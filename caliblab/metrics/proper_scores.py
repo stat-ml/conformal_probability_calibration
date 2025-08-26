@@ -9,7 +9,9 @@ class BrierScore(LabelBasedMetricBase):
 
 class NegativeLogLikelihood(LabelBasedMetricBase):
     def compute(self, *, probs, y_true, true_proba):
-        raise NotImplementedError("NegativeLogLikelihood.compute is not implemented.")
+        # Get probabilities for correct classes and compute -log
+        correct_probs = probs[np.arange(len(y_true)), y_true]
+        return np.mean(-np.log(correct_probs))
 
 
 class FullBrierScore(TrueProbMetricBase):
