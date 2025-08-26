@@ -1,5 +1,5 @@
 from caliblab.calibrators.temperature_scaling import TemperatureScaling
-from caliblab.metrics.ece import ExpectedCalibrationError
+from caliblab.metrics.calibration_errors import ExpectedCalibrationError
 from caliblab.eval.runner import evaluate
 import numpy as np
 
