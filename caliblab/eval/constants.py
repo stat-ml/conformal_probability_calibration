@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class EvaluationReport:
     metrics: Dict[str, float]
     n_samples: int
