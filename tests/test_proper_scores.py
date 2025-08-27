@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from caliblab.metrics.proper_scores import BrierScore, NegativeLogLikelihood
+from caliblab.metrics.proper_scores import BrierScore, NegativeLogLikelihood, make_one_hot
 
 class TestBrierScore:
     """Concise tests for Brier score."""
@@ -16,13 +16,12 @@ class TestBrierScore:
         y_true = np.array([0, 1, 2, 0])
 
         # one-hot targets
-        one_hot = np.zeros_like(probs)
-        one_hot[np.arange(len(y_true)), y_true] = 1.0
+        one_hot = make_one_hot(y_true, probs.shape[1])
 
-        expected = np.mean((probs - one_hot) ** 2)
+        expected = np.mean(np.sum((probs - one_hot) ** 2, axis=1), axis=0)
 
         brier = BrierScore()
-        assert brier.compute(probs=probs, y_true=y_true) == pytest.approx(expected)
+        assert brier(probs=probs, y_true=y_true) == pytest.approx(expected)
 
     def test_brier_with_soft_true_proba(self):
         """Brier score when true labels are soft distributions (non-constant)."""
@@ -35,10 +34,10 @@ class TestBrierScore:
             [0.2, 0.5, 0.3],
         ])
 
-        expected = np.mean((probs - true_proba) ** 2)
+        expected = np.mean(np.sum((probs - true_proba) ** 2, axis=1), axis=0)
 
         brier = BrierScore()
-        assert brier.compute(probs=probs, true_proba=true_proba) == pytest.approx(expected)
+        assert brier(probs=probs, true_proba=true_proba) == pytest.approx(expected)
 
 class TestNegativeLogLikelihood:
     """Concise tests for NLL metric."""
@@ -57,7 +56,7 @@ class TestNegativeLogLikelihood:
         expected = (-np.log(0.7) - np.log(0.8) - np.log(0.5) - np.log(0.6)) / 4
         
         nll = NegativeLogLikelihood()
-        assert nll.compute(probs=probs, y_true=y_true) == pytest.approx(expected)
+        assert nll(probs=probs, y_true=y_true) == pytest.approx(expected)
 
     def test_true_proba_soft_labels(self):
         """Test NLL when true labels are provided as soft distributions."""
@@ -76,4 +75,4 @@ class TestNegativeLogLikelihood:
         expected = (expected_0 + expected_1) / 2
 
         nll = NegativeLogLikelihood()
-        assert nll.compute(probs=probs, true_proba=true_proba) == pytest.approx(expected)
+        assert nll(probs=probs, true_proba=true_proba) == pytest.approx(expected)
