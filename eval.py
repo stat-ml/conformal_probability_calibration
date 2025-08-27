@@ -1,6 +1,6 @@
 from caliblab.calibrators.temperature_scaling import TemperatureScaling
 from caliblab.metrics.calibration_errors import ExpectedCalibrationError, MaximumCalibrationError, ClasswiseExpectedCalibrationError
-from caliblab.metrics.proper_scores import NegativeLogLikelihood
+from caliblab.metrics.proper_scores import BrierScore, NegativeLogLikelihood
 from caliblab.eval.runner import evaluate
 import numpy as np
 
@@ -20,6 +20,7 @@ metrics = [
     MaximumCalibrationError(n_bins=15),
     ClasswiseExpectedCalibrationError(n_bins=15),
     NegativeLogLikelihood(),
+    BrierScore(),
 ]
 
 

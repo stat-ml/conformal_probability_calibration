@@ -60,7 +60,9 @@ class MaximumCalibrationError(LabelBasedMetricBase):
         bin_boundaries = _get_bin_boundaries(self.n_bins, self.strategy)
         
         bin_errors = _compute_bin_calibration_error(max_probs, correct, bin_boundaries)
-        return max((error for _, error in bin_errors), default=0.0)
+        if not bin_errors:
+            raise ValueError("No bins contain any samples; cannot compute MaximumCalibrationError.")
+        return max(error for _, error in bin_errors)
 
 
 class ClasswiseExpectedCalibrationError(LabelBasedMetricBase):
