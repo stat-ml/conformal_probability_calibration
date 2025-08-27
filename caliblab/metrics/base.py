@@ -24,7 +24,7 @@ class MetricBase(ABC):
             y_true=y_true,
             true_proba=true_proba,
         )
-        return self.compute(
+        return self._compute(
             probs=probs,
             y_true=y_true,
             true_proba=true_proba,
@@ -51,7 +51,7 @@ class MetricBase(ABC):
                 raise ValueError("true_proba and probs must have the same shape.")
 
     @abstractmethod
-    def compute(
+    def _compute(
         self,
         *,
         probs: np.ndarray,

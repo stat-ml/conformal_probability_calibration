@@ -1,5 +1,6 @@
 from caliblab.calibrators.temperature_scaling import TemperatureScaling
-from caliblab.metrics.ece import ExpectedCalibrationError
+from caliblab.metrics.calibration_errors import ExpectedCalibrationError, MaximumCalibrationError, ClasswiseExpectedCalibrationError
+from caliblab.metrics.proper_scores import BrierScore, NegativeLogLikelihood
 from caliblab.eval.runner import evaluate
 import numpy as np
 
@@ -14,7 +15,13 @@ cal.fit(logits=logits, y_true=y_true)
 probs_cal = cal.predict_proba(logits=logits)
 
 
-metrics = [ExpectedCalibrationError(n_bins=15)]
+metrics = [
+    ExpectedCalibrationError(n_bins=15),
+    MaximumCalibrationError(n_bins=15),
+    ClasswiseExpectedCalibrationError(n_bins=15),
+    NegativeLogLikelihood(),
+    BrierScore(),
+]
 
 
 report = evaluate(
@@ -22,3 +29,8 @@ report = evaluate(
     y_true=y_true,
     metrics=metrics,
 )
+
+print("Calibration Metrics Results:")
+for metric_name, value in report.metrics.items():
+    print(f"  {metric_name}: {value:.6f}")
+print(f"Samples: {report.n_samples}, Classes: {report.n_classes}")
