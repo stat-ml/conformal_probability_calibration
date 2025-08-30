@@ -5,10 +5,14 @@ from caliblab.utils.data import dataset_getter
 
 
 @pytest.mark.parametrize("dataset_name", ["cifar10", "cifar100", "mnist"])
-def test_vision_datasets(dataset_name):
+def test_vision_datasets(dataset_name, tmp_path):
     """Test that vision datasets can be loaded and iterated."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
     try:
-        dataset = dataset_getter(dataset_name, cal_ratio=0.5, seed=42)
+        dataset = dataset_getter(
+            dataset_name, data_dir=str(data_dir), cal_ratio=0.5, seed=42
+        )
     except Exception as e:
         pytest.skip(f"Skipping {dataset_name} due to download or setup error: {e}")
 
