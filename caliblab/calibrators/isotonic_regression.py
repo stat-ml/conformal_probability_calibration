@@ -36,7 +36,7 @@ class IsotonicRegression(CalibratorBase):
             y_binary = (y_true == k).astype(int)
             self.calibrators[k].fit(probs[:, k], y_binary)
 
-        self.is_fitted_ = True
+        self._mark_fitted()
         return self
 
     def predict_proba(

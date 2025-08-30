@@ -74,8 +74,8 @@ class LabelBasedMetricBase(MetricBase, ABC):
         self,
         *,
         probs: np.ndarray,
-        y_true: np.ndarray,
-        **kwargs: Any,
+        y_true: Optional[np.ndarray],
+        true_proba: Optional[np.ndarray]
     ) -> float:
         raise NotImplementedError
 
@@ -92,7 +92,7 @@ class TrueProbMetricBase(MetricBase, ABC):
         self,
         *,
         probs: np.ndarray,
-        true_proba: np.ndarray,
-        **kwargs: Any,
+        y_true: Optional[np.ndarray],
+        true_proba: Optional[np.ndarray]
     ) -> float:
         raise NotImplementedError

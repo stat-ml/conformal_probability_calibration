@@ -130,3 +130,32 @@ class CIFAR100Dataset(BaseDataset):
             generator=torch.Generator().manual_seed(self.seed),
         )
 
+    def get_train_loader(
+        self, batch_size: int, shuffle: bool = True, num_workers: int = 4
+    ) -> DataLoader:
+        return DataLoader(
+            self.train_dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+        )
+
+    def get_cal_loader(
+        self, batch_size: int, shuffle: bool = False, num_workers: int = 4
+    ) -> DataLoader:
+        return DataLoader(
+            self.cal_dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+        )
+
+    def get_test_loader(
+        self, batch_size: int, shuffle: bool = False, num_workers: int = 4
+    ) -> DataLoader:
+        return DataLoader(
+            self.test_dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+        )

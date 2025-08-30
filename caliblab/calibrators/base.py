@@ -17,7 +17,7 @@ class CalibratorBase(ABC):
         raise NotImplementedError
 
     def _mark_fitted(self) -> None:
-        self._is_fitted = True
+        self.is_fitted_ = True
 
     def check_fitted(self):
         if not self.is_fitted_:
