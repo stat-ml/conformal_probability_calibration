@@ -1,10 +1,9 @@
 import pytest
 import numpy as np
 from caliblab.metrics.calibration_errors import (
-    ExpectedCalibrationError,
-    MaximumCalibrationError,
-    ClasswiseExpectedCalibrationError,
-    make_one_hot
+    CWECE,
+    ECE,
+    MCE,
 )
 
 
@@ -50,7 +49,7 @@ class TestCalibrationMetricsExact:
         #
         # ECE = 0.09 + 0.08 = 0.17
         
-        ece = ExpectedCalibrationError(n_bins=3)
+        ece = ECE(n_bins=3)
         result = ece(probs=probs, y_true=y_true)
         assert result == pytest.approx(0.17, abs=1e-6)
 
@@ -73,7 +72,7 @@ class TestCalibrationMetricsExact:
         #
         # MCE = max(0.15, 0.2) = 0.2
         
-        mce = MaximumCalibrationError(n_bins=3)
+        mce = MCE(n_bins=3)
         result = mce(probs=probs, y_true=y_true)
         assert result == pytest.approx(0.2, abs=1e-6)
 
@@ -104,7 +103,7 @@ class TestCalibrationMetricsExact:
         #
         # cw-ECE = (0.16 + 0.055 + 0.095) / 3 = 0.103333
         
-        cw_ece = ClasswiseExpectedCalibrationError(n_bins=3)
+        cw_ece = CWECE(n_bins=3)
         result = cw_ece(probs=probs, y_true=y_true)
         
         # cw-ECE = (0.16 + 0.055 + 0.095) / 3 = 0.103333

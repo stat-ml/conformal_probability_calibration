@@ -1,14 +1,7 @@
 import numpy as np
 from .base import MetricBase, LabelBasedMetricBase, TrueProbMetricBase
+from ..utils.computations import make_one_hot
 
-
-import numpy as np
-
-def make_one_hot(y_true, n_classes):
-    n_samples = len(y_true)
-    one_hot = np.zeros((n_samples, n_classes))
-    one_hot[np.arange(n_samples), y_true] = 1.0
-    return one_hot
 
 class BrierScore(MetricBase):
     @property
@@ -27,7 +20,7 @@ class BrierScore(MetricBase):
 
 
 
-class NLL(MetricBase):
+class NegativeLogLikelihood(MetricBase):
     @property
     def name(self) -> str:
         return "nll"
@@ -47,4 +40,4 @@ class NLL(MetricBase):
             return np.mean(nll)
 
 
-__all__ = ["BrierScore", "NLL"]
+__all__ = ["BrierScore", "NegativeLogLikelihood"]

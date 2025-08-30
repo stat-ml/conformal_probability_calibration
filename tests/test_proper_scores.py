@@ -1,6 +1,9 @@
 import pytest
 import numpy as np
-from caliblab.metrics.proper_scores import BrierScore, NegativeLogLikelihood, make_one_hot
+
+from caliblab.metrics.proper_scores import BrierScore, NegativeLogLikelihood
+from caliblab.utils.computations import make_one_hot
+
 
 class TestBrierScore:
     """Concise tests for Brier score."""
@@ -70,8 +73,8 @@ class TestNegativeLogLikelihood:
         ])
 
         # NLL = mean over samples of -sum(p_true * log(p_pred))
-        expected_0 = -(0.6*np.log(0.7) + 0.3*np.log(0.2) + 0.1*np.log(0.1))
-        expected_1 = -(0.2*np.log(0.1) + 0.5*np.log(0.8) + 0.3*np.log(0.1))
+        expected_0 = -(0.8 * np.log(0.7) + 0.1 * np.log(0.2) + 0.1 * np.log(0.1))
+        expected_1 = -(0.2 * np.log(0.1) + 0.5 * np.log(0.8) + 0.3 * np.log(0.1))
         expected = (expected_0 + expected_1) / 2
 
         nll = NegativeLogLikelihood()

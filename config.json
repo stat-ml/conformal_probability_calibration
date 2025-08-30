@@ -11,41 +11,59 @@
     ],
     "metrics": [
         "accuracy",
-        {
-            "name": "ece",
-            "params": { "n_bins": 20 }
-        },
-        {
-            "name": "mce",
-            "params": { "n_bins": 20 }
-        },
-        {
-            "name": "cwece",
-            "params": { "n_bins": 20 }
-        },
+        { "name": "ece", "params": { "n_bins": 20 } },
+        { "name": "mce", "params": { "n_bins": 20 } },
+        { "name": "cwece", "params": { "n_bins": 20 } },
         "nll",
         "brier_score"
     ],
     "evaluations": [
         {
-            "dataset": "cifar10",
-            "model": "cifar10_resnet56"
+            "dataset": { "name": "cifar10" },
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar10_resnet56",
+                "alias": "ResNet56"
+            }
         },
         {
-            "dataset": "cifar10",
-            "model": "cifar10_resnet20"
+            "dataset": { "name": "cifar10" },
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar10_resnet20",
+                "alias": "ResNet20"
+            }
         },
         {
-            "dataset": "cifar100",
-            "model": "cifar100_resnet56"
+            "dataset": { "name": "cifar100" },
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar100_resnet56",
+                "alias": "ResNet56"
+            }
         },
         {
-            "dataset": "cifar100",
-            "model": "cifar100_resnet20"
+            "dataset": { "name": "cifar100" },
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar100_resnet20",
+                "alias": "ResNet20"
+            }
         },
         {
-            "dataset": "cifar100",
-            "model": "efficientnet_b0"
+            "dataset": {
+                "name": "cifar100",
+                "params": { "image_size": 224 }
+            },
+            "model": {
+                "source": "vit",
+                "name": "pkr7098/cifar100-vit-base-patch16-224-in21k",
+                "alias": "ViT-B16"
+            }
         }
     ]
 }

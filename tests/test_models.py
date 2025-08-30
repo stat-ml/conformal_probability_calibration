@@ -2,41 +2,62 @@ import pytest
 import torch
 
 from caliblab.models import get_model
-from caliblab.models.cifar_hub import CIFARHubModel
-from caliblab.models.torch_hub import TorchHubModel
-from caliblab.models.torchvision import TorchvisionModel
+from caliblab.models.hub import HubModel
+from caliblab.models.vit import ViTModel
 
 # Helper to skip tests if no internet connection is available for torch.hub
-try:
-    torch.hub.load("pytorch/vision", "resnet18", pretrained=False)
-    has_hub_connection = True
-except Exception:
-    has_hub_connection = False
-
 skip_if_no_hub = pytest.mark.skipif(
-    not has_hub_connection, reason="torch.hub requires internet connection"
+    not hasattr(torch.hub, "check_integrity"),
+    reason="torch.hub requires internet connection",
 )
 
 
 @skip_if_no_hub
 @pytest.mark.parametrize(
-    "model_name, expected_class",
+    "source, name, repo, expected_class",
     [
-        ("resnet18", TorchvisionModel),
-        ("cifar10_resnet20", CIFARHubModel),
-        ("pytorch/vision:resnet18", TorchHubModel),
+        ("torch_hub", "resnet18", "pytorch/vision", HubModel),
+        (
+            "torch_hub",
+            "cifar10_resnet20",
+            "chenyaofo/pytorch-cifar-models",
+            HubModel,
+        ),
+        ("vit", "google/vit-base-patch16-224", None, ViTModel),
     ],
 )
-def test_get_model_factory(model_name, expected_class):
+def test_get_model_factory(source, name, repo, expected_class):
     """Test that the get_model factory returns the correct model class."""
-    model = get_model(model_name, pretrained=False)
+    model = get_model(name=name, source=source, repo=repo, pretrained=False)
     assert isinstance(model, expected_class)
+
+
+@skip_if_no_hub
+def test_model_alias():
+    """Test that the model's name property uses the alias if provided."""
+    # Test without alias
+    model_no_alias = get_model(
+        name="resnet18", source="torch_hub", repo="pytorch/vision", pretrained=False
+    )
+    assert model_no_alias.name == "resnet18"
+
+    # Test with alias
+    model_with_alias = get_model(
+        name="resnet18",
+        source="torch_hub",
+        repo="pytorch/vision",
+        alias="MyResNet18",
+        pretrained=False,
+    )
+    assert model_with_alias.name == "MyResNet18"
 
 
 @skip_if_no_hub
 def test_model_forward_pass():
     """Test that a loaded model can perform a forward pass."""
-    model = get_model("resnet18", pretrained=False)
+    model = get_model(
+        name="resnet18", source="torch_hub", repo="pytorch/vision", pretrained=False
+    )
     # The model expects 3-channel images
     dummy_input = torch.randn(2, 3, 32, 32)
     output = model(dummy_input)

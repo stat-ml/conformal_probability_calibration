@@ -37,14 +37,24 @@ def _get_predictions(model, loader, device):
 
 @skip_if_no_hub
 @pytest.mark.parametrize(
-    "dataset_name, model_name, min_accuracy",
+    "dataset_name, model_repo, model_name, min_accuracy",
     [
-        ("cifar10", "cifar10_resnet20", 0.90),
-        ("cifar100", "cifar100_resnet20", 0.67),
+        (
+            "cifar10",
+            "chenyaofo/pytorch-cifar-models",
+            "cifar10_resnet20",
+            0.90,
+        ),
+        (
+            "cifar100",
+            "chenyaofo/pytorch-cifar-models",
+            "cifar100_resnet20",
+            0.67,
+        ),
     ],
 )
 def test_model_benchmark_accuracy(
-    dataset_name, model_name, min_accuracy, tmp_path
+    dataset_name, model_repo, model_name, min_accuracy, tmp_path
 ):
     """
     Tests that a pretrained model achieves a minimum accuracy on a benchmark dataset.
@@ -60,7 +70,9 @@ def test_model_benchmark_accuracy(
         )
 
     # 2. Load the pretrained model
-    model = get_model(model_name, pretrained=True)
+    model = get_model(
+        name=model_name, source="torch_hub", repo=model_repo, pretrained=True
+    )
 
     # 3. Create a data loader
     test_loader = dataset.get_test_loader(batch_size=256, num_workers=4)

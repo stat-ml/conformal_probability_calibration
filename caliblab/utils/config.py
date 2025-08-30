@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Tuple
 
 from ..calibrators import CalibratorBase, get_calibrator
 from ..datasets import BaseDataset, dataset_getter
+from ..eval.runner import EvaluationConfig
 from ..metrics import MetricBase, get_metric
 from ..models import ModelBase, get_model
 
@@ -35,47 +36,54 @@ def parse_config(
     data_root = Path(config.get("data_root", "data"))
     runner_settings = config.get("runner_settings", {})
 
-    # --- Parse calibrators ---
-    calibrators = []
-    for cal_config in config.get("calibrators", []):
-        if isinstance(cal_config, str):
-            name = cal_config
-            params = {}
-        elif isinstance(cal_config, dict):
-            name = cal_config["name"]
-            params = cal_config.get("params", {})
-        else:
-            raise TypeError(f"Invalid format for calibrator config: {cal_config}")
+    # --- Parse calibrator configurations ---
+    calibrators: List[CalibratorBase] = []
+    for calibrator_config in config.get("calibrators", []):
+        if isinstance(calibrator_config, str):
+            calibrators.append(get_calibrator(calibrator_config))
+        elif isinstance(calibrator_config, dict):
+            calibrators.append(
+                get_calibrator(
+                    calibrator_config["name"], **calibrator_config.get("params", {})
+                )
+            )
 
-        if name.lower().strip() == "none":
-            continue
-        calibrators.append(get_calibrator(name, **params))
-
-    # --- Parse metrics ---
-    metrics = []
+    # --- Parse metric configurations ---
+    metrics: List[MetricBase] = []
     for metric_config in config.get("metrics", []):
         if isinstance(metric_config, str):
-            name = metric_config
-            params = {}
-        else:
-            name = metric_config["name"]
-            params = metric_config.get("params", {})
-        metrics.append(get_metric(name, **params))
+            metrics.append(get_metric(metric_config))
+        elif isinstance(metric_config, dict):
+            metrics.append(
+                get_metric(metric_config["name"], **metric_config.get("params", {}))
+            )
 
     # --- Parse evaluation configurations ---
     evaluation_configs: List[EvaluationConfig] = []
     for eval_config in config.get("evaluations", []):
         # Instantiate dataset
-        dataset_name = eval_config["dataset"]
-        dataset_params = eval_config.get("dataset_params", {})
+        dataset_config = eval_config["dataset"]
+        dataset_name = dataset_config["name"]
+        dataset_params = dataset_config.get("params", {})
         dataset = dataset_getter(
             dataset_name, data_dir=str(data_root / dataset_name), **dataset_params
         )
 
         # Instantiate model
-        model_name = eval_config["model"]
-        model_params = eval_config.get("model_params", {})
-        model = get_model(model_name, **model_params)
+        model_config = eval_config["model"]
+        model_name = model_config["name"]
+        model_source = model_config["source"]
+        model_alias = model_config.get("alias")
+        model_repo = model_config.get("repo")  # Can be None
+        model_params = model_config.get("params", {})
+        model = get_model(
+            name=model_name,
+            source=model_source,
+            alias=model_alias,
+            repo=model_repo,
+            cache_dir=runner_settings.get("model_cache_dir"),
+            **model_params,
+        )
 
         evaluation_configs.append((dataset, model))
 

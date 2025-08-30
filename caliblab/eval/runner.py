@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any, Dict
 from pathlib import Path
 from tabulate import tabulate
 
@@ -12,13 +12,15 @@ EvaluationConfig = Tuple[BaseDataset, ModelBase]
 
 
 def run_evaluations(
+    *,
     configs: List[EvaluationConfig],
+    calibrators: List[CalibratorBase],
     metrics: List[MetricBase],
-    calibrators: Optional[List[CalibratorBase]] = None,
-    output_dir: str = "experiments",
-    use_cache: bool = True,
-    force_recompute: bool = False,
-):
+    output_dir: Path,
+    use_cache: bool,
+    force_recompute: bool,
+    **kwargs: Any,
+) -> None:
     """
     Runs a series of model evaluations based on a list of configurations.
 

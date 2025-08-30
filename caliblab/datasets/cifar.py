@@ -85,12 +85,20 @@ class CIFAR100Dataset(BaseDataset):
     def name(self) -> str:
         return "cifar100"
 
-    def __init__(self, data_dir: str, cal_ratio: float = 0.3, seed: int = 0):
+    def __init__(
+        self,
+        data_dir: str,
+        cal_ratio: float = 0.5,
+        seed: int = 0,
+        image_size: int = 32,
+    ):
         self.data_dir = data_dir
         self.cal_ratio = cal_ratio
         self.seed = seed
+        self.image_size = image_size
         self.transform = transforms.Compose(
             [
+                transforms.Resize((self.image_size, self.image_size)),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     (0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)
