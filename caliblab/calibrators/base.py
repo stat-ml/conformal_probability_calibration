@@ -16,6 +16,9 @@ class CalibratorBase(ABC):
         """The name of the calibrator."""
         raise NotImplementedError
 
+    def _mark_fitted(self) -> None:
+        self._is_fitted = True
+
     def check_fitted(self):
         if not self.is_fitted_:
             raise RuntimeError("This calibrator instance is not fitted yet.")

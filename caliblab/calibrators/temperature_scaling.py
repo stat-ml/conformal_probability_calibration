@@ -45,7 +45,7 @@ class TemperatureScaling(CalibratorBase):
             return loss
 
         optimizer.step(eval)
-        self.is_fitted_ = True
+        self._mark_fitted()
         return self
 
     def predict_proba(
