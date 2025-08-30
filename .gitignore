@@ -162,6 +162,18 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Editor directories and files
+.idea/
+.vscode/
+*.[oa]
+*.so
+*.pyc
+*.swp
+*.swo
+
+# Data
+/data
+
 # pytype static type analyzer
 .pytype/
 
