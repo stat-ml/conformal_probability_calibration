@@ -5,7 +5,9 @@ from tabulate import tabulate
 from ..calibrators.base import CalibratorBase
 from ..datasets.base import BaseDataset
 from ..metrics.base import MetricBase
-from ..models.base import ModelBase
+from ..models import ModelBase
+from ..visualizations import ConfidenceVisualizer
+from .constants import EvaluationReport
 from .evaluator import ModelEvaluator
 
 EvaluationConfig = Tuple[BaseDataset, ModelBase]
@@ -19,8 +21,9 @@ def run_evaluations(
     output_dir: Path,
     use_cache: bool,
     force_recompute: bool,
+    visualizer: Optional[ConfidenceVisualizer] = None,
     **kwargs: Any,
-) -> None:
+) -> List[EvaluationReport]:
     """
     Runs a series of model evaluations based on a list of configurations.
 
@@ -35,7 +38,7 @@ def run_evaluations(
     Returns:
         A list of all EvaluationReport objects generated during the runs.
     """
-    all_results = []
+    all_reports: List[EvaluationReport] = []
     table_data = []
     all_metric_names = set()
 
@@ -43,21 +46,46 @@ def run_evaluations(
         print("-" * 80)
         print(f"Running evaluation for model '{model.name}' on dataset '{dataset.name}'")
 
+        # Create the run-specific directory
+        run_dir = output_dir / f"{dataset.name}_{model.name}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+
         evaluator = ModelEvaluator(
             dataset=dataset,
             model=model,
             metrics=metrics,
             calibrators=calibrators,
-            output_dir=output_dir,
+            run_dir=run_dir,
+        )
+        run_reports = evaluator.evaluate(
+            use_cache=use_cache, force_recompute=force_recompute
         )
 
-        results = evaluator.evaluate(
-            use_cache=use_cache,
-            force_recompute=force_recompute,
-        )
+        # --- Plotting ---
+        if visualizer is not None:
+            visualizer.plot(
+                reports=run_reports,
+                run_dir=run_dir,
+                dataset_name=dataset.name,
+                model_name=model.name,
+            )
+
+        # --- Per-run summary ---
+        print("\n" + tabulate(
+            [
+                {
+                    "Dataset": dataset.name,
+                    "Model": model.name,
+                    "Calibrator": report.calibrator_name,
+                }
+                for report in run_reports
+            ],
+            headers="keys",
+            tablefmt="grid",
+        ))
 
         # Print a summary of the results and collect data for the final table
-        for report in results:
+        for report in run_reports:
             print(f"  Calibrator: {report.calibrator_name}")
             row = {
                 "Dataset": dataset.name,
@@ -69,16 +97,16 @@ def run_evaluations(
                 row[metric_name] = value
                 all_metric_names.add(metric_name)
             table_data.append(row)
-        
-        all_results.extend(results)
-    
+
+        all_reports.extend(run_reports)
+
     print("-" * 80)
     print("All evaluations complete.")
-    
+
     # Print the summary table
     if table_data:
         headers = ["Dataset", "Model", "Calibrator"] + sorted(list(all_metric_names))
-        
+
         # Format numbers to 4 decimal places for printing
         formatted_rows = []
         for row_dict in table_data:
@@ -105,4 +133,4 @@ def run_evaluations(
             f.write(table_string)
         print(f"\nResults table saved to {output_path}")
 
-    return all_results
+    return all_reports

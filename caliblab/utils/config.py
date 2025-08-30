@@ -1,40 +1,50 @@
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
 from ..calibrators import CalibratorBase, get_calibrator
 from ..datasets import BaseDataset, dataset_getter
 from ..eval.runner import EvaluationConfig
 from ..metrics import MetricBase, get_metric
 from ..models import ModelBase, get_model
+from ..visualizations import ConfidenceVisualizer
 
+# A simple type alias for the JSON config
 Config = Dict[str, Any]
 EvaluationConfig = Tuple[BaseDataset, ModelBase]
 
 
 def parse_config(
-    config_path: str,
-) -> Tuple[List[EvaluationConfig], List[CalibratorBase], List[MetricBase], Dict[str, Any]]:
-    """
-    Parses a JSON configuration file to set up evaluation runs.
+    config_path: Path,
+) -> Tuple[
+    List[EvaluationConfig],
+    List[CalibratorBase],
+    List[MetricBase],
+    Dict[str, Any],
+    Optional[ConfidenceVisualizer],
+]:
+    with config_path.open("r") as f:
+        try:
+            config: Config = json.load(f)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Error parsing {config_path}: {e}") from e
 
-    Args:
-        config_path: Path to the JSON configuration file.
-
-    Returns:
-        A tuple containing:
-        - A list of evaluation configurations (dataset, model).
-        - A list of calibrator instances.
-        - A list of metric instances.
-        - A dictionary of global runner settings.
-    """
-    config_path = Path(config_path)
-    with open(config_path, "r") as f:
-        config: Config = json.load(f)
-
-    # --- Parse global settings ---
-    data_root = Path(config.get("data_root", "data"))
+    # --- Parse runner settings ---
     runner_settings = config.get("runner_settings", {})
+    output_dir = Path(runner_settings.get("output_dir", "experiments"))
+    output_dir.mkdir(parents=True, exist_ok=True)
+    runner_settings["output_dir"] = output_dir
+
+    data_root_str = config.get("data_root", "data")
+    data_root = Path(data_root_str)
+    data_root.mkdir(parents=True, exist_ok=True)
+
+    # --- Parse visualization settings ---
+    visualizer = None
+    vis_config = config.get("visualizations", {})
+    if "confidence_curve" in vis_config:
+        n_bins = vis_config["confidence_curve"].get("n_bins", 15)
+        visualizer = ConfidenceVisualizer(n_bins=n_bins)
 
     # --- Parse calibrator configurations ---
     calibrators: List[CalibratorBase] = []
@@ -87,4 +97,4 @@ def parse_config(
 
         evaluation_configs.append((dataset, model))
 
-    return evaluation_configs, calibrators, metrics, runner_settings
+    return evaluation_configs, calibrators, metrics, runner_settings, visualizer

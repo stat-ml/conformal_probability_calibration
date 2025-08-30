@@ -11,9 +11,10 @@ from tqdm import tqdm
 
 from ..calibrators.base import CalibratorBase
 from ..datasets.base import BaseDataset
-from ..metrics.base import MetricBase
-from ..models.base import ModelBase
+from ..metrics import MetricBase
+from ..models import ModelBase
 from .constants import EvaluationReport
+from ..utils.computations import softmax
 
 
 class ModelEvaluator:
@@ -28,27 +29,16 @@ class ModelEvaluator:
         dataset: BaseDataset,
         model: ModelBase,
         metrics: List[MetricBase],
-        n_bins: int = 15,
-        output_dir: str = "experiments",
+        run_dir: Path,
         calibrators: Optional[List[CalibratorBase]] = None,
+        device: Optional[torch.device] = None,
     ):
         self.dataset = dataset
         self.model = model
         self.metrics = metrics
-        self.dataset_name = dataset.name
-        self.model_name = model.name
-        self.n_bins = int(n_bins)
-        self.calibrators = calibrators or []
-
-        # Root where per-run dirs live (we still always write into experiments/{dataset}_{model})
-        self.root_dir = Path(output_dir)
-        self.root_dir.mkdir(parents=True, exist_ok=True)
-
-        # Per-run directory strictly following the required convention:
-        self.run_dir = Path("experiments") / f"{self.dataset_name}_{self.model_name}"
-        self.run_dir.mkdir(parents=True, exist_ok=True)
-
-        self.device = torch.device(
+        self.run_dir = run_dir
+        self.calibrators = calibrators if calibrators is not None else []
+        self.device = device or torch.device(
             "mps" if torch.backends.mps.is_available() else "cpu"
         )
         self.model.to(self.device)
@@ -134,7 +124,10 @@ class ModelEvaluator:
                     metrics=calibrated_metrics,
                     n_samples=n_samples,
                     n_classes=n_classes,
+                    calibrated_probabilities=final_probs,
+                    true_labels=test_labels,
                 )
             )
-
+            
         return results
+

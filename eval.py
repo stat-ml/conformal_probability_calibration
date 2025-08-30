@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 from caliblab.eval.runner import run_evaluations
 from caliblab.utils.config import parse_config
@@ -6,28 +7,30 @@ from caliblab.utils.config import parse_config
 
 def main():
     """
-    Main entry point for running evaluations from a config file.
+    Main entry point for running evaluations from a configuration file.
     """
     parser = argparse.ArgumentParser(
-        description="Run model evaluations based on a JSON config file."
+        description="Run model calibration evaluations from a config file."
     )
     parser.add_argument(
         "config_file",
         type=str,
         help="Path to the JSON configuration file.",
-        default="config.json",
-        nargs="?",
     )
     args = parser.parse_args()
+    config_path = Path(args.config_file)
+    if not config_path.is_file():
+        raise FileNotFoundError(f"Config file not found: {config_path}")
 
-    # Parse the config file to get evaluation setups
-    configs, calibrators, metrics, runner_settings = parse_config(args.config_file)
+    configs, calibrators, metrics, runner_settings, visualizer = parse_config(
+        config_path
+    )
 
-    # Run all evaluations
     run_evaluations(
         configs=configs,
         calibrators=calibrators,
         metrics=metrics,
+        visualizer=visualizer,
         **runner_settings,
     )
 
