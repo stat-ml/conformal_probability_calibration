@@ -6,8 +6,9 @@ from .base import (
     MetricBase,
     TrueProbMetricBase,
 )
-from .calibration_errors import ECE, MCE, CE
+from .calibration_errors import ECE, MCE, CWECE
 from .classification import Accuracy
+from .getters import get_metric
 from .proper_scores import BrierScore, NLL
 
 __all__ = [
@@ -16,8 +17,9 @@ __all__ = [
     "TrueProbMetricBase",
     "ECE",
     "MCE",
-    "CE",
+    "CWECE",
     "BrierScore",
     "NLL",
     "Accuracy",
+    "get_metric",
 ]

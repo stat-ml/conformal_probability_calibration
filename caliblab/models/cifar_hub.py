@@ -26,7 +26,10 @@ class CIFARHubModel(ModelBase):
 
     @property
     def name(self) -> str:
-        return self._name
+        if self._name.startswith(("cifar10_", "cifar100_")):
+            return self._name.split("_")[1]
+        else:
+            return self._name
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)

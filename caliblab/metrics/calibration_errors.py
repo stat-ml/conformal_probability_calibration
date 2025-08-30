@@ -40,7 +40,7 @@ class ECE(LabelBasedMetricBase):
 
     @property
     def name(self) -> str:
-        return f"ece_{self.n_bins}_{self.strategy}"
+        return f"ece_{self.n_bins}_{self.strategy[:3]}"
 
     def _compute(self, *, probs, y_true, **kwargs):
         max_probs = np.max(probs, axis=1)
@@ -58,7 +58,7 @@ class MCE(LabelBasedMetricBase):
 
     @property
     def name(self) -> str:
-        return f"mce_{self.n_bins}_{self.strategy}"
+        return f"mce_{self.n_bins}_{self.strategy[:3]}"
 
     def _compute(self, *, probs, y_true, **kwargs):
         max_probs = np.max(probs, axis=1)
@@ -71,14 +71,14 @@ class MCE(LabelBasedMetricBase):
         return max(error for _, error in bin_errors)
 
 
-class CE(LabelBasedMetricBase):
+class CWECE(LabelBasedMetricBase):
     def __init__(self, n_bins: int = 15, strategy: str = "uniform"):
         self.n_bins = n_bins
         self.strategy = strategy
 
     @property
     def name(self) -> str:
-        return f"ce_{self.n_bins}_{self.strategy}"
+        return f"cwece_{self.n_bins}_{self.strategy[:3]}"
 
     def _compute(self, *, probs, y_true, **kwargs):
         bin_boundaries = _get_bin_boundaries(self.n_bins, self.strategy)
@@ -95,4 +95,4 @@ class CE(LabelBasedMetricBase):
         return np.mean(class_eces)
 
 
-__all__ = ["ECE", "MCE", "CE"]
+__all__ = ["ECE", "MCE", "CWECE"]

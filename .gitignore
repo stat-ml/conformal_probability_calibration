@@ -173,6 +173,7 @@ dmypy.json
 
 # Data
 /data
+/experiments
 
 # pytype static type analyzer
 .pytype/

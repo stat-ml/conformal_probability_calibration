@@ -1,151 +1,106 @@
-from __future__ import annotations
-
+from typing import List, Optional, Tuple
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-
-import numpy as np
-import torch
-from torch.utils.data import DataLoader
-from tqdm import tqdm
+from tabulate import tabulate
 
 from ..calibrators.base import CalibratorBase
 from ..datasets.base import BaseDataset
 from ..metrics.base import MetricBase
 from ..models.base import ModelBase
-from .constants import EvaluationReport
+from .evaluator import ModelEvaluator
+
+EvaluationConfig = Tuple[BaseDataset, ModelBase]
 
 
-class ModelEvaluator:
-    """Main class for evaluating model calibration and performance with caching.
-
-    Predictions are cached at: experiments/{dataset}_{model}/predictions.npz
-    Other artifacts (plots/metrics) are also saved in the same run directory.
+def run_evaluations(
+    configs: List[EvaluationConfig],
+    metrics: List[MetricBase],
+    calibrators: Optional[List[CalibratorBase]] = None,
+    output_dir: str = "experiments",
+    use_cache: bool = True,
+    force_recompute: bool = False,
+):
     """
+    Runs a series of model evaluations based on a list of configurations.
 
-    def __init__(
-        self,
-        dataset: BaseDataset,
-        model: ModelBase,
-        metrics: List[MetricBase],
-        n_bins: int = 15,
-        output_dir: str = "experiments",
-        calibrators: Optional[List[CalibratorBase]] = None,
-    ):
-        self.dataset = dataset
-        self.model = model
-        self.metrics = metrics
-        self.dataset_name = dataset.name
-        self.model_name = model.name
-        self.n_bins = int(n_bins)
-        self.calibrators = calibrators or []
+    Args:
+        configs: A list of tuples, where each tuple contains a dataset, a model,
+                 and a list of metrics to compute.
+        calibrators: A list of calibrators to apply to each model.
+        output_dir: The root directory to save experiment results.
+        use_cache: Whether to use cached predictions if available.
+        force_recompute: Whether to force re-computation of predictions, ignoring cache.
 
-        # Root where per-run dirs live (we still always write into experiments/{dataset}_{model})
-        self.root_dir = Path(output_dir)
-        self.root_dir.mkdir(parents=True, exist_ok=True)
+    Returns:
+        A list of all EvaluationReport objects generated during the runs.
+    """
+    all_results = []
+    table_data = []
+    all_metric_names = set()
 
-        # Per-run directory strictly following the required convention:
-        self.run_dir = self.root_dir / f"{self.dataset_name}_{self.model_name}"
-        self.run_dir.mkdir(parents=True, exist_ok=True)
+    for dataset, model in configs:
+        print("-" * 80)
+        print(f"Running evaluation for model '{model.name}' on dataset '{dataset.name}'")
 
-        self.device = torch.device(
-            "mps" if torch.backends.mps.is_available() else "cpu"
-        )
-        self.model.to(self.device)
-        self.model.eval()
-
-        self.cal_loader = self.dataset.get_cal_loader(batch_size=128, num_workers=4)
-        self.test_loader = self.dataset.get_test_loader(batch_size=128, num_workers=4)
-
-    def _predict(
-        self, loader: DataLoader, use_cache: bool, force_recompute: bool, cache_name: str
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """Get model predictions for a given data loader, with caching."""
-        pred_path = self.run_dir / f"{cache_name}.npz"
-
-        if use_cache and pred_path.exists() and not force_recompute:
-            print(f"Using cached predictions at: {pred_path}")
-            data = np.load(pred_path)
-            return data["probabilities"], data["true_labels"]
-
-        print(f"Computing predictions for {cache_name}...")
-        all_probs = []
-        all_labels = []
-        with torch.no_grad():
-            for inputs, labels in tqdm(loader):
-                inputs = inputs.to(self.device)
-                outputs = self.model(inputs)
-                probs = torch.softmax(outputs, dim=1)
-                all_probs.append(probs.cpu().numpy())
-                all_labels.append(labels.cpu().numpy())
-
-        probabilities = np.concatenate(all_probs)
-        true_labels = np.concatenate(all_labels)
-
-        if use_cache:
-            np.savez(
-                pred_path, probabilities=probabilities, true_labels=true_labels
-            )
-            print(f"Saved predictions to: {pred_path}")
-
-        return probabilities, true_labels
-
-    def evaluate(
-        self, use_cache: bool = True, force_recompute: bool = False
-    ) -> List[EvaluationReport]:
-        """
-        Run complete evaluation pipeline with multiple calibrators.
-
-        Args:
-            use_cache: If True, reuse predictions from disk if present.
-            force_recompute: If True, ignore cache and recompute predictions.
-
-        Returns:
-            List[EvaluationReport]: List of evaluation reports, one per calibrator.
-        """
-        cal_probs, cal_labels = self._predict(
-            self.cal_loader, use_cache, force_recompute, "cal_preds"
-        )
-        test_probs, test_labels = self._predict(
-            self.test_loader, use_cache, force_recompute, "test_preds"
+        evaluator = ModelEvaluator(
+            dataset=dataset,
+            model=model,
+            metrics=metrics,
+            calibrators=calibrators,
+            output_dir=output_dir,
         )
 
-        n_samples = len(test_labels)
-        n_classes = test_probs.shape[1]
-        results = []
-
-        # Evaluate uncalibrated model
-        uncalibrated_metrics = {}
-        for metric in self.metrics:
-            uncalibrated_metrics[metric.name] = metric(
-                probs=test_probs, y_true=test_labels
-            )
-        results.append(
-            EvaluationReport(
-                calibrator_name="uncalibrated",
-                metrics=uncalibrated_metrics,
-                n_samples=n_samples,
-                n_classes=n_classes,
-            )
+        results = evaluator.evaluate(
+            use_cache=use_cache,
+            force_recompute=force_recompute,
         )
 
-        # Evaluate each calibrator
-        for calibrator in self.calibrators:
-            print(f"\nEvaluating calibrator: {calibrator.name}")
-            calibrator.fit(probs=cal_probs, y_true=cal_labels)
-            final_probs = calibrator.predict_proba(probs=test_probs)
+        # Print a summary of the results and collect data for the final table
+        for report in results:
+            print(f"  Calibrator: {report.calibrator_name}")
+            row = {
+                "Dataset": dataset.name,
+                "Model": model.name,
+                "Calibrator": report.calibrator_name,
+            }
+            for metric_name, value in report.metrics.items():
+                print(f"    {metric_name}: {value:.4f}")
+                row[metric_name] = value
+                all_metric_names.add(metric_name)
+            table_data.append(row)
+        
+        all_results.extend(results)
+    
+    print("-" * 80)
+    print("All evaluations complete.")
+    
+    # Print the summary table
+    if table_data:
+        headers = ["Dataset", "Model", "Calibrator"] + sorted(list(all_metric_names))
+        
+        # Format numbers to 4 decimal places for printing
+        formatted_rows = []
+        for row_dict in table_data:
+            formatted_row = []
+            for header in headers:
+                value = row_dict.get(header)
+                if isinstance(value, float):
+                    formatted_row.append(f"{value:.4f}")
+                else:
+                    formatted_row.append(value)
+            formatted_rows.append(formatted_row)
 
-            calibrated_metrics = {}
-            for metric in self.metrics:
-                calibrated_metrics[metric.name] = metric(
-                    probs=final_probs, y_true=test_labels
-                )
-            results.append(
-                EvaluationReport(
-                    calibrator_name=calibrator.name,
-                    metrics=calibrated_metrics,
-                    n_samples=n_samples,
-                    n_classes=n_classes,
-                )
-            )
+        print("\n" + "=" * 80)
+        print("Summary of Results")
+        print("=" * 80)
+        table_string = tabulate(formatted_rows, headers=headers, tablefmt="grid")
+        print(table_string)
 
-        return results
+        # Save the table to a file
+        output_path = Path(output_dir) / "summary_results.txt"
+        with open(output_path, "w") as f:
+            f.write("Summary of Results\n")
+            f.write("=" * 80 + "\n")
+            f.write(table_string)
+        print(f"\nResults table saved to {output_path}")
+
+    return all_results

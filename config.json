@@ -1,0 +1,51 @@
+{
+    "data_root": "data",
+    "runner_settings": {
+        "output_dir": "experiments",
+        "use_cache": true,
+        "force_recompute": false
+    },
+    "calibrators": [
+        "temperature_scaling",
+        "isotonic_regression"
+    ],
+    "metrics": [
+        "accuracy",
+        {
+            "name": "ece",
+            "params": { "n_bins": 20 }
+        },
+        {
+            "name": "mce",
+            "params": { "n_bins": 20 }
+        },
+        {
+            "name": "cwece",
+            "params": { "n_bins": 20 }
+        },
+        "nll",
+        "brier_score"
+    ],
+    "evaluations": [
+        {
+            "dataset": "cifar10",
+            "model": "cifar10_resnet56"
+        },
+        {
+            "dataset": "cifar10",
+            "model": "cifar10_resnet20"
+        },
+        {
+            "dataset": "cifar100",
+            "model": "cifar100_resnet56"
+        },
+        {
+            "dataset": "cifar100",
+            "model": "cifar100_resnet20"
+        },
+        {
+            "dataset": "cifar100",
+            "model": "efficientnet_b0"
+        }
+    ]
+}

@@ -5,9 +5,20 @@ import numpy as np
 
 
 class CalibratorBase(ABC):
-    def __init__(self, name: Optional[str] = None) -> None:
-        self.name = name or self.__class__.__name__
-        self._is_fitted: bool = False
+    """A base class for calibrators."""
+
+    def __init__(self):
+        self.is_fitted_ = False
+
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """The name of the calibrator."""
+        raise NotImplementedError
+
+    def check_fitted(self):
+        if not self.is_fitted_:
+            raise RuntimeError("This calibrator instance is not fitted yet.")
 
     @abstractmethod
     def fit(
@@ -27,10 +38,3 @@ class CalibratorBase(ABC):
         probs: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         raise NotImplementedError
-
-    def _mark_fitted(self) -> None:
-        self._is_fitted = True
-
-    def check_fitted(self) -> None:
-        if not self._is_fitted:
-            raise RuntimeError(f"{self.name} is not fitted.")

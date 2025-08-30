@@ -12,7 +12,7 @@ class CIFAR10Dataset(BaseDataset):
     def name(self) -> str:
         return "cifar10"
 
-    def __init__(self, data_dir: str, cal_ratio: float = 0.5, seed: int = 0):
+    def __init__(self, data_dir: str, cal_ratio: float = 0.3, seed: int = 0):
         self.data_dir = data_dir
         self.cal_ratio = cal_ratio
         self.seed = seed
@@ -85,7 +85,7 @@ class CIFAR100Dataset(BaseDataset):
     def name(self) -> str:
         return "cifar100"
 
-    def __init__(self, data_dir: str, cal_ratio: float = 0.5, seed: int = 0):
+    def __init__(self, data_dir: str, cal_ratio: float = 0.3, seed: int = 0):
         self.data_dir = data_dir
         self.cal_ratio = cal_ratio
         self.seed = seed

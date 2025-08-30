@@ -65,6 +65,12 @@ class ImageNetMiniDataset(BaseDataset):
         train_path = self.data_dir / "train"
         val_path = self.data_dir / "val"
 
+        if not train_path.exists() or not val_path.exists():
+            raise FileNotFoundError(
+                f"ImageNet-mini data not found at {self.data_dir}. "
+                "Please download and extract it into 'train' and 'val' subdirectories."
+            )
+
         self.train_dataset = ImageFolder(
             train_path, transform=self.train_transform
         )
