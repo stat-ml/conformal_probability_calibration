@@ -6,6 +6,12 @@ from torch.utils.data import DataLoader
 class BaseDataset(ABC):
     """A base class for datasets."""
 
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """The name of the dataset."""
+        raise NotImplementedError
+
     @abstractmethod
     def get_train_loader(
         self, batch_size: int, shuffle: bool = True, num_workers: int = 0

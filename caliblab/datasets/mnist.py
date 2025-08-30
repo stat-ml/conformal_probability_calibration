@@ -7,9 +7,11 @@ from .base import BaseDataset
 
 
 class MNISTDataset(BaseDataset):
-    def __init__(
-        self, data_dir: str = "./data", cal_ratio: float = 0.5, seed: int = 0
-    ):
+    @property
+    def name(self) -> str:
+        return "mnist"
+
+    def __init__(self, data_dir: str, cal_ratio: float = 0.5, seed: int = 0):
         self.data_dir = data_dir
         self.cal_ratio = cal_ratio
         self.seed = seed

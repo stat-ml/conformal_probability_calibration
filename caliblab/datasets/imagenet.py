@@ -27,9 +27,13 @@ class _TransformedDataset(Dataset):
 
 
 class ImageNetMiniDataset(BaseDataset):
+    @property
+    def name(self) -> str:
+        return "imagenet-mini"
+
     def __init__(
         self,
-        data_dir: str = "./data/imagenet-mini",
+        data_dir: str,
         cal_ratio: float = 0.5,
         size: int = 224,
         seed: int = 0,

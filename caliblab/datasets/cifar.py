@@ -8,9 +8,11 @@ import torchvision.transforms as transforms
 
 
 class CIFAR10Dataset(BaseDataset):
-    def __init__(
-        self, data_dir: str = "./data", cal_ratio: float = 0.5, seed: int = 0
-    ):
+    @property
+    def name(self) -> str:
+        return "cifar10"
+
+    def __init__(self, data_dir: str, cal_ratio: float = 0.5, seed: int = 0):
         self.data_dir = data_dir
         self.cal_ratio = cal_ratio
         self.seed = seed
@@ -79,9 +81,11 @@ class CIFAR10Dataset(BaseDataset):
 
 
 class CIFAR100Dataset(BaseDataset):
-    def __init__(
-        self, data_dir: str = "./data", cal_ratio: float = 0.5, seed: int = 0
-    ):
+    @property
+    def name(self) -> str:
+        return "cifar100"
+
+    def __init__(self, data_dir: str, cal_ratio: float = 0.5, seed: int = 0):
         self.data_dir = data_dir
         self.cal_ratio = cal_ratio
         self.seed = seed
