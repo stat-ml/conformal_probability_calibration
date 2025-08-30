@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..eval.constants import EvaluationReport
+from .utils import calculate_confidence_bins
 
 
 class ConfidenceVisualizer:
@@ -28,6 +29,7 @@ class ConfidenceVisualizer:
             )
             for report in reports
             if report.calibrated_probabilities is not None
+            and report.true_labels is not None
         }
         title = f"Calibration Curve for {dataset_name} - {model_name}"
         output_path = run_dir / "confidence_calibration_curve.png"
@@ -39,27 +41,12 @@ class ConfidenceVisualizer:
         ax.plot([0, 1], [0, 1], "k--", label="Perfectly calibrated")
 
         for name, (probs, y_true) in results.items():
-            confidences = np.max(probs, axis=1)
-            predictions = np.argmax(probs, axis=1)
-            accuracies = (predictions == y_true).astype(float)
+            (
+                bin_confidences,
+                bin_accuracies,
+                bin_counts,
+            ) = calculate_confidence_bins(probs, y_true, self.n_bins)
 
-            bin_boundaries = np.linspace(0, 1, self.n_bins + 1)
-            bin_lowers = bin_boundaries[:-1]
-            bin_uppers = bin_boundaries[1:]
-
-            bin_accuracies = np.zeros(self.n_bins)
-            bin_confidences = np.zeros(self.n_bins)
-            bin_counts = np.zeros(self.n_bins)
-
-            for i, (lower, upper) in enumerate(zip(bin_lowers, bin_uppers)):
-                in_bin = (confidences > lower) & (confidences <= upper)
-                bin_counts[i] = np.sum(in_bin)
-
-                if bin_counts[i] > 0:
-                    bin_accuracies[i] = np.mean(accuracies[in_bin])
-                    bin_confidences[i] = np.mean(confidences[in_bin])
-
-            # Filter out bins with no samples
             non_empty_bins = bin_counts > 0
             if np.any(non_empty_bins):
                 ax.plot(
