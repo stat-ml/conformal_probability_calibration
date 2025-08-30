@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from caliblab.utils.data import dataset_getter
+from caliblab.datasets import dataset_getter
 
 
 @pytest.mark.parametrize("dataset_name", ["cifar10", "cifar100", "mnist"])

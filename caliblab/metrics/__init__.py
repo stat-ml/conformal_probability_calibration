@@ -8,7 +8,11 @@ from .base import (
     MetricBase,
     TrueProbMetricBase,
 )
-from .calibration_errors import CWECE, ECE, MCE
+from .calibration_errors import (
+    ClasswiseExpectedCalibrationError,
+    ExpectedCalibrationError,
+    MaximumCalibrationError,
+)
 from .classification import Accuracy
 from .proper_scores import BrierScore, NegativeLogLikelihood
 
@@ -21,11 +25,11 @@ def get_metric(name: str, **kwargs: Any) -> MetricBase:
     if name == "accuracy":
         return Accuracy()
     elif name == "ece":
-        return ECE(**kwargs)
+        return ExpectedCalibrationError(**kwargs)
     elif name == "mce":
-        return MCE(**kwargs)
-    elif name == "cwece":
-        return CWECE(**kwargs)
+        return MaximumCalibrationError(**kwargs)
+    elif name == "cw-ece":
+        return ClasswiseExpectedCalibrationError(**kwargs)
     elif name == "nll":
         return NegativeLogLikelihood()
     elif name == "brier_score":
@@ -38,9 +42,9 @@ __all__ = [
     "MetricBase",
     "LabelBasedMetricBase",
     "TrueProbMetricBase",
-    "ECE",
-    "MCE",
-    "CWECE",
+    "ExpectedCalibrationError",
+    "MaximumCalibrationError",
+    "ClasswiseExpectedCalibrationError",
     "BrierScore",
     "NegativeLogLikelihood",
     "Accuracy",

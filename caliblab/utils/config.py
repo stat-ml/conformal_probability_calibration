@@ -7,7 +7,7 @@ from ..datasets import BaseDataset, dataset_getter
 from ..eval.runner import EvaluationConfig
 from ..metrics import MetricBase, get_metric
 from ..models import ModelBase, get_model
-from ..visualizations import ConfidenceVisualizer
+from ..visualizations import ConfidenceVisualizer, CumulativeMassVisualizer
 
 # A simple type alias for the JSON config
 Config = Dict[str, Any]
@@ -21,7 +21,7 @@ def parse_config(
     List[CalibratorBase],
     List[MetricBase],
     Dict[str, Any],
-    Optional[ConfidenceVisualizer],
+    List[Any],
 ]:
     with config_path.open("r") as f:
         try:
@@ -40,11 +40,14 @@ def parse_config(
     data_root.mkdir(parents=True, exist_ok=True)
 
     # --- Parse visualization settings ---
-    visualizer = None
+    visualizers = []
     vis_config = config.get("visualizations", {})
     if "confidence_curve" in vis_config:
         n_bins = vis_config["confidence_curve"].get("n_bins", 15)
-        visualizer = ConfidenceVisualizer(n_bins=n_bins)
+        visualizers.append(ConfidenceVisualizer(n_bins=n_bins))
+    if "cumulative_mass_curve" in vis_config:
+        n_bins = vis_config["cumulative_mass_curve"].get("n_bins", 15)
+        visualizers.append(CumulativeMassVisualizer(n_bins=n_bins))
 
     # --- Parse calibrator configurations ---
     calibrators: List[CalibratorBase] = []
@@ -97,4 +100,4 @@ def parse_config(
 
         evaluation_configs.append((dataset, model))
 
-    return evaluation_configs, calibrators, metrics, runner_settings, visualizer
+    return evaluation_configs, calibrators, metrics, runner_settings, visualizers

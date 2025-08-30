@@ -33,14 +33,15 @@ def _compute_bin_calibration_error(probs: np.ndarray, correct: np.ndarray,
     return bin_errors
 
 
-class ECE(LabelBasedMetricBase):
-    def __init__(self, n_bins: int = 15, strategy: str = "uniform"):
+class ExpectedCalibrationError(LabelBasedMetricBase):
+    def __init__(self, n_bins: int = 15, strategy: str = "uniform") -> None:
+        super().__init__()
         self.n_bins = n_bins
         self.strategy = strategy
 
     @property
     def name(self) -> str:
-        return f"ece_{self.n_bins}_{self.strategy[:3]}"
+        return "ece"
 
     def _compute(self, *, probs, y_true, **kwargs):
         max_probs = np.max(probs, axis=1)
@@ -51,14 +52,15 @@ class ECE(LabelBasedMetricBase):
         return sum(weight * error for weight, error in bin_errors)
 
 
-class MCE(LabelBasedMetricBase):
-    def __init__(self, n_bins: int = 15, strategy: str = "uniform"):
+class MaximumCalibrationError(LabelBasedMetricBase):
+    def __init__(self, n_bins: int = 15, strategy: str = "uniform") -> None:
+        super().__init__()
         self.n_bins = n_bins
         self.strategy = strategy
 
     @property
     def name(self) -> str:
-        return f"mce_{self.n_bins}_{self.strategy[:3]}"
+        return "mce"
 
     def _compute(self, *, probs, y_true, **kwargs):
         max_probs = np.max(probs, axis=1)
@@ -71,20 +73,22 @@ class MCE(LabelBasedMetricBase):
         return max(error for _, error in bin_errors)
 
 
-class CWECE(LabelBasedMetricBase):
-    def __init__(self, n_bins: int = 15, strategy: str = "uniform"):
+class ClasswiseExpectedCalibrationError(LabelBasedMetricBase):
+    def __init__(self, n_bins: int = 15, strategy: str = "uniform") -> None:
+        super().__init__()
         self.n_bins = n_bins
         self.strategy = strategy
 
     @property
     def name(self) -> str:
-        return f"cwece_{self.n_bins}_{self.strategy[:3]}"
+        return "cw-ece"
 
     def _compute(self, *, probs, y_true, **kwargs):
         bin_boundaries = _get_bin_boundaries(self.n_bins, self.strategy)
         class_eces = []
+        n_classes = probs.shape[1]
         
-        for class_idx in range(probs.shape[1]):
+        for class_idx in range(n_classes):
             class_probs = probs[:, class_idx]
             class_correct = (y_true == class_idx).astype(float)
             
@@ -95,4 +99,8 @@ class CWECE(LabelBasedMetricBase):
         return np.mean(class_eces)
 
 
-__all__ = ["ECE", "MCE", "CWECE"]
+__all__ = [
+    "ExpectedCalibrationError",
+    "MaximumCalibrationError",
+    "ClasswiseExpectedCalibrationError",
+]

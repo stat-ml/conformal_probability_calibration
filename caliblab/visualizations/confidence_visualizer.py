@@ -32,7 +32,7 @@ class ConfidenceVisualizer:
         title = f"Calibration Curve for {dataset_name} - {model_name}"
         output_path = run_dir / "confidence_calibration_curve.png"
 
-        plt.figure(figsize=(15, 15))
+        plt.figure(figsize=(9, 9))
         ax = plt.gca()
 
         # Plot the perfect calibration line

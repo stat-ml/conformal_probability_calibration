@@ -21,7 +21,7 @@ def run_evaluations(
     output_dir: Path,
     use_cache: bool,
     force_recompute: bool,
-    visualizer: Optional[ConfidenceVisualizer] = None,
+    visualizers: Optional[List[Any]] = None,
     **kwargs: Any,
 ) -> List[EvaluationReport]:
     """
@@ -62,13 +62,14 @@ def run_evaluations(
         )
 
         # --- Plotting ---
-        if visualizer is not None:
-            visualizer.plot(
-                reports=run_reports,
-                run_dir=run_dir,
-                dataset_name=dataset.name,
-                model_name=model.name,
-            )
+        if visualizers:
+            for visualizer in visualizers:
+                visualizer.plot(
+                    reports=run_reports,
+                    run_dir=run_dir,
+                    dataset_name=dataset.name,
+                    model_name=model.name,
+                )
 
         # --- Per-run summary ---
         print("\n" + tabulate(

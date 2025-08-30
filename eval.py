@@ -22,7 +22,7 @@ def main():
     if not config_path.is_file():
         raise FileNotFoundError(f"Config file not found: {config_path}")
 
-    configs, calibrators, metrics, runner_settings, visualizer = parse_config(
+    configs, calibrators, metrics, runner_settings, visualizers = parse_config(
         config_path
     )
 
@@ -30,7 +30,7 @@ def main():
         configs=configs,
         calibrators=calibrators,
         metrics=metrics,
-        visualizer=visualizer,
+        visualizers=visualizers,
         **runner_settings,
     )
 
