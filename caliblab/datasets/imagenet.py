@@ -2,10 +2,11 @@ from pathlib import Path
 
 import torch
 import torchvision.transforms as T
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 
 from .base import BaseDataset
+from .utils import split_dataset
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
@@ -63,45 +64,6 @@ class ImageNetMiniDataset(BaseDataset):
             val_path, transform=self.test_transform
         )
 
-        num_test = len(original_test_dataset)
-        cal_size = int(self.cal_ratio * num_test)
-        test_size = num_test - cal_size
-
-        self.cal_dataset, self.test_dataset = random_split(
-            original_test_dataset,
-            [cal_size, test_size],
-            generator=torch.Generator().manual_seed(self.seed),
-        )
-
-    def get_train_loader(
-        self, batch_size: int, shuffle: bool = True, num_workers: int = 4
-    ) -> DataLoader:
-        return DataLoader(
-            self.train_dataset,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            num_workers=num_workers,
-            pin_memory=True,
-        )
-
-    def get_cal_loader(
-        self, batch_size: int, shuffle: bool = False, num_workers: int = 4
-    ) -> DataLoader:
-        return DataLoader(
-            self.cal_dataset,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            num_workers=num_workers,
-            pin_memory=True,
-        )
-
-    def get_test_loader(
-        self, batch_size: int, shuffle: bool = False, num_workers: int = 4
-    ) -> DataLoader:
-        return DataLoader(
-            self.test_dataset,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            num_workers=num_workers,
-            pin_memory=True,
+        self.cal_dataset, self.test_dataset = split_dataset(
+            original_test_dataset, self.cal_ratio, self.seed
         )
