@@ -33,13 +33,16 @@ def _compute_bin_calibration_error(probs: np.ndarray, correct: np.ndarray,
     return bin_errors
 
 
-class ExpectedCalibrationError(LabelBasedMetricBase):
-    def __init__(self, n_bins: int = 15, strategy: str = "uniform") -> None:
-        super().__init__()
+class ECE(LabelBasedMetricBase):
+    def __init__(self, n_bins: int = 15, strategy: str = "uniform"):
         self.n_bins = n_bins
         self.strategy = strategy
 
-    def _compute(self, *, probs, y_true, true_proba):
+    @property
+    def name(self) -> str:
+        return f"ece_{self.n_bins}_{self.strategy}"
+
+    def _compute(self, *, probs, y_true, **kwargs):
         max_probs = np.max(probs, axis=1)
         correct = (np.argmax(probs, axis=1) == y_true).astype(float)
         bin_boundaries = _get_bin_boundaries(self.n_bins, self.strategy)
@@ -48,13 +51,16 @@ class ExpectedCalibrationError(LabelBasedMetricBase):
         return sum(weight * error for weight, error in bin_errors)
 
 
-class MaximumCalibrationError(LabelBasedMetricBase):
-    def __init__(self, n_bins: int = 15, strategy: str = "uniform") -> None:
-        super().__init__()
+class MCE(LabelBasedMetricBase):
+    def __init__(self, n_bins: int = 15, strategy: str = "uniform"):
         self.n_bins = n_bins
         self.strategy = strategy
 
-    def _compute(self, *, probs, y_true, true_proba):
+    @property
+    def name(self) -> str:
+        return f"mce_{self.n_bins}_{self.strategy}"
+
+    def _compute(self, *, probs, y_true, **kwargs):
         max_probs = np.max(probs, axis=1)
         correct = (np.argmax(probs, axis=1) == y_true).astype(float)
         bin_boundaries = _get_bin_boundaries(self.n_bins, self.strategy)
@@ -65,13 +71,16 @@ class MaximumCalibrationError(LabelBasedMetricBase):
         return max(error for _, error in bin_errors)
 
 
-class ClasswiseExpectedCalibrationError(LabelBasedMetricBase):
-    def __init__(self, n_bins: int = 15, strategy: str = "uniform") -> None:
-        super().__init__()
+class CE(LabelBasedMetricBase):
+    def __init__(self, n_bins: int = 15, strategy: str = "uniform"):
         self.n_bins = n_bins
         self.strategy = strategy
 
-    def _compute(self, *, probs, y_true, true_proba):
+    @property
+    def name(self) -> str:
+        return f"ce_{self.n_bins}_{self.strategy}"
+
+    def _compute(self, *, probs, y_true, **kwargs):
         bin_boundaries = _get_bin_boundaries(self.n_bins, self.strategy)
         class_eces = []
         
@@ -84,3 +93,6 @@ class ClasswiseExpectedCalibrationError(LabelBasedMetricBase):
             class_eces.append(class_ece)
         
         return np.mean(class_eces)
+
+
+__all__ = ["ECE", "MCE", "CE"]

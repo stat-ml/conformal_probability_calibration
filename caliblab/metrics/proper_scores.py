@@ -1,5 +1,5 @@
 import numpy as np
-from .base import MetricBase
+from .base import MetricBase, LabelBasedMetricBase, TrueProbMetricBase
 
 
 import numpy as np
@@ -11,7 +11,11 @@ def make_one_hot(y_true, n_classes):
     return one_hot
 
 class BrierScore(MetricBase):
-    def _compute(self, *, probs, y_true=None, true_proba=None):
+    @property
+    def name(self) -> str:
+        return "brier_score"
+
+    def _compute(self, *, probs, y_true=None, true_proba=None, **kwargs):
         if (y_true is None and true_proba is None) or (y_true is not None and true_proba is not None):
             raise ValueError("Provide exactly one of y_true (labels) or true_proba (probabilities).")
 
@@ -23,8 +27,12 @@ class BrierScore(MetricBase):
 
 
 
-class NegativeLogLikelihood(MetricBase):
-    def _compute(self, *, probs, y_true=None, true_proba=None):
+class NLL(MetricBase):
+    @property
+    def name(self) -> str:
+        return "nll"
+
+    def _compute(self, *, probs, y_true=None, true_proba=None, **kwargs):
         if (y_true is None and true_proba is None) or (y_true is not None and true_proba is not None):
             raise ValueError("Provide exactly one of y_true (labels) or true_proba (probabilities).")
 
@@ -37,3 +45,6 @@ class NegativeLogLikelihood(MetricBase):
                 raise ValueError("When using true_proba, its shape must match probs.")
             nll = -np.sum(true_proba * np.log(probs + 1e-12), axis=1)
             return np.mean(nll)
+
+
+__all__ = ["BrierScore", "NLL"]

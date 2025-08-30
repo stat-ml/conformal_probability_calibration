@@ -6,66 +6,55 @@ from ..utils.validation import check_probs, check_labels
 
 
 class MetricBase(ABC):
-    requires_labels: bool = False
-    requires_true_proba: bool = False
+    """A base class for metrics."""
 
-    def __init__(self, name: Optional[str] = None) -> None:
-        self.name = name or self.__class__.__name__
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """The name of the metric."""
+        raise NotImplementedError
 
-    def __call__(
-        self,
-        *,
-        probs: np.ndarray,
-        y_true: Optional[np.ndarray] = None,
-        true_proba: Optional[np.ndarray] = None,
-    ) -> float:
-        self._validate_inputs(
-            probs=probs,
-            y_true=y_true,
-            true_proba=true_proba,
-        )
-        return self._compute(
-            probs=probs,
-            y_true=y_true,
-            true_proba=true_proba,
-        )
+    def __call__(self, **kwargs: Any) -> float:
+        """Compute the metric."""
+        return self._compute(**kwargs)
 
-    def _validate_inputs(
-        self,
-        *,
-        probs: np.ndarray,
-        y_true: Optional[np.ndarray],
-        true_proba: Optional[np.ndarray],
-    ) -> None:
-        check_probs(probs, name="probs")
-        _, k = probs.shape
-        if self.requires_labels:
-            if y_true is None:
-                raise ValueError(f"{self.name} requires `y_true`.")
-            check_labels(y_true, n_classes=k)
-        if self.requires_true_proba:
-            if true_proba is None:
-                raise ValueError(f"{self.name} requires `true_proba`.")
-            check_probs(true_proba, name="true_proba")
-            if true_proba.shape != probs.shape:
-                raise ValueError("true_proba and probs must have the same shape.")
+    @abstractmethod
+    def _compute(self, **kwargs: Any) -> float:
+        """The actual metric computation."""
+        raise NotImplementedError
+
+
+class LabelBasedMetricBase(MetricBase, ABC):
+    """Base class for metrics that require ground truth labels."""
+
+    @abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError
 
     @abstractmethod
     def _compute(
         self,
         *,
         probs: np.ndarray,
-        y_true: Optional[np.ndarray],
-        true_proba: Optional[np.ndarray],
+        y_true: np.ndarray,
+        **kwargs: Any,
     ) -> float:
         raise NotImplementedError
 
 
-class LabelBasedMetricBase(MetricBase):
-    requires_labels: bool = True
-    requires_true_proba: bool = False
+class TrueProbMetricBase(MetricBase, ABC):
+    """Base class for metrics that require true probabilities."""
 
+    @abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError
 
-class TrueProbMetricBase(MetricBase):
-    requires_labels: bool = False
-    requires_true_proba: bool = True
+    @abstractmethod
+    def _compute(
+        self,
+        *,
+        probs: np.ndarray,
+        true_proba: np.ndarray,
+        **kwargs: Any,
+    ) -> float:
+        raise NotImplementedError
