@@ -38,9 +38,9 @@ class ModelEvaluator:
         self.metrics = metrics
         self.run_dir = run_dir
         self.calibrators = calibrators if calibrators is not None else []
-        self.device = device or torch.device(
-            "mps" if torch.backends.mps.is_available() else "cpu"
-        )
+        if device is None:
+            raise ValueError("A torch.device must be provided to the ModelEvaluator.")
+        self.device = device
         self.model.to(self.device)
         self.model.eval()
 

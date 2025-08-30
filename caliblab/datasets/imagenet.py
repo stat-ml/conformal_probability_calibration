@@ -2,28 +2,13 @@ from pathlib import Path
 
 import torch
 import torchvision.transforms as T
-from torch.utils.data import DataLoader, Dataset, Subset, random_split
+from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import ImageFolder
 
 from .base import BaseDataset
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
-
-
-class _TransformedDataset(Dataset):
-    def __init__(self, subset: Subset, transform=None):
-        self.subset = subset
-        self.transform = transform
-
-    def __getitem__(self, index):
-        x, y = self.subset[index]
-        if self.transform:
-            x = self.transform(x)
-        return x, y
-
-    def __len__(self):
-        return len(self.subset)
 
 
 class ImageNetMiniDataset(BaseDataset):
@@ -74,23 +59,18 @@ class ImageNetMiniDataset(BaseDataset):
         self.train_dataset = ImageFolder(
             train_path, transform=self.train_transform
         )
-        original_test_dataset = ImageFolder(val_path)
+        original_test_dataset = ImageFolder(
+            val_path, transform=self.test_transform
+        )
 
         num_test = len(original_test_dataset)
         cal_size = int(self.cal_ratio * num_test)
         test_size = num_test - cal_size
 
-        cal_subset, test_subset = random_split(
+        self.cal_dataset, self.test_dataset = random_split(
             original_test_dataset,
             [cal_size, test_size],
             generator=torch.Generator().manual_seed(self.seed),
-        )
-
-        self.cal_dataset = _TransformedDataset(
-            cal_subset, transform=self.test_transform
-        )
-        self.test_dataset = _TransformedDataset(
-            test_subset, transform=self.test_transform
         )
 
     def get_train_loader(

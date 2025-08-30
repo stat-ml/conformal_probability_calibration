@@ -1,5 +1,6 @@
-from typing import List, Optional, Tuple, Any, Dict
+from typing import List, Optional, Tuple, Any, Dict, Set
 from pathlib import Path
+import torch
 from tabulate import tabulate
 
 from ..calibrators.base import CalibratorBase
@@ -9,13 +10,18 @@ from ..models import ModelBase
 from ..visualizations import ConfidenceVisualizer
 from .constants import EvaluationReport
 from .evaluator import ModelEvaluator
+from ..utils.device import get_device
+from .runner_utils import (
+    generate_and_save_summary,
+    print_and_collect_run_results,
+)
 
-EvaluationConfig = Tuple[BaseDataset, ModelBase]
+EvaluationConfig = List[List[Any]]
 
 
 def run_evaluations(
     *,
-    configs: List[EvaluationConfig],
+    configs: EvaluationConfig,
     calibrators: List[CalibratorBase],
     metrics: List[MetricBase],
     output_dir: Path,
@@ -40,9 +46,12 @@ def run_evaluations(
     """
     all_reports: List[EvaluationReport] = []
     table_data = []
-    all_metric_names = set()
+    all_metric_names: Set[str] = set()
 
-    for dataset, model in configs:
+    device = get_device(verbose=True)
+
+    for config in configs:
+        dataset, model = config
         print("-" * 80)
         print(f"Running evaluation for model '{model.name}' on dataset '{dataset.name}'")
 
@@ -56,9 +65,14 @@ def run_evaluations(
             metrics=metrics,
             calibrators=calibrators,
             run_dir=run_dir,
+            device=device,
         )
         run_reports = evaluator.evaluate(
             use_cache=use_cache, force_recompute=force_recompute
+        )
+
+        print_and_collect_run_results(
+            run_reports, dataset, model, table_data, all_metric_names
         )
 
         # --- Plotting ---
@@ -71,67 +85,11 @@ def run_evaluations(
                     model_name=model.name,
                 )
 
-        # --- Per-run summary ---
-        print("\n" + tabulate(
-            [
-                {
-                    "Dataset": dataset.name,
-                    "Model": model.name,
-                    "Calibrator": report.calibrator_name,
-                }
-                for report in run_reports
-            ],
-            headers="keys",
-            tablefmt="grid",
-        ))
-
-        # Print a summary of the results and collect data for the final table
-        for report in run_reports:
-            print(f"  Calibrator: {report.calibrator_name}")
-            row = {
-                "Dataset": dataset.name,
-                "Model": model.name,
-                "Calibrator": report.calibrator_name,
-            }
-            for metric_name, value in report.metrics.items():
-                print(f"    {metric_name}: {value:.4f}")
-                row[metric_name] = value
-                all_metric_names.add(metric_name)
-            table_data.append(row)
-
         all_reports.extend(run_reports)
 
     print("-" * 80)
     print("All evaluations complete.")
 
-    # Print the summary table
-    if table_data:
-        headers = ["Dataset", "Model", "Calibrator"] + sorted(list(all_metric_names))
-
-        # Format numbers to 4 decimal places for printing
-        formatted_rows = []
-        for row_dict in table_data:
-            formatted_row = []
-            for header in headers:
-                value = row_dict.get(header)
-                if isinstance(value, float):
-                    formatted_row.append(f"{value:.4f}")
-                else:
-                    formatted_row.append(value)
-            formatted_rows.append(formatted_row)
-
-        print("\n" + "=" * 80)
-        print("Summary of Results")
-        print("=" * 80)
-        table_string = tabulate(formatted_rows, headers=headers, tablefmt="grid")
-        print(table_string)
-
-        # Save the table to a file
-        output_path = Path(output_dir) / "summary_results.txt"
-        with open(output_path, "w") as f:
-            f.write("Summary of Results\n")
-            f.write("=" * 80 + "\n")
-            f.write(table_string)
-        print(f"\nResults table saved to {output_path}")
+    generate_and_save_summary(table_data, all_metric_names, Path(output_dir))
 
     return all_reports
