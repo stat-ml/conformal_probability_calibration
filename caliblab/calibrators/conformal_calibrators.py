@@ -21,9 +21,7 @@ def _softmax(logits: np.ndarray, axis: int = -1) -> np.ndarray:
     return e / np.sum(e, axis=axis, keepdims=True)
 
 
-def _to_probs(
-    logits: Optional[np.ndarray], probs: Optional[np.ndarray]
-) -> np.ndarray:
+def _to_probs(logits: Optional[np.ndarray], probs: Optional[np.ndarray]) -> np.ndarray:
     if logits is None and probs is None:
         raise ValueError("Provide either `logits` or `probs`.")
     if logits is not None:
@@ -33,9 +31,7 @@ def _to_probs(
     return p
 
 
-def _to_logits(
-    logits: Optional[np.ndarray], probs: Optional[np.ndarray]
-) -> np.ndarray:
+def _to_logits(logits: Optional[np.ndarray], probs: Optional[np.ndarray]) -> np.ndarray:
     if logits is None and probs is None:
         raise ValueError("Provide either `logits` or `probs`.")
     if logits is not None:
