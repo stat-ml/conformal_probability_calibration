@@ -1,6 +1,7 @@
 from typing import Optional
 
 import numpy as np
+import torch
 from sklearn.isotonic import IsotonicRegression as SklearnIsotonicRegression
 
 from .base import CalibratorBase
@@ -22,11 +23,12 @@ class IsotonicRegression(CalibratorBase):
         probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
     ) -> "IsotonicRegression":
-        if probs is None and logits is None:
-            raise ValueError("IsotonicRegression requires probabilities (probs).")
-
         if probs is None:
-            probs = np.softmax(logits, axis=1)
+            if logits is None:
+                raise ValueError(
+                    "Either logits or probs must be provided to IsotonicRegression."
+                )
+            probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
 
         n_classes = probs.shape[1]
         self.calibrators = [
@@ -49,11 +51,12 @@ class IsotonicRegression(CalibratorBase):
         probs: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
-        if probs is None and logits is None:
-            raise ValueError("IsotonicRegression requires probabilities or logits (probs).")
-
         if probs is None:
-            probs = np.softmax(logits, axis=1)
+            if logits is None:
+                raise ValueError(
+                    "Either logits or probs must be provided to IsotonicRegression."
+                )
+            probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
 
         n_samples, n_classes = probs.shape
         calibrated_probs = np.zeros_like(probs)
