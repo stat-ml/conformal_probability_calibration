@@ -20,15 +20,13 @@ class IsotonicRegression(CalibratorBase):
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
     ) -> "IsotonicRegression":
-        if probs is None:
-            if logits is None:
-                raise ValueError(
-                    "Either logits or probs must be provided to IsotonicRegression."
-                )
-            probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
+        if logits is None:
+            raise ValueError(
+                "Logits must be provided to IsotonicRegression."
+            )
+        probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
 
         n_classes = probs.shape[1]
         self.calibrators = [
@@ -48,15 +46,13 @@ class IsotonicRegression(CalibratorBase):
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
-        if probs is None:
-            if logits is None:
-                raise ValueError(
-                    "Either logits or probs must be provided to IsotonicRegression."
-                )
-            probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
+        if logits is None:
+            raise ValueError(
+                "Logits must be provided to IsotonicRegression."
+            )
+        probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
 
         n_samples, n_classes = probs.shape
         calibrated_probs = np.zeros_like(probs)
