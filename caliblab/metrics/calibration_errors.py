@@ -1,13 +1,8 @@
 from .base import LabelBasedMetricBase
 import numpy as np
+from typing import Optional
 
-
-def _get_bin_boundaries(n_bins: int, strategy: str = "uniform") -> np.ndarray:
-    """Get bin boundaries for calibration metrics."""
-    if strategy == "uniform":
-        return np.linspace(0, 1, n_bins + 1)
-    else:
-        raise NotImplementedError(f"Strategy '{strategy}' not implemented")
+from ..utils.bins import get_bin_boundaries
 
 
 def _compute_bin_calibration_error(probs: np.ndarray, correct: np.ndarray, 
@@ -39,10 +34,17 @@ class ExpectedCalibrationError(LabelBasedMetricBase):
         self.n_bins = n_bins
         self.strategy = strategy
 
-    def _compute(self, *, probs, y_true, true_proba):
+    @property
+    def name(self) -> str:
+        return "ece"
+
+    def _compute(self, *, probs,        
+        y_true: Optional[np.ndarray],
+        true_proba: Optional[np.ndarray]
+        ):
         max_probs = np.max(probs, axis=1)
         correct = (np.argmax(probs, axis=1) == y_true).astype(float)
-        bin_boundaries = _get_bin_boundaries(self.n_bins, self.strategy)
+        bin_boundaries = get_bin_boundaries(self.n_bins, self.strategy)
         
         bin_errors = _compute_bin_calibration_error(max_probs, correct, bin_boundaries)
         return sum(weight * error for weight, error in bin_errors)
@@ -54,10 +56,17 @@ class MaximumCalibrationError(LabelBasedMetricBase):
         self.n_bins = n_bins
         self.strategy = strategy
 
-    def _compute(self, *, probs, y_true, true_proba):
+    @property
+    def name(self) -> str:
+        return "mce"
+
+    def _compute(self, *, probs,        
+        y_true: Optional[np.ndarray],
+        true_proba: Optional[np.ndarray]
+        ):
         max_probs = np.max(probs, axis=1)
         correct = (np.argmax(probs, axis=1) == y_true).astype(float)
-        bin_boundaries = _get_bin_boundaries(self.n_bins, self.strategy)
+        bin_boundaries = get_bin_boundaries(self.n_bins, self.strategy)
         
         bin_errors = _compute_bin_calibration_error(max_probs, correct, bin_boundaries)
         if not bin_errors:
@@ -71,11 +80,19 @@ class ClasswiseExpectedCalibrationError(LabelBasedMetricBase):
         self.n_bins = n_bins
         self.strategy = strategy
 
-    def _compute(self, *, probs, y_true, true_proba):
-        bin_boundaries = _get_bin_boundaries(self.n_bins, self.strategy)
+    @property
+    def name(self) -> str:
+        return "cw-ece"
+
+    def _compute(self, *, probs,        
+        y_true: Optional[np.ndarray],
+        true_proba: Optional[np.ndarray]
+        ):
+        bin_boundaries = get_bin_boundaries(self.n_bins, self.strategy)
         class_eces = []
+        n_classes = probs.shape[1]
         
-        for class_idx in range(probs.shape[1]):
+        for class_idx in range(n_classes):
             class_probs = probs[:, class_idx]
             class_correct = (y_true == class_idx).astype(float)
             
@@ -84,3 +101,10 @@ class ClasswiseExpectedCalibrationError(LabelBasedMetricBase):
             class_eces.append(class_ece)
         
         return np.mean(class_eces)
+
+
+__all__ = [
+    "ExpectedCalibrationError",
+    "MaximumCalibrationError",
+    "ClasswiseExpectedCalibrationError",
+]

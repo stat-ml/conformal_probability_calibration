@@ -1,36 +1,39 @@
-from caliblab.calibrators.temperature_scaling import TemperatureScaling
-from caliblab.metrics.calibration_errors import ExpectedCalibrationError, MaximumCalibrationError, ClasswiseExpectedCalibrationError
-from caliblab.metrics.proper_scores import BrierScore, NegativeLogLikelihood
-from caliblab.eval.runner import evaluate
-import numpy as np
+import argparse
+from pathlib import Path
 
-logits = np.random.randn(128, 5)
-y_true = np.random.randint(0, 5, size=128)
+from caliblab.eval.runner import run_evaluations
+from caliblab.utils.config import parse_config
 
 
-cal = TemperatureScaling()
-cal.fit(logits=logits, y_true=y_true)
+def main():
+    """
+    Main entry point for running evaluations from a configuration file.
+    """
+    parser = argparse.ArgumentParser(
+        description="Run model calibration evaluations from a config file."
+    )
+    parser.add_argument(
+        "config_file",
+        type=str,
+        help="Path to the JSON configuration file.",
+    )
+    args = parser.parse_args()
+    config_path = Path(args.config_file)
+    if not config_path.is_file():
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+
+    configs, calibrators, metrics, runner_settings, visualizers = parse_config(
+        config_path
+    )
+
+    run_evaluations(
+        configs=configs,
+        calibrators=calibrators,
+        metrics=metrics,
+        visualizers=visualizers,
+        **runner_settings,
+    )
 
 
-probs_cal = cal.predict_proba(logits=logits)
-
-
-metrics = [
-    ExpectedCalibrationError(n_bins=15),
-    MaximumCalibrationError(n_bins=15),
-    ClasswiseExpectedCalibrationError(n_bins=15),
-    NegativeLogLikelihood(),
-    BrierScore(),
-]
-
-
-report = evaluate(
-    probs_cal=probs_cal,
-    y_true=y_true,
-    metrics=metrics,
-)
-
-print("Calibration Metrics Results:")
-for metric_name, value in report.metrics.items():
-    print(f"  {metric_name}: {value:.6f}")
-print(f"Samples: {report.n_samples}, Classes: {report.n_classes}")
+if __name__ == "__main__":
+    main()

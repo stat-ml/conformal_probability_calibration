@@ -1,40 +1,95 @@
-from __future__ import annotations
+from typing import List, Optional, Tuple, Any, Dict, Set
+from pathlib import Path
+import torch
+from tabulate import tabulate
 
-from typing import Dict, List, Optional
-import numpy as np
-
+from ..calibrators.base import CalibratorBase
+from ..datasets.base import BaseDataset
+from ..metrics.base import MetricBase
+from ..models import ModelBase
+from ..visualizations import ConfidenceVisualizer
 from .constants import EvaluationReport
-from ..metrics.base import MetricBase, LabelBasedMetricBase, TrueProbMetricBase
-from ..utils.validation import check_probs, check_labels
+from .evaluator import ModelEvaluator
+from ..utils.device import get_device
+from .runner_utils import (
+    generate_and_save_summary,
+    print_and_collect_run_results,
+)
+
+EvaluationConfig = List[List[Any]]
 
 
-def evaluate(
+def run_evaluations(
     *,
-    probs_cal: np.ndarray,
-    y_true: Optional[np.ndarray] = None,
-    true_proba: Optional[np.ndarray] = None,
+    configs: EvaluationConfig,
+    calibrators: List[CalibratorBase],
     metrics: List[MetricBase],
-) -> EvaluationReport:
-    check_probs(probs_cal, name="probs_cal")
-    n, k = probs_cal.shape
-    if y_true is not None:
-        check_labels(y_true, n_classes=k)
-    if true_proba is not None:
-        check_probs(true_proba, name="true_proba")
+    output_dir: Path,
+    use_cache: bool,
+    force_recompute: bool,
+    visualizers: Optional[List[Any]] = None,
+    **kwargs: Any,
+) -> List[EvaluationReport]:
+    """
+    Runs a series of model evaluations based on a list of configurations.
 
-    out: Dict[str, float] = {}
-    for m in metrics:
-        if isinstance(m, LabelBasedMetricBase) and y_true is None:
-            raise ValueError(f"Metric {m.name} requires y_true but none was provided.")
-        if isinstance(m, TrueProbMetricBase) and true_proba is None:
-            raise ValueError(
-                f"Metric {m.name} requires true_proba but none was provided."
-            )
-        val = m(
-            probs=probs_cal,
-            y_true=y_true,
-            true_proba=true_proba,
+    Args:
+        configs: A list of tuples, where each tuple contains a dataset, a model,
+                 and a list of metrics to compute.
+        calibrators: A list of calibrators to apply to each model.
+        output_dir: The root directory to save experiment results.
+        use_cache: Whether to use cached predictions if available.
+        force_recompute: Whether to force re-computation of predictions, ignoring cache.
+
+    Returns:
+        A list of all EvaluationReport objects generated during the runs.
+    """
+    all_reports: List[EvaluationReport] = []
+    table_data = []
+    all_metric_names: Set[str] = set()
+
+    device = get_device(verbose=True)
+
+    for config in configs:
+        dataset, model = config
+        print("-" * 80)
+        print(f"Running evaluation for model '{model.name}' on dataset '{dataset.name}'")
+
+        # Create the run-specific directory
+        run_dir = output_dir / f"{dataset.name}_{model.name}"
+        run_dir.mkdir(parents=True, exist_ok=True)
+
+        evaluator = ModelEvaluator(
+            dataset=dataset,
+            model=model,
+            metrics=metrics,
+            calibrators=calibrators,
+            run_dir=run_dir,
+            device=device,
         )
-        out[m.name] = val
+        run_reports = evaluator.evaluate(
+            use_cache=use_cache, force_recompute=force_recompute
+        )
 
-    return EvaluationReport(metrics=out, n_samples=n, n_classes=k)
+        print_and_collect_run_results(
+            run_reports, dataset, model, table_data, all_metric_names
+        )
+
+        # --- Plotting ---
+        if visualizers:
+            for visualizer in visualizers:
+                visualizer.plot(
+                    reports=run_reports,
+                    run_dir=run_dir,
+                    dataset_name=dataset.name,
+                    model_name=model.name,
+                )
+
+        all_reports.extend(run_reports)
+
+    print("-" * 80)
+    print("All evaluations complete.")
+
+    generate_and_save_summary(table_data, all_metric_names, Path(output_dir))
+
+    return all_reports

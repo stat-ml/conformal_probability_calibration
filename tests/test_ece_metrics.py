@@ -3,8 +3,7 @@ import numpy as np
 from caliblab.metrics.calibration_errors import (
     ExpectedCalibrationError,
     MaximumCalibrationError,
-    ClasswiseExpectedCalibrationError,
-    make_one_hot
+    ClasswiseExpectedCalibrationError
 )
 
 
