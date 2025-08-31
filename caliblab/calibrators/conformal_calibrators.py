@@ -21,23 +21,12 @@ def _softmax(logits: np.ndarray, axis: int = -1) -> np.ndarray:
     return e / np.sum(e, axis=axis, keepdims=True)
 
 
-def _to_probs(logits: Optional[np.ndarray], probs: Optional[np.ndarray]) -> np.ndarray:
-    if logits is None and probs is None:
-        raise ValueError("Provide either `logits` or `probs`.")
+def _to_probs(logits: Optional[np.ndarray]) -> np.ndarray:
+    if logits is None:
+        raise ValueError("Logits must be provided.")
     if logits is not None:
         p = _softmax(np.asarray(logits, dtype=np.float64), axis=-1)
-    else:
-        p = np.asarray(probs, dtype=np.float64)
     return p
-
-
-def _to_logits(logits: Optional[np.ndarray], probs: Optional[np.ndarray]) -> np.ndarray:
-    if logits is None and probs is None:
-        raise ValueError("Provide either `logits` or `probs`.")
-    if logits is not None:
-        return np.asarray(logits, dtype=np.float64)
-    p = np.asarray(probs, dtype=np.float64)
-    return np.log(p)
 
 
 class ConformalSetHelper:
@@ -89,10 +78,9 @@ class ConformalSetHelper:
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
     ) -> "ConformalSetHelper":
-        p = _to_probs(logits, probs)
+        p = _to_probs(logits)
         y_true = np.asarray(y_true)
         if p.ndim != 2:
             raise ValueError("probs/logits must be 2D: (n, K).")
@@ -112,7 +100,7 @@ class ConformalSetHelper:
 
     @staticmethod
     def _topk_mask_by_cumsum(probs: np.ndarray, threshold: float) -> np.ndarray:
-        n, K = probs.shape
+        n, _ = probs.shape
         order = np.argsort(-probs, axis=1)
         sorted_p = np.take_along_axis(probs, order, axis=1)
         csum = np.cumsum(sorted_p, axis=1)
@@ -159,19 +147,18 @@ class ConformalMassCalibrator(CalibratorBase):
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
     ) -> "ConformalMassCalibrator":
-        self._conf.fit(logits=logits, probs=probs, y_true=y_true)
+        self._conf.fit(logits=logits, y_true=y_true)
         return self
 
     def predict_proba(
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        p = _to_probs(logits, probs)  # (n, K)
+        self.check_fitted()
+        p = _to_probs(logits)  # (n, K)
         C = self._conf.make_mask(p)  # (n, K) fixed set
 
         P_in = (p * C).sum(axis=1, keepdims=True)  # (n, 1)
@@ -189,10 +176,7 @@ class ConformalMassCalibrator(CalibratorBase):
         q = p * (C * s_in + (~C) * s_out)
 
         if np.any(q.sum(axis=-1) != 1):
-            import pdb
-
-            pdb.set_trace()
-            q /= q.sum(axis=1, keepdims=True)
+            raise ValueError("Each row of q must sum to 1.")
         return q
 
 
@@ -231,10 +215,9 @@ class ConformalTemperatureCalibrator(CalibratorBase):
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
     ) -> "ConformalTemperatureCalibrator":
-        self._conf.fit(logits=logits, probs=probs, y_true=y_true)
+        self._conf.fit(logits=logits, y_true=y_true)
         return self
 
     def _mass_in_set(
@@ -282,9 +265,9 @@ class ConformalTemperatureCalibrator(CalibratorBase):
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        L = _to_logits(logits, probs)  # (n, K)
+        self.check_fitted()
+        L = logits
         p_base = _softmax(L)  # (n, K)
         C = self._conf.make_mask(p_base)
 
