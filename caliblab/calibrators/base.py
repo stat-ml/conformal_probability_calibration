@@ -28,7 +28,6 @@ class CalibratorBase(ABC):
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
         **kwargs,
     ) -> "CalibratorBase":
@@ -39,6 +38,5 @@ class CalibratorBase(ABC):
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         raise NotImplementedError

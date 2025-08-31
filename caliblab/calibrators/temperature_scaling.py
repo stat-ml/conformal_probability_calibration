@@ -24,15 +24,11 @@ class TemperatureScaling(CalibratorBase):
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
         **kwargs,
     ) -> "TemperatureScaling":
         if logits is None:
-            if probs is None:
-                raise ValueError("Either logits or probs must be provided.")
-            # Convert probs to logits
-            logits = np.log(probs + 1e-12)
+            raise ValueError("Logits must be provided.")
 
         logits_tensor = torch.from_numpy(logits)
         labels_tensor = torch.from_numpy(y_true)
@@ -54,13 +50,10 @@ class TemperatureScaling(CalibratorBase):
         self,
         *,
         logits: Optional[np.ndarray] = None,
-        probs: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
         if logits is None:
-            if probs is None:
-                raise ValueError("Either logits or probs must be provided.")
-            logits = np.log(probs + 1e-12)
+            raise ValueError("Logits must be provided.")
 
         with torch.no_grad():
             logits_tensor = torch.from_numpy(logits)
