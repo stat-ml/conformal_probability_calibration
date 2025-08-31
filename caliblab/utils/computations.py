@@ -1,10 +1,5 @@
 import numpy as np
 
-
-def softmax(x: np.ndarray) -> np.ndarray:
-    return np.exp(x) / np.exp(x).sum(axis=1, keepdims=True)
-
-
 def make_one_hot(y_true: np.ndarray, n_classes: int) -> np.ndarray:
     """
     Converts a 1D array of integer labels into a 2D one-hot encoded array.

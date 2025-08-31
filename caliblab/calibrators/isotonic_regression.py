@@ -22,8 +22,11 @@ class IsotonicRegression(CalibratorBase):
         probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
     ) -> "IsotonicRegression":
-        if probs is None:
+        if probs is None and logits is None:
             raise ValueError("IsotonicRegression requires probabilities (probs).")
+
+        if probs is None:
+            probs = np.softmax(logits, axis=1)
 
         n_classes = probs.shape[1]
         self.calibrators = [
@@ -46,8 +49,11 @@ class IsotonicRegression(CalibratorBase):
         probs: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
+        if probs is None and logits is None:
+            raise ValueError("IsotonicRegression requires probabilities or logits (probs).")
+
         if probs is None:
-            raise ValueError("IsotonicRegression requires probabilities (probs).")
+            probs = np.softmax(logits, axis=1)
 
         n_samples, n_classes = probs.shape
         calibrated_probs = np.zeros_like(probs)

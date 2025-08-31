@@ -59,26 +59,25 @@ class ModelEvaluator:
             return data["probabilities"], data["true_labels"]
 
         print(f"Computing predictions for {cache_name}...")
-        all_probs = []
+        all_logits = []
         all_labels = []
         with torch.no_grad():
             for inputs, labels in tqdm(loader):
                 inputs = inputs.to(self.device)
-                outputs = self.model(inputs)
-                probs = torch.softmax(outputs, dim=1)
-                all_probs.append(probs.cpu().numpy())
+                logits = self.model(inputs)
+                all_logits.append(logits.cpu().numpy())
                 all_labels.append(labels.cpu().numpy())
 
-        probabilities = np.concatenate(all_probs)
+        logits = np.concatenate(all_logits)
         true_labels = np.concatenate(all_labels)
 
         if use_cache:
             np.savez(
-                pred_path, probabilities=probabilities, true_labels=true_labels
+                pred_path, logits=logits, true_labels=true_labels
             )
             print(f"Saved predictions to: {pred_path}")
 
-        return probabilities, true_labels
+        return logits, true_labels
 
     def evaluate(
         self, use_cache: bool = True, force_recompute: bool = False
@@ -93,25 +92,27 @@ class ModelEvaluator:
         Returns:
             List[EvaluationReport]: List of evaluation reports, one per calibrator.
         """
-        cal_probs, cal_labels = self._predict(
+        cal_logits, cal_labels = self._predict(
             self.cal_loader, use_cache, force_recompute, "cal_preds"
         )
-        test_probs, test_labels = self._predict(
+        test_logits, test_labels = self._predict(
             self.test_loader, use_cache, force_recompute, "test_preds"
         )
 
         n_samples = len(test_labels)
-        n_classes = test_probs.shape[1]
+        n_classes = test_logits.shape[1]
         results = []
 
         # Evaluate each calibrator
         for calibrator in [None] + self.calibrators:
             calibrator_name = calibrator.name if calibrator is not None else "none"
             print(f"\nEvaluating calibrator: {calibrator_name}")
-            final_probs = deepcopy(test_probs)
+            logits = deepcopy(test_logits)
             if calibrator is not None:
-                calibrator.fit(probs=cal_probs, y_true=cal_labels)
-                final_probs = calibrator.predict_proba(probs=final_probs)
+                calibrator.fit(all_logits=cal_logits, y_true=cal_labels)
+                final_probs = calibrator.predict_proba(probs=logits)
+            else:
+                final_probs = np.softmax(logits, dim=1)
 
             calibrated_metrics = {}
             for metric in self.metrics:
