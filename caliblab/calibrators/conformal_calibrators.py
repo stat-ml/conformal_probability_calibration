@@ -175,11 +175,17 @@ class ConformalMassCalibrator(CalibratorBase):
         C = self._conf.make_mask(p)  # (n, K) fixed set
 
         P_in = (p * C).sum(axis=1, keepdims=True)  # (n, 1)
+        P_in = np.where(
+            P_in == 0, 1, P_in
+        )  # this could be only for the empty set. In this case do nothing
         P_out = 1.0 - P_in
+        P_out = np.where(
+            P_out == 0, 1, P_out
+        )  # this could be only for the full set. In this case do nothing
         coverage = 1.0 - self.alpha
 
-        s_in = coverage / np.clip(P_in, self.eps, None)
-        s_out = (1.0 - coverage) / np.clip(P_out, self.eps, None)
+        s_in = coverage / P_in
+        s_out = (1.0 - coverage) / P_out
         q = p * (C * s_in + (~C) * s_out)
 
         if np.any(q.sum(axis=-1) != 1):
