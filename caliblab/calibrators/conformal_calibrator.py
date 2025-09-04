@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.special import softmax
+import torch
 
 from ..conformal_prediction.conformal_predictor import ConformalPredictor
 from .base import CalibratorBase
@@ -27,11 +28,17 @@ class ConformalCalibrator(CalibratorBase):
     def fit(
         self, *, probs=None, logits=None, y_true, **kwargs
     ) -> "ConformalCalibrator":
-        if probs is None and logits is None:
-            raise ValueError("Either probs or logits must be provided.")
+        if probs is None:
+            if logits is None:
+                raise ValueError(
+                    "Either logits or probs must be provided to IsotonicRegression."
+                )
+            probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
         # ConformalPredictor's fit can handle logits directly
-        input_probs = probs if probs is not None else softmax(logits, axis=1)
-        self.predictor.fit(logits=input_probs, y_true=y_true)
+
+        self.predictor.fit(
+            probs=probs, y_true=y_true, run_dir=kwargs.get("run_dir")
+        )
         self._mark_fitted()
         return self
 
@@ -44,6 +51,14 @@ class ConformalCalibrator(CalibratorBase):
             probs = softmax(logits, axis=1)
 
         quantiles = self.predictor.predict(probs)
+        
+        # Normalize quantiles to ensure the maximum is 1.0 for each sample
+        max_quantiles = quantiles.max(axis=1, keepdims=True)
+        quantiles /= (max_quantiles + 1e-9)
+        
+        print(f"Quantiles: {quantiles.shape}")
+        if not np.allclose(quantiles.max(axis=1), 1.0, atol=1e-4):
+            raise ValueError(f"Highest quantile should be 1.")
 
         # Get sort order for each row based on probabilities (descending)
         order = np.argsort(-probs, axis=1)
@@ -54,6 +69,7 @@ class ConformalCalibrator(CalibratorBase):
         # The new probability mass is the difference between consecutive sorted quantiles.
         # Prepending with 0 ensures the first element's probability is its own quantile.
         calibrated_sorted = np.diff(sorted_quantiles, axis=1, prepend=0)
+
 
         # Restore the original class order
         calibrated_probs = np.take_along_axis(

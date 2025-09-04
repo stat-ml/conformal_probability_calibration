@@ -1,7 +1,9 @@
 from typing import Optional
+from pathlib import Path
 
 import numpy as np
 from scipy.special import softmax
+import matplotlib.pyplot as plt
 
 from .inverters.discrete_quantile_inversion import (
     DiscreteQuantileInversion,
@@ -13,10 +15,6 @@ from .score_functions import (
     compute_scores_for_all_classes,
     one_minus_prob_scores,
 )
-
-
-def _to_probs(logits: np.ndarray) -> np.ndarray:
-    return softmax(logits, axis=1)
 
 
 class ConformalPredictor:
@@ -36,25 +34,41 @@ class ConformalPredictor:
     def fit(
         self,
         *,
-        logits: Optional[np.ndarray] = None,
+        probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
+        run_dir: Optional[Path] = None,
     ) -> "ConformalPredictor":
-        p = _to_probs(logits)
         y_true = np.asarray(y_true)
-        if p.ndim != 2:
+        if probs.ndim != 2:
             raise ValueError("probs/logits must be 2D: (n, K).")
-        if y_true.ndim != 1 or y_true.shape[0] != p.shape[0]:
+        if y_true.ndim != 1 or y_true.shape[0] != probs.shape[0]:
             raise ValueError("y_true must be shape (n,) and match probs/logits rows.")
 
         if self.score_type == ScoreTypes.ONE_MINUS_PROB.value:
-            scores = one_minus_prob_scores(p, y_true)
+            raise NotImplementedError("Linear interpolation is not implemented for APS scores.")
+            scores = one_minus_prob_scores(probs, y_true)
         elif self.score_type == ScoreTypes.APS.value:
-            scores = aps_scores(p, y_true)
+            scores = aps_scores(probs, y_true)
         else:
             raise ValueError(f"Invalid score type: {self.score_type}")
 
+        if run_dir:
+            self._plot_scores_distribution(scores, run_dir, self.score_type)
         self.quantile_inversion.fit(np.sort(scores))
         return self
+
+    def _plot_scores_distribution(
+        self, scores: np.ndarray, run_dir: Path, score_type: str
+    ):
+        plt.figure()
+        plt.hist(scores, bins=50, density=True)
+        plt.title(f"Distribution of {score_type} scores")
+        plt.xlabel("Score")
+        plt.ylabel("Density")
+        plot_path = run_dir / f"scores_distribution_{score_type}.png"
+        plt.savefig(plot_path)
+        plt.close()
+        print(f"Saved scores distribution plot to {plot_path}")
 
     def predict(self, base_probs: np.ndarray) -> np.ndarray:
         test_scores = compute_scores_for_all_classes(base_probs, self.score_type)

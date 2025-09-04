@@ -25,6 +25,7 @@ class TemperatureScaling(CalibratorBase):
         logits: Optional[np.ndarray] = None,
         probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
+        **kwargs,
     ) -> "TemperatureScaling":
         if logits is None:
             if probs is None:

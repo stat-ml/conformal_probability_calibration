@@ -2,7 +2,12 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
 
-from ..calibrators import CALIBRATORS, CalibratorBase
+from ..calibrators import (
+    CALIBRATORS,
+    CalibratorBase,
+    ConformalCalibrator,
+    get_calibrator,
+)
 from ..datasets import BaseDataset, dataset_getter
 from ..eval.runner import EvaluationConfig
 from ..metrics import MetricBase, get_metric
@@ -52,22 +57,15 @@ def parse_config(
     # --- Parse calibrator configurations ---
     calibrators: List[CalibratorBase] = []
     for calibrator_config in config.get("calibrators", []):
-        name = None
         if isinstance(calibrator_config, str):
-            name = calibrator_config
+            calibrators.append(get_calibrator(calibrator_config))
         elif isinstance(calibrator_config, dict):
             name = calibrator_config.get("name")
             if name == "conformal_calibrator":
                 params = calibrator_config.get("params", {})
-                score_type = params.get("score_type")
-                quantile_method = params.get("quantile_method")
-                if score_type and quantile_method:
-                    name = f"conformal_{score_type}_{quantile_method}"
-
-        if name and name in CALIBRATORS:
-            calibrators.append(CALIBRATORS[name])
-        else:
-            raise ValueError(f"Unknown or malformed calibrator config: {calibrator_config}")
+                calibrators.append(ConformalCalibrator(**params))
+            elif name:
+                calibrators.append(get_calibrator(name))
 
     # --- Parse metric configurations ---
     metrics: List[MetricBase] = []

@@ -26,13 +26,26 @@ class DiscreteQuantileInversion(CDF_inverter_base):
         return self
 
     def _get_quantiles_nearest(self, test_scores: np.ndarray) -> np.ndarray:
+        """
+        Computes the empirical CDF of the calibration scores for each test score.
+        This is the proportion of calibration scores less than or equal to the test score.
+        """
         n = self.calib_scores_.shape[0]
-        # Find the number of calibration scores less than or equal to the test scores
+        if n == 0:
+            return np.zeros_like(test_scores)
+
+        # Find the number of calibration scores less than or equal to the test scores.
         num_le = np.searchsorted(self.calib_scores_, test_scores, side="right")
+
+        # The quantile is the proportion of scores <= test_score.
         quantiles = num_le / n
+
         return quantiles
 
     def _get_quantiles_linear(self, test_scores: np.ndarray) -> np.ndarray:
+        raise NotImplementedError(
+            "Linear interpolation is not implemented for APS scores."
+        )
         n = self.calib_scores_.shape[0]
 
         # Find indices for interpolation
@@ -57,7 +70,10 @@ class DiscreteQuantileInversion(CDF_inverter_base):
         quantiles[test_scores < self.calib_scores_[0]] = 0.0
         quantiles[test_scores > self.calib_scores_[-1]] = 1.0
 
-        return np.clip(quantiles, 0.0, 1.0)
+        if self.score_type == ScoreTypes.ONE_MINUS_PROB:
+            quantiles = 1 - quantiles
+
+        return quantiles
 
     def predict(self, test_scores: np.ndarray) -> np.ndarray:
         if self.calib_scores_ is None:

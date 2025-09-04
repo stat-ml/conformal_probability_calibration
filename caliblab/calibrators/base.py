@@ -38,6 +38,7 @@ class CalibratorBase(ABC):
         logits: Optional[np.ndarray] = None,
         probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
+        **kwargs,
     ) -> "CalibratorBase":
         raise NotImplementedError
 

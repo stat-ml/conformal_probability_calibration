@@ -22,6 +22,7 @@ class IsotonicRegression(CalibratorBase):
         logits: Optional[np.ndarray] = None,
         probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
+        **kwargs,
     ) -> "IsotonicRegression":
         if probs is None:
             if logits is None:

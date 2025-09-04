@@ -3,6 +3,8 @@ from typing import Set
 
 import numpy as np
 
+from caliblab.utils.computations import get_cumulative_mass_scores
+
 
 class ScoreTypes(str, Enum):
     ONE_MINUS_PROB = "one_minus_prob"
@@ -14,6 +16,8 @@ class ScoreTypes(str, Enum):
 
 
 def one_minus_prob_scores(probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
+    raise NotImplementedError("Linear interpolation is not implemented for APS scores.")
+    
     n, _ = probs.shape
     cal_smx = probs
     cal_labels = y_true
@@ -22,15 +26,12 @@ def one_minus_prob_scores(probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
 
 
 def aps_scores(probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
-    n, _ = probs.shape
-    cal_smx = probs
-    cal_labels = y_true
-    cal_pi = cal_smx.argsort(1)[:, ::-1]
-    cal_srt = np.take_along_axis(cal_smx, cal_pi, axis=1).cumsum(axis=1)
-    cal_scores = np.take_along_axis(cal_srt, cal_pi.argsort(axis=1), axis=1)[
-        range(n), cal_labels
-    ]
-    return cal_scores
+    """Computes the Adaptive Prediction Set (APS) scores.
+
+    The APS score for the true class is the cumulative sum of probabilities
+    of classes with higher or equal probability, including the true class itself.
+    """
+    return get_cumulative_mass_scores(probs, y_true)
 
 
 def compute_scores_for_all_classes(
@@ -39,9 +40,22 @@ def compute_scores_for_all_classes(
     if score_type == ScoreTypes.ONE_MINUS_PROB.value:
         return 1 - base_probs
     elif score_type == ScoreTypes.APS.value:
-        pi = base_probs.argsort(1)[:, ::-1]
-        srt = np.take_along_axis(base_probs, pi, axis=1).cumsum(axis=1)
-        scores = np.take_along_axis(srt, pi.argsort(axis=1), axis=1)
+        # Sort probabilities in descending order
+        sorted_indices = np.argsort(-base_probs, axis=1)
+        sorted_probs = np.take_along_axis(base_probs, sorted_indices, axis=1)
+
+        # Calculate cumulative probability sums
+        cum_probs = np.cumsum(sorted_probs, axis=1)
+
+        # Get the ranks to revert the sorting
+        ranks = np.argsort(sorted_indices, axis=1)
+
+        # Map cumulative probabilities back to original class order
+        scores = np.take_along_axis(cum_probs, ranks, axis=1)
+
+        if not np.allclose(scores.max(axis=1), 1.0, atol=1e-4):
+            raise ValueError(f"Highest score should be 1.")
+
         return scores
     else:
         raise ValueError(f"Invalid score type: {score_type}")

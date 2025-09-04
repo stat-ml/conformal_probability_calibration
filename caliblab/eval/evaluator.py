@@ -110,7 +110,9 @@ class ModelEvaluator:
             print(f"\nEvaluating calibrator: {calibrator_name}")
             logits = deepcopy(test_logits)
             if calibrator is not None:
-                calibrator.fit(logits=cal_logits, y_true=cal_labels)
+                calibrator.fit(
+                    logits=cal_logits, y_true=cal_labels, run_dir=self.run_dir
+                )
                 final_probs = calibrator.predict_proba(logits=logits)
             else:
                 final_probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()

@@ -24,10 +24,18 @@ CALIBRATORS: Dict[str, CalibratorBase] = {
     ),
 }
 
+
+def get_calibrator(name: str) -> CalibratorBase:
+    if name not in CALIBRATORS:
+        raise ValueError(f"Unknown calibrator: {name}")
+    return CALIBRATORS[name]
+
+
 __all__ = [
     "CalibratorBase",
     "TemperatureScaling",
     "IsotonicRegression",
     "ConformalCalibrator",
     "CALIBRATORS",
+    "get_calibrator",
 ]
