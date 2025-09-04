@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from ..utils.computations import softmax
 
 from .base import CalibratorBase
 
@@ -64,4 +65,4 @@ class TemperatureScaling(CalibratorBase):
         with torch.no_grad():
             logits_tensor = torch.from_numpy(logits)
             scaled_logits = logits_tensor / self.temperature
-            return torch.softmax(scaled_logits, dim=1).numpy()
+            return softmax(scaled_logits.numpy())

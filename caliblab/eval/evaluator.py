@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-import torch
+from ..utils.computations import softmax
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -111,11 +111,11 @@ class ModelEvaluator:
             logits = deepcopy(test_logits)
             if calibrator is not None:
                 calibrator.fit(
-                    logits=cal_logits, y_true=cal_labels, run_dir=self.run_dir
+                    logits=test_logits, y_true=test_labels, run_dir=self.run_dir
                 )
                 final_probs = calibrator.predict_proba(logits=logits)
             else:
-                final_probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
+                final_probs = softmax(logits)
 
             calibrated_metrics = {}
             for metric in self.metrics:

@@ -2,7 +2,6 @@ from typing import Optional
 from pathlib import Path
 
 import numpy as np
-from scipy.special import softmax
 import matplotlib.pyplot as plt
 
 from .inverters.discrete_quantile_inversion import (
@@ -12,8 +11,7 @@ from .inverters.discrete_quantile_inversion import (
 from .score_functions import (
     ScoreTypes,
     aps_scores,
-    compute_scores_for_all_classes,
-    one_minus_prob_scores,
+    compute_aps_scores_for_all_classes,
 )
 
 
@@ -43,11 +41,9 @@ class ConformalPredictor:
             raise ValueError("probs/logits must be 2D: (n, K).")
         if y_true.ndim != 1 or y_true.shape[0] != probs.shape[0]:
             raise ValueError("y_true must be shape (n,) and match probs/logits rows.")
-
-        if self.score_type == ScoreTypes.ONE_MINUS_PROB.value:
-            raise NotImplementedError("Linear interpolation is not implemented for APS scores.")
-            scores = one_minus_prob_scores(probs, y_true)
-        elif self.score_type == ScoreTypes.APS.value:
+        
+        
+        if self.score_type == ScoreTypes.APS.value:
             scores = aps_scores(probs, y_true)
         else:
             raise ValueError(f"Invalid score type: {self.score_type}")
@@ -71,6 +67,8 @@ class ConformalPredictor:
         print(f"Saved scores distribution plot to {plot_path}")
 
     def predict(self, base_probs: np.ndarray) -> np.ndarray:
-        test_scores = compute_scores_for_all_classes(base_probs, self.score_type)
+        test_scores = compute_aps_scores_for_all_classes(base_probs, self.score_type)
+        if not np.allclose(test_scores.max(axis=1), 1.0, atol=1e-8, rtol=0):
+            raise ValueError(f"Highest score should be 1.")
         quantiles = self.quantile_inversion.predict(test_scores)
         return quantiles

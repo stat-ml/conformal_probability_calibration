@@ -1,6 +1,5 @@
 import numpy as np
-from scipy.special import softmax
-import torch
+from ..utils.computations import softmax
 
 from ..conformal_prediction.conformal_predictor import ConformalPredictor
 from .base import CalibratorBase
@@ -33,7 +32,7 @@ class ConformalCalibrator(CalibratorBase):
                 raise ValueError(
                     "Either logits or probs must be provided to IsotonicRegression."
                 )
-            probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
+            probs = softmax(logits)
         # ConformalPredictor's fit can handle logits directly
 
         self.predictor.fit(
@@ -51,13 +50,8 @@ class ConformalCalibrator(CalibratorBase):
             probs = softmax(logits, axis=1)
 
         quantiles = self.predictor.predict(probs)
-        
-        # Normalize quantiles to ensure the maximum is 1.0 for each sample
-        max_quantiles = quantiles.max(axis=1, keepdims=True)
-        quantiles /= (max_quantiles + 1e-9)
-        
-        print(f"Quantiles: {quantiles.shape}")
-        if not np.allclose(quantiles.max(axis=1), 1.0, atol=1e-4):
+
+        if not np.allclose(quantiles.max(axis=1).min(), 1.0, atol=1e-4):
             raise ValueError(f"Highest quantile should be 1.")
 
         # Get sort order for each row based on probabilities (descending)

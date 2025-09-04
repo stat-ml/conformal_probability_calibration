@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-import torch
+from ..utils.computations import softmax
 from tqdm import tqdm
 
 from caliblab.datasets import dataset_getter
@@ -29,7 +29,7 @@ def _get_predictions(model, loader, device):
         for inputs, labels in tqdm(loader, desc="Evaluating"):
             inputs = inputs.to(device)
             outputs = model(inputs)
-            probs = torch.softmax(outputs, dim=1)
+            probs = softmax(outputs)
             all_probs.append(probs.cpu().numpy())
             all_labels.append(labels.cpu().numpy())
     return np.concatenate(all_probs), np.concatenate(all_labels)

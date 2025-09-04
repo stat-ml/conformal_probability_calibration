@@ -1,4 +1,5 @@
 from typing import Optional
+from ..utils.computations import softmax
 
 import numpy as np
 import torch
@@ -29,7 +30,7 @@ class IsotonicRegression(CalibratorBase):
                 raise ValueError(
                     "Either logits or probs must be provided to IsotonicRegression."
                 )
-            probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
+            probs = softmax(logits)
 
         n_classes = probs.shape[1]
         self.calibrators = [
@@ -57,7 +58,7 @@ class IsotonicRegression(CalibratorBase):
                 raise ValueError(
                     "Either logits or probs must be provided to IsotonicRegression."
                 )
-            probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
+            probs = softmax(logits)
 
         n_samples, n_classes = probs.shape
         calibrated_probs = np.zeros_like(probs)

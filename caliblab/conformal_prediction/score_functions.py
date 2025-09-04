@@ -14,17 +14,6 @@ class ScoreTypes(str, Enum):
     def all_types(cls) -> Set[str]:
         return {item.value for item in cls}
 
-
-def one_minus_prob_scores(probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
-    raise NotImplementedError("Linear interpolation is not implemented for APS scores.")
-    
-    n, _ = probs.shape
-    cal_smx = probs
-    cal_labels = y_true
-    cal_scores = 1 - cal_smx[np.arange(n), cal_labels]
-    return cal_scores
-
-
 def aps_scores(probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
     """Computes the Adaptive Prediction Set (APS) scores.
 
@@ -34,7 +23,7 @@ def aps_scores(probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
     return get_cumulative_mass_scores(probs, y_true)
 
 
-def compute_scores_for_all_classes(
+def compute_aps_scores_for_all_classes(
     base_probs: np.ndarray, score_type: str
 ) -> np.ndarray:
     if score_type == ScoreTypes.ONE_MINUS_PROB.value:
@@ -52,8 +41,10 @@ def compute_scores_for_all_classes(
 
         # Map cumulative probabilities back to original class order
         scores = np.take_along_axis(cum_probs, ranks, axis=1)
+        
+        scores = scores / scores.max(axis=1, keepdims=True)
 
-        if not np.allclose(scores.max(axis=1), 1.0, atol=1e-4):
+        if not np.allclose(scores.max(axis=1), 1.0, atol=1e-10, rtol=0):
             raise ValueError(f"Highest score should be 1.")
 
         return scores
