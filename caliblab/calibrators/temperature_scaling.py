@@ -5,10 +5,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from .base import CalibratorBase
+from .base import BaseCalibrator
 
 
-class TemperatureScaling(CalibratorBase):
+class TemperatureScaling(BaseCalibrator):
     def __init__(self, temperature: float = 1.0, lr: float = 0.01, max_iter: int = 50):
         super().__init__()
         self.temperature = nn.Parameter(torch.tensor(temperature))

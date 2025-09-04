@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 
 
-class CalibratorBase(ABC):
+class BaseCalibrator(ABC):
     """A base class for calibrators."""
 
     def __init__(self):
@@ -15,6 +15,14 @@ class CalibratorBase(ABC):
     def name(self) -> str:
         """The name of the calibrator."""
         raise NotImplementedError
+
+    def get_score(self) -> Optional[str]:
+        """The score type used by the calibrator, if applicable."""
+        return None
+
+    def get_quantile_method(self) -> Optional[str]:
+        """The quantile method used by the calibrator, if applicable."""
+        return None
 
     def _mark_fitted(self) -> None:
         self.is_fitted_ = True
@@ -30,7 +38,7 @@ class CalibratorBase(ABC):
         logits: Optional[np.ndarray] = None,
         probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
-    ) -> "CalibratorBase":
+    ) -> "BaseCalibrator":
         raise NotImplementedError
 
     @abstractmethod

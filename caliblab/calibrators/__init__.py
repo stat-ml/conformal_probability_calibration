@@ -1,26 +1,33 @@
-from typing import Any
+from __future__ import annotations
 
-from .base import CalibratorBase
+from typing import Dict, Type
+
+from .base import BaseCalibrator
+from .conformal_calibrator import ConformalCalibrator
 from .isotonic_regression import IsotonicRegression
 from .temperature_scaling import TemperatureScaling
 
-
-def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
-    """
-    Factory function to get a calibrator instance by name.
-    """
-    name = name.lower().strip()
-    if name == "temperature_scaling":
-        return TemperatureScaling(**kwargs)
-    elif name == "isotonic_regression":
-        return IsotonicRegression(**kwargs)
-    else:
-        raise ValueError(f"Unknown calibrator: {name}")
-
+CALIBRATORS: Dict[str, BaseCalibrator] = {
+    "temperature_scaling": TemperatureScaling(),
+    "isotonic_regression": IsotonicRegression(),
+    "conformal_aps_nearest": ConformalCalibrator(
+        score_type="aps", quantile_method="nearest"
+    ),
+    "conformal_aps_linear": ConformalCalibrator(
+        score_type="aps", quantile_method="linear"
+    ),
+    "conformal_one_minus_prob_nearest": ConformalCalibrator(
+        score_type="one_minus_prob", quantile_method="nearest"
+    ),
+    "conformal_one_minus_prob_linear": ConformalCalibrator(
+        score_type="one_minus_prob", quantile_method="linear"
+    ),
+}
 
 __all__ = [
-    "CalibratorBase",
-    "IsotonicRegression",
+    "BaseCalibrator",
     "TemperatureScaling",
-    "get_calibrator",
+    "IsotonicRegression",
+    "ConformalCalibrator",
+    "CALIBRATORS",
 ]

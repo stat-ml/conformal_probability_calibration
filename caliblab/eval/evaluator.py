@@ -9,10 +9,10 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from ..calibrators.base import CalibratorBase
+from ..calibrators.base import BaseCalibrator
 from ..datasets.base import BaseDataset
-from ..metrics import MetricBase
-from ..models import ModelBase
+from ..metrics.base import MetricBase
+from ..models.base import ModelBase
 from .constants import EvaluationReport
 
 
@@ -29,7 +29,7 @@ class ModelEvaluator:
         model: ModelBase,
         metrics: List[MetricBase],
         run_dir: Path,
-        calibrators: Optional[List[CalibratorBase]] = None,
+        calibrators: Optional[List[BaseCalibrator]] = None,
         device: Optional[torch.device] = None,
     ):
         self.dataset = dataset
@@ -55,7 +55,9 @@ class ModelEvaluator:
         if use_cache and pred_path.exists() and not force_recompute:
             print(f"Using cached predictions at: {pred_path}")
             data = np.load(pred_path)
-            return data["probabilities"], data["true_labels"]
+            if "probabilities" in data:
+                return data["probabilities"], data["true_labels"]
+            return data["logits"], data["true_labels"]
 
         print(f"Computing predictions for {cache_name}...")
         all_logits = []
