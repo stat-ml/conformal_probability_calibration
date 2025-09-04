@@ -16,14 +16,6 @@ class CalibratorBase(ABC):
         """The name of the calibrator."""
         raise NotImplementedError
 
-    def get_score(self) -> Optional[str]:
-        """The score type used by the calibrator, if applicable."""
-        return None
-
-    def get_quantile_method(self) -> Optional[str]:
-        """The quantile method used by the calibrator, if applicable."""
-        return None
-
     def _mark_fitted(self) -> None:
         self.is_fitted_ = True
 
