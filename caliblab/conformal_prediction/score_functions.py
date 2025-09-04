@@ -41,7 +41,8 @@ def compute_aps_scores_for_all_classes(
 
         # Map cumulative probabilities back to original class order
         scores = np.take_along_axis(cum_probs, ranks, axis=1)
-        
+
+        ### FATAL: This line is wrong. NORMALISATION.
         scores = scores / scores.max(axis=1, keepdims=True)
 
         if not np.allclose(scores.max(axis=1), 1.0, atol=1e-10, rtol=0):

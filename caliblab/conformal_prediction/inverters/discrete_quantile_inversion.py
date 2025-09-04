@@ -31,7 +31,7 @@ class DiscreteQuantileInversion(CDF_inverter_base):
         n = self.calib_scores_.shape[0]
         if n == 0:
             return np.zeros_like(test_scores)
-        
+
         # Find the number of calibration scores less than or equal to the test scores.
         num_le = np.searchsorted(self.calib_scores_, test_scores, side="right")
 

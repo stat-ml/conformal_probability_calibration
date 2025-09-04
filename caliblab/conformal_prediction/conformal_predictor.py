@@ -41,8 +41,7 @@ class ConformalPredictor:
             raise ValueError("probs/logits must be 2D: (n, K).")
         if y_true.ndim != 1 or y_true.shape[0] != probs.shape[0]:
             raise ValueError("y_true must be shape (n,) and match probs/logits rows.")
-        
-        
+
         if self.score_type == ScoreTypes.APS.value:
             scores = aps_scores(probs, y_true)
         else:
