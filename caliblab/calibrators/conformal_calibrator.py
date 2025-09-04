@@ -2,10 +2,10 @@ import numpy as np
 from scipy.special import softmax
 
 from ..conformal_prediction.conformal_predictor import ConformalPredictor
-from .base import BaseCalibrator
+from .base import CalibratorBase
 
 
-class ConformalCalibrator(BaseCalibrator):
+class ConformalCalibrator(CalibratorBase):
     def __init__(self, score_type: str, quantile_method: str):
         super().__init__()
         self.score_type = score_type

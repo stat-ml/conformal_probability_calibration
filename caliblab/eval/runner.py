@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 from tabulate import tabulate
 
-from ..calibrators.base import BaseCalibrator
+from ..calibrators.base import CalibratorBase
 from ..datasets.base import BaseDataset
 from ..metrics.base import MetricBase
 from ..models import ModelBase
@@ -22,7 +22,7 @@ EvaluationConfig = List[List[Any]]
 def run_evaluations(
     *,
     configs: EvaluationConfig,
-    calibrators: List[BaseCalibrator],
+    calibrators: List[CalibratorBase],
     metrics: List[MetricBase],
     output_dir: Path,
     use_cache: bool,

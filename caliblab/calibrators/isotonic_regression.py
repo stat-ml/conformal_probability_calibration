@@ -4,10 +4,10 @@ import numpy as np
 import torch
 from sklearn.isotonic import IsotonicRegression as SklearnIsotonicRegression
 
-from .base import BaseCalibrator
+from .base import CalibratorBase
 
 
-class IsotonicRegression(BaseCalibrator):
+class IsotonicRegression(CalibratorBase):
     def __init__(self):
         super().__init__()
         self.calibrators = None

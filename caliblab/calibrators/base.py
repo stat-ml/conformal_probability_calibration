@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 
 
-class BaseCalibrator(ABC):
+class CalibratorBase(ABC):
     """A base class for calibrators."""
 
     def __init__(self):
@@ -38,7 +38,7 @@ class BaseCalibrator(ABC):
         logits: Optional[np.ndarray] = None,
         probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
-    ) -> "BaseCalibrator":
+    ) -> "CalibratorBase":
         raise NotImplementedError
 
     @abstractmethod

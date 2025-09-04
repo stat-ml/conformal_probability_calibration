@@ -9,7 +9,7 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from ..calibrators.base import BaseCalibrator
+from ..calibrators.base import CalibratorBase
 from ..datasets.base import BaseDataset
 from ..metrics.base import MetricBase
 from ..models.base import ModelBase
@@ -29,7 +29,7 @@ class ModelEvaluator:
         model: ModelBase,
         metrics: List[MetricBase],
         run_dir: Path,
-        calibrators: Optional[List[BaseCalibrator]] = None,
+        calibrators: Optional[List[CalibratorBase]] = None,
         device: Optional[torch.device] = None,
     ):
         self.dataset = dataset

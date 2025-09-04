@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
 
-from ..calibrators import CALIBRATORS, BaseCalibrator
+from ..calibrators import CALIBRATORS, CalibratorBase
 from ..datasets import BaseDataset, dataset_getter
 from ..eval.runner import EvaluationConfig
 from ..metrics import MetricBase, get_metric
@@ -18,7 +18,7 @@ def parse_config(
     config_path: Path,
 ) -> Tuple[
     List[EvaluationConfig],
-    List[BaseCalibrator],
+    List[CalibratorBase],
     List[MetricBase],
     Dict[str, Any],
     List[Any],
@@ -50,7 +50,7 @@ def parse_config(
         visualizers.append(CumulativeMassVisualizer(n_bins=n_bins))
 
     # --- Parse calibrator configurations ---
-    calibrators: List[BaseCalibrator] = []
+    calibrators: List[CalibratorBase] = []
     for calibrator_config in config.get("calibrators", []):
         name = None
         if isinstance(calibrator_config, str):

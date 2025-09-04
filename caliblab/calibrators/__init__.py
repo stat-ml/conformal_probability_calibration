@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Dict, Type
 
-from .base import BaseCalibrator
+from .base import CalibratorBase
 from .conformal_calibrator import ConformalCalibrator
 from .isotonic_regression import IsotonicRegression
 from .temperature_scaling import TemperatureScaling
 
-CALIBRATORS: Dict[str, BaseCalibrator] = {
+CALIBRATORS: Dict[str, CalibratorBase] = {
     "temperature_scaling": TemperatureScaling(),
     "isotonic_regression": IsotonicRegression(),
     "conformal_aps_nearest": ConformalCalibrator(
@@ -25,7 +25,7 @@ CALIBRATORS: Dict[str, BaseCalibrator] = {
 }
 
 __all__ = [
-    "BaseCalibrator",
+    "CalibratorBase",
     "TemperatureScaling",
     "IsotonicRegression",
     "ConformalCalibrator",
