@@ -3,9 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
 
 from ..calibrators import (
-    CALIBRATORS,
     CalibratorBase,
-    ConformalCalibrator,
     get_calibrator,
 )
 from ..datasets import BaseDataset, dataset_getter
@@ -61,11 +59,11 @@ def parse_config(
             calibrators.append(get_calibrator(calibrator_config))
         elif isinstance(calibrator_config, dict):
             name = calibrator_config.get("name")
-            if name == "conformal_calibrator":
-                params = calibrator_config.get("params", {})
-                calibrators.append(ConformalCalibrator(**params))
-            elif name:
-                calibrators.append(get_calibrator(name))
+            params = calibrator_config.get("params", {})
+            calibrators.append(get_calibrator(name, **params))
+        else:
+            raise ValueError(f"Unknown calibrator config: {calibrator_config}")
+
 
     # --- Parse metric configurations ---
     metrics: List[MetricBase] = []
