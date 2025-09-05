@@ -21,6 +21,7 @@ class IsotonicRegression(CalibratorBase):
         self,
         *,
         logits: Optional[np.ndarray] = None,
+        probs: Optional[np.ndarray] = None,
         y_true: np.ndarray,
         **kwargs,
     ) -> "IsotonicRegression":
@@ -50,6 +51,7 @@ class IsotonicRegression(CalibratorBase):
         self,
         *,
         logits: Optional[np.ndarray] = None,
+        probs: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
 
