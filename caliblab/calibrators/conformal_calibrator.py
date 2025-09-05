@@ -64,6 +64,9 @@ class ConformalCalibrator(CalibratorBase):
         # Prepending with 0 ensures the first element's probability is its own quantile.
         calibrated_sorted = np.diff(sorted_quantiles, axis=1, prepend=0)
 
+        if not np.allclose(calibrated_sorted[:, 0], quantiles.min(axis=1), atol=1e-4):
+            raise ValueError(f"Lowest calibrated_sorted should be equal to lowest quantile.")
+
         # Restore the original class order
         calibrated_probs = np.take_along_axis(
             calibrated_sorted, order.argsort(axis=1), axis=1

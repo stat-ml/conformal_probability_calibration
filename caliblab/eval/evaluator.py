@@ -55,8 +55,6 @@ class ModelEvaluator:
         if use_cache and pred_path.exists() and not force_recompute:
             print(f"Using cached predictions at: {pred_path}")
             data = np.load(pred_path)
-            if "probabilities" in data:
-                return data["probabilities"], data["true_labels"]
             return data["logits"], data["true_labels"]
 
         print(f"Computing predictions for {cache_name}...")
