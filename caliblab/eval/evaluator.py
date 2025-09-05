@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+import torch
 
 import numpy as np
 from ..utils.computations import softmax

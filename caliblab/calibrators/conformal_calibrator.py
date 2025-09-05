@@ -36,7 +36,7 @@ class ConformalCalibrator(CalibratorBase):
         # ConformalPredictor's fit can handle logits directly
 
         self.predictor.fit(
-            probs=probs, y_true=y_true, run_dir=kwargs.get("run_dir")
+            logits=logits, y_true=y_true, run_dir=kwargs.get("run_dir")
         )
         self._mark_fitted()
         return self

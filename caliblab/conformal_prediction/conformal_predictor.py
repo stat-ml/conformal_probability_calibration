@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
+from ..utils.computations import softmax
 
 from .inverters.discrete_quantile_inversion import (
     DiscreteQuantileInversion,
@@ -32,18 +33,18 @@ class ConformalPredictor:
     def fit(
         self,
         *,
-        probs: Optional[np.ndarray] = None,
+        logits: Optional[np.ndarray] = None,
         y_true: np.ndarray,
         run_dir: Optional[Path] = None,
     ) -> "ConformalPredictor":
         y_true = np.asarray(y_true)
-        if probs.ndim != 2:
+        if logits.ndim != 2:
             raise ValueError("probs/logits must be 2D: (n, K).")
-        if y_true.ndim != 1 or y_true.shape[0] != probs.shape[0]:
+        if y_true.ndim != 1 or y_true.shape[0] != logits.shape[0]:
             raise ValueError("y_true must be shape (n,) and match probs/logits rows.")
 
         if self.score_type == ScoreTypes.APS.value:
-            scores = aps_scores(probs, y_true)
+            scores = aps_scores(softmax(logits), y_true)
         else:
             raise ValueError(f"Invalid score type: {self.score_type}")
 
