@@ -15,10 +15,8 @@
         }
     },
     "calibrators": [
-        "temperature_scaling",
-        "isotonic_regression",
         {"name": "conformal_calibrator", 
-            "params": { "score_type": "aps", "quantile_method": "nearest" }
+            "params": { "score_type": "aps", "quantile_method": "nearest" , "inversion_type": "normalizing_flow"}
         }
     ],
     "metrics": [
