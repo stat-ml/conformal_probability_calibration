@@ -20,6 +20,8 @@
     ],
     "metrics": [
         "accuracy",
+        "roc_auc",
+        "pr_auc",
         { "name": "ece", "params": { "n_bins": 20 } },
         { "name": "mce", "params": { "n_bins": 20 } },
         { "name": "cw-ece", "params": { "n_bins": 20 } },
@@ -34,33 +36,6 @@
                 "repo": "chenyaofo/pytorch-cifar-models",
                 "name": "cifar10_resnet56",
                 "alias": "ResNet56"
-            }
-        },
-        {
-            "dataset": { "name": "cifar10" },
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar10_resnet20",
-                "alias": "ResNet20"
-            }
-        },
-        {
-            "dataset": { "name": "cifar100" },
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar100_resnet56",
-                "alias": "ResNet56"
-            }
-        },
-        {
-            "dataset": { "name": "cifar100" },
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar100_resnet20",
-                "alias": "ResNet20"
             }
         },
         {

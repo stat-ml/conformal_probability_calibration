@@ -13,7 +13,7 @@ from .calibration_errors import (
     ExpectedCalibrationError,
     MaximumCalibrationError,
 )
-from .classification import Accuracy
+from .classification import Accuracy, RocAuc, PrAuc
 from .proper_scores import BrierScore, NegativeLogLikelihood
 
 
@@ -24,6 +24,10 @@ def get_metric(name: str, **kwargs: Any) -> MetricBase:
     name = name.lower().strip()
     if name == "accuracy":
         return Accuracy()
+    if name == "roc_auc":
+        return RocAuc()
+    if name == "pr_auc":
+        return PrAuc()
     elif name == "ece":
         return ExpectedCalibrationError(**kwargs)
     elif name == "mce":
@@ -48,5 +52,7 @@ __all__ = [
     "BrierScore",
     "NegativeLogLikelihood",
     "Accuracy",
+    "RocAuc",
+    "PrAuc",
     "get_metric",
 ]
