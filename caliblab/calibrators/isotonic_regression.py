@@ -20,12 +20,11 @@ class IsotonicRegression(CalibratorBase):
     def fit(
         self,
         *,
-        logits: Optional[np.ndarray] = None,
         probs: Optional[np.ndarray] = None,
+        logits: Optional[np.ndarray] = None,
         y_true: np.ndarray,
         **kwargs,
     ) -> "IsotonicRegression":
-
         if probs is None:
             if logits is None:
                 raise ValueError(
@@ -50,11 +49,10 @@ class IsotonicRegression(CalibratorBase):
     def predict_proba(
         self,
         *,
-        logits: Optional[np.ndarray] = None,
         probs: Optional[np.ndarray] = None,
+        logits: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
-
         if probs is None:
             if logits is None:
                 raise ValueError(
