@@ -6,6 +6,9 @@ from typing import Set
 from enum import Enum
 import pdb
 
+from ..utils.computations import softmax
+
+
 # @dataclass(frozen=True, slots=True)
 class ScoreTypes(str, Enum):
     ONE_MINUS_PROB: str = "one_minus_prob"
@@ -16,17 +19,11 @@ class ScoreTypes(str, Enum):
         return {cls.ONE_MINUS_PROB, cls.APS}
 
 
-def _softmax(logits: np.ndarray, axis: int = -1) -> np.ndarray:
-    z = logits - np.max(logits, axis=axis, keepdims=True)
-    e = np.exp(z)
-    return e / np.sum(e, axis=axis, keepdims=True)
-
-
 def _to_probs(logits: Optional[np.ndarray]) -> np.ndarray:
     if logits is None:
         raise ValueError("Logits must be provided.")
     if logits is not None:
-        p = _softmax(np.asarray(logits, dtype=np.float64), axis=-1)
+        p = softmax(np.asarray(logits, dtype=np.float64), axis=-1)
     return p
 
 
@@ -135,7 +132,7 @@ class ConformalMassCalibrator(CalibratorBase):
     base probabilities at prediction time.
     """
 
-    def __init__(self, score_type: str = ScoreTypes.APS, alpha: float = 0.5):
+    def __init__(self, score_type: str, alpha: float):
         super().__init__()
         self.alpha = float(alpha)
         self._conf = ConformalSetHelper(score_type=score_type, alpha=alpha)
@@ -230,7 +227,7 @@ class ConformalTemperatureCalibrator(CalibratorBase):
     def _mass_in_set(
         self, logit_row: np.ndarray, mask_row: np.ndarray, tau: float
     ) -> float:
-        probs_tau = _softmax(logit_row / tau)
+        probs_tau = softmax(logit_row / tau)
         return float((probs_tau * mask_row).sum())
 
     def _bisection_tau(
@@ -275,7 +272,7 @@ class ConformalTemperatureCalibrator(CalibratorBase):
     ) -> np.ndarray:
         self.check_fitted()
         L = logits
-        p_base = _softmax(L)  # (n, K)
+        p_base = softmax(L)  # (n, K)
         C = self._conf.make_mask(p_base)
 
         n, _ = L.shape
@@ -284,12 +281,12 @@ class ConformalTemperatureCalibrator(CalibratorBase):
 
         for i in range(n):
             tau_i = self._bisection_tau(L[i], C[i], target)
-            q[i] = _softmax(L[i] / tau_i)
+            q[i] = softmax(L[i] / tau_i)
 
             # safety: ensure no shortfall due to floating error
             mass_i = float((q[i] * C[i]).sum())
             if mass_i + 1e-12 < target:
                 tau_i = max(self.tau_min, 0.999 * tau_i)
-                q[i] = _softmax(L[i] / tau_i)
+                q[i] = softmax(L[i] / tau_i)
 
         return q
