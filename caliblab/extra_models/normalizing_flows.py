@@ -16,7 +16,7 @@ class ConformalFlowCalibrator(BaseEstimator, RegressorMixin):
     - or invert for a score to get its corresponding alpha level.
     """
 
-    def __init__(self, flow_name="ER", max_iter=1000, n_val=0):
+    def __init__(self, flow_name="Uniform", max_iter=3000, n_val=0):
         self.flow_name = flow_name
         self.max_iter = max_iter
         self.n_val = n_val
@@ -28,7 +28,7 @@ class ConformalFlowCalibrator(BaseEstimator, RegressorMixin):
         else:
             raise ValueError(f"flow_name must be one of ML or Uniform")
 
-    def fit(self, scores, X, y=None):
+    def fit(self, scores: np.ndarray, X: np.ndarray, y=None):
         """
         Fit the flow-based conformal calibrator.
 
@@ -61,27 +61,41 @@ class ConformalFlowCalibrator(BaseEstimator, RegressorMixin):
             self.b_cal_ = self.model_(a, X_t)
         return self
 
-    def predict_cdf_for_scores(self, scores_new, X_new):
+    def predict_cdf_for_scores(self, scores_new: np.ndarray, X_new: np.ndarray):
         if not hasattr(self, "model_"):
             raise NotFittedError("Call fit() before predict_alpha().")
 
         # Ensure shapes align
-        s_arr = np.ravel(scores_new)
-        Xn = np.atleast_2d(X_new)
+        scores_new = np.atleast_2d(scores_new)  # Shape: (n_samples, n_score_dims)
+        X_new = np.atleast_2d(X_new)  # Shape: (n_samples, n_features)
+        
+        if scores_new.shape[0] != X_new.shape[0]:
+            raise ValueError(f"scores_new and X_new must have the same number of samples. "
+                           f"Got {scores_new.shape[0]} and {X_new.shape[0]}")
 
         # Prepare torch inputs
-        s_t = torch.tensor(s_arr, dtype=torch.float32)
-        X_t = torch.tensor(Xn, dtype=torch.float32)
+        scores_t = torch.tensor(scores_new, dtype=torch.float32)
+        X_t = torch.tensor(X_new, dtype=torch.float32)
 
-        cdfs = []
-        for s_val, x_val in zip(s_t, X_t):
-            # 1) map (score, x) to latent z
-            z = self.model_(s_val.unsqueeze(0), x_val.unsqueeze(0)).squeeze()
+        # Result will have shape (n_samples, n_score_dims)
+        cdfs_result = []
+        
+        for i in range(X_t.shape[0]):  # Iterate over samples
+            x_val = X_t[i]  # Shape: (n_features,)
+            sample_cdfs = []
+            
+            for j in range(scores_t.shape[1]):  # Iterate over score dimensions
+                s_val = scores_t[i, j]  # Scalar score
+                
+                # 1) map (score, x) to latent z
+                z = self.model_(s_val.unsqueeze(0), x_val.unsqueeze(0)).squeeze()
 
-            # 2) exact CDF under base
-            F_z = self.base.cdf(z)  # a float in [0,1]
+                # 2) exact CDF under base
+                F_z = self.base.cdf(z)  # a float in [0,1]
 
-            # 3) cdfs
-            cdfs.append(F_z.item())
+                # 3) append CDF value
+                sample_cdfs.append(F_z.item())
+            
+            cdfs_result.append(sample_cdfs)
 
-        return np.array(cdfs)
+        return np.array(cdfs_result)  # Shape: (n_samples, n_score_dims)

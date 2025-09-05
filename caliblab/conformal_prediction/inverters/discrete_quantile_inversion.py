@@ -7,6 +7,7 @@ from .cdf_inverter_base import CDF_inverter_base
 from ...extra_models.normalizing_flows import ConformalFlowCalibrator
 
 
+
 class QuantileMethod(str, Enum):
     NEAREST = "nearest"
 
@@ -19,7 +20,7 @@ class DiscreteQuantileInversion(CDF_inverter_base):
         self.quantile_method = quantile_method
         self.calib_scores_: Optional[np.ndarray] = None
 
-    def fit(self, scores: np.ndarray) -> "DiscreteQuantileInversion":
+    def fit(self, scores: np.ndarray, logits: Optional[np.ndarray] = None, y=None) -> "DiscreteQuantileInversion":
         # It is assumed that the calibration scores are already sorted.
         self.calib_scores_ = np.sort(scores)
         return self
@@ -41,7 +42,7 @@ class DiscreteQuantileInversion(CDF_inverter_base):
 
         return quantiles
 
-    def predict(self, test_scores: np.ndarray) -> np.ndarray:
+    def predict(self, test_scores: np.ndarray, X_test: Optional[np.ndarray] = None) -> np.ndarray:
         if self.calib_scores_ is None:
             raise RuntimeError(
                 "DiscreteQuantileInversion not fitted. Call fit(...) first."
@@ -61,38 +62,17 @@ class NormalizingFlowQuantileInversion(CDF_inverter_base):
         self.conditional_model = ConformalFlowCalibrator()
         self.calib_scores_: Optional[np.ndarray] = None
 
-    def fit(self, scores: np.ndarray, X: np.ndarray, y=None) -> "DiscreteQuantileInversion":
+    def fit(self, scores: np.ndarray, X: np.ndarray, y=None) -> "NormalizingFlowQuantileInversion":
         # It is assumed that the calibration scores are already sorted.
-        self.calib_scores_ = np.sort(scores)
         self.conditional_model.fit(scores, X, y)
+        self.calib_scores_ = scores
         return self
 
-    def _get_quantiles_nearest(self, test_scores: np.ndarray) -> np.ndarray:
-        """
-        Computes the empirical CDF of the calibration scores for each test score.
-        This is the proportion of calibration scores less than or equal to the test score.
-        """
-        n = self.calib_scores_.shape[0]
-        if n == 0:
-            return np.zeros_like(test_scores)
-
-        # Find the number of calibration scores less than or equal to the test scores.
-        num_le = np.searchsorted(self.calib_scores_, test_scores, side="right")
-
-        # The quantile is the proportion of scores <= test_score.
-        quantiles = num_le / n
-
-        return quantiles
-
-    def predict(self, test_scores: np.ndarray) -> np.ndarray:
+    def predict(self, test_scores: np.ndarray, X_test: np.ndarray) -> np.ndarray:
         if self.calib_scores_ is None:
             raise RuntimeError(
                 "DiscreteQuantileInversion not fitted. Call fit(...) first."
             )
 
-        if self.quantile_method == QuantileMethod.NEAREST:
-            quantiles = self._get_quantiles_nearest(test_scores)
-        else:
-            raise ValueError(f"Invalid quantile_method: {self.quantile_method}")
+        return self.conditional_model.predict_cdf_for_scores(test_scores, X_test)
 
-        return quantiles

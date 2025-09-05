@@ -4,19 +4,22 @@ from ..utils.computations import softmax
 from ..conformal_prediction.conformal_predictor import ConformalPredictor
 from .base import CalibratorBase
 
+from ..conformal_prediction.inverters.cdf_inverter_base import InversionType
+
 
 class ConformalCalibrator(CalibratorBase):
-    def __init__(self, score_type: str, quantile_method: str):
+    def __init__(self, score_type: str, quantile_method: str, inversion_type: InversionType):
         super().__init__()
         self.score_type = score_type
         self.quantile_method = quantile_method
+        self.inversion_type = inversion_type
         self.predictor = ConformalPredictor(
-            score_type=score_type, quantile_method=quantile_method
+            score_type=score_type, quantile_method=quantile_method, inversion_type=inversion_type
         )
 
     @property
     def name(self) -> str:
-        return f"conformal_{self.score_type}_{self.quantile_method}"
+        return f"conformal_{self.score_type}_{self.quantile_method}_{self.inversion_type}"
 
     def get_score(self) -> str:
         return self.score_type
@@ -49,7 +52,12 @@ class ConformalCalibrator(CalibratorBase):
         if probs is None:
             probs = softmax(logits, axis=1)
 
-        quantiles = self.predictor.predict(probs)
+        quantiles = self.predictor.predict(base_probs=probs, logits=logits)
+
+        # FATAL
+        # Enforce that the largest element in each row is exactly 1.0
+        max_indices = np.argmax(quantiles, axis=1)
+        quantiles[np.arange(quantiles.shape[0]), max_indices] = 1.0
 
         if not np.allclose(quantiles.max(axis=1).min(), 1.0, atol=1e-4):
             raise ValueError(f"Highest quantile should be 1.")

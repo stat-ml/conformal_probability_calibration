@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
+from enum import Enum
 
 import numpy as np
+
+class InversionType(str, Enum):
+    DISCRETE = "discrete"
+    NORMALIZING_FLOW = "normalizing_flow"
 
 
 class CDF_inverter_base(ABC):

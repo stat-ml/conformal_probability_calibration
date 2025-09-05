@@ -7,8 +7,10 @@ from ..utils.computations import softmax
 
 from .inverters.discrete_quantile_inversion import (
     DiscreteQuantileInversion,
+    NormalizingFlowQuantileInversion,
     QuantileMethod,
 )
+from .inverters.cdf_inverter_base import InversionType
 from .score_functions import (
     ScoreTypes,
     aps_scores,
@@ -21,14 +23,21 @@ class ConformalPredictor:
         self,
         score_type: str,
         quantile_method: str = QuantileMethod.NEAREST,
+        inversion_type: str = InversionType.DISCRETE,
     ):
         if score_type not in ScoreTypes.all_types():
             raise ValueError(f"score_type must be one of {ScoreTypes.all_types()}.")
 
         self.score_type = score_type
-        self.quantile_inversion = DiscreteQuantileInversion(
-            score_type, quantile_method
-        )
+        self.inversion_type = inversion_type
+        if inversion_type == InversionType.DISCRETE:
+            self.quantile_inversion = DiscreteQuantileInversion(
+                score_type, quantile_method
+            )
+        elif inversion_type == InversionType.NORMALIZING_FLOW:
+            self.quantile_inversion = NormalizingFlowQuantileInversion(score_type)
+        else:
+            raise ValueError(f"Invalid inversion type: {inversion_type}")
 
     def fit(
         self,
@@ -50,7 +59,8 @@ class ConformalPredictor:
 
         if run_dir:
             self._plot_scores_distribution(scores, run_dir, self.score_type)
-        self.quantile_inversion.fit(np.sort(scores))
+
+        self.quantile_inversion.fit(np.sort(scores), logits, None)
         return self
 
     def _plot_scores_distribution(
@@ -66,9 +76,9 @@ class ConformalPredictor:
         plt.close()
         print(f"Saved scores distribution plot to {plot_path}")
 
-    def predict(self, base_probs: np.ndarray) -> np.ndarray:
+    def predict(self, base_probs: np.ndarray, logits: np.ndarray) -> np.ndarray:
         test_scores = compute_aps_scores_for_all_classes(base_probs, self.score_type)
         if not np.allclose(test_scores.max(axis=1), 1.0, atol=1e-8, rtol=0):
             raise ValueError(f"Highest score should be 1.")
-        quantiles = self.quantile_inversion.predict(test_scores)
+        quantiles = self.quantile_inversion.predict(test_scores, logits)
         return quantiles
