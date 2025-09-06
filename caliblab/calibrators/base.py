@@ -4,17 +4,11 @@ from typing import Optional
 import numpy as np
 
 
-def _to_logits(logits: Optional[np.ndarray]) -> np.ndarray:
-    if logits is None:
-        raise ValueError("Logits must be provided.")
-    return np.asarray(logits, dtype=np.float64)
-
-
 class CalibratorBase(ABC):
     """A base class for calibrators."""
 
-    def __init__(self) -> None:
-        self._fitted = False
+    def __init__(self):
+        self.is_fitted_ = False
 
     @property
     @abstractmethod

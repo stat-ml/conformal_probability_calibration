@@ -1,7 +1,7 @@
 from typing import Optional
 import numpy as np
 
-from .base import CalibratorBase, _to_logits
+from .base import CalibratorBase
 from ..conformal_prediction.conformal_set_helper import ConformalSetHelper
 from ..utils.computations import softmax
 
@@ -21,7 +21,7 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
 
     @property
     def name(self) -> str:
-        return f"conformal_mass_threshold_{self.alpha}"
+        return f"conformal_mass_threshold_alpha={self.alpha}"
 
     def fit(
         self,
@@ -39,9 +39,8 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
         logits: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
-        logits = _to_logits(logits)
-        C = self._conf.make_mask(logits)  # (n, K) fixed set
         p = softmax(logits)
+        C = self._conf.make_mask(logits)  # (n, K) fixed set
 
         P_in = (p * C).sum(axis=1, keepdims=True)  # (n, 1)
 

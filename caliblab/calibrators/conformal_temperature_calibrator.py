@@ -1,7 +1,7 @@
 from typing import Optional
 import numpy as np
 
-from .base import CalibratorBase, _to_logits
+from .base import CalibratorBase
 from ..conformal_prediction.conformal_set_helper import ConformalSetHelper
 from ..utils.computations import softmax
 
@@ -93,11 +93,12 @@ class ConformalTemperatureCalibrator(CalibratorBase):
         logits: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
-        L = _to_logits(logits)
-        C = self._conf.make_mask(L)
+        L = logits
+        p_base = softmax(logits)
+        C = self._conf.make_mask(logits)
 
-        n, K = L.shape
-        q = np.empty((n, K), dtype=np.float64)
+        n, _ = L.shape
+        q = np.empty_like(p_base, dtype=np.float64)
         target = 1.0 - self.alpha
 
         for i in range(n):
