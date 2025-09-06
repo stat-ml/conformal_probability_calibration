@@ -20,7 +20,7 @@ def check_probs(
         raise ValueError(f"{name} values must lie in [0,1].")
     row_sums = probs.sum(axis=1)
     if not np.allclose(row_sums, 1.0, atol=1e-4):
-        raise ValueError(f"Each row of {name} must sum to 1 (±1e-4). But got {row_sums}.")
+        raise ValueError(f"Each row of {name} must sum to 1 (±1e-4). Got min sum value: {row_sums.min()}")
 
 
 def check_labels(

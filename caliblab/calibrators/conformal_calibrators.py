@@ -3,10 +3,11 @@ from typing import Optional
 import numpy as np
 from dataclasses import dataclass
 from typing import Set
+from enum import Enum
+import pdb
 
-
-@dataclass(frozen=True, slots=True)
-class ScoreTypes:
+# @dataclass(frozen=True, slots=True)
+class ScoreTypes(str, Enum):
     ONE_MINUS_PROB: str = "one_minus_prob"
     APS: str = "aps"
 
@@ -134,7 +135,7 @@ class ConformalMassCalibrator(CalibratorBase):
     base probabilities at prediction time.
     """
 
-    def __init__(self, score_type: str, alpha: float):
+    def __init__(self, score_type: str = ScoreTypes.APS, alpha: float = 0.5):
         super().__init__()
         self.alpha = float(alpha)
         self._conf = ConformalSetHelper(score_type=score_type, alpha=alpha)
@@ -150,6 +151,7 @@ class ConformalMassCalibrator(CalibratorBase):
         y_true: np.ndarray,
     ) -> "ConformalMassCalibrator":
         self._conf.fit(logits=logits, y_true=y_true)
+        self._mark_fitted()
         return self
 
     def predict_proba(
@@ -162,22 +164,27 @@ class ConformalMassCalibrator(CalibratorBase):
         C = self._conf.make_mask(p)  # (n, K) fixed set
 
         P_in = (p * C).sum(axis=1, keepdims=True)  # (n, 1)
+
         P_in = np.where(
-            P_in == 0, 1, P_in
-        )  # this could be only for the empty set. In this case do nothing
+            (np.isclose(P_in, 0)), 1, P_in
+        )  # this could be only for the empty set or for full set. In this case do nothing
         P_out = 1.0 - P_in
-        P_out = np.where(
-            P_out == 0, 1, P_out
-        )  # this could be only for the full set. In this case do nothing
+
         coverage = 1.0 - self.alpha
 
         s_in = coverage / P_in
         s_out = (1.0 - coverage) / P_out
         q = p * (C * s_in + (~C) * s_out)
 
-        if np.any(q.sum(axis=-1) != 1):
-            raise ValueError("Each row of q must sum to 1.")
-        return q
+        q_final = np.where(
+            (np.isclose(P_in, 1.0)), p, q
+        )  # this could be only for the empty set or for full set. In this case do nothing
+
+        print("p * C * s_in:", (p * C * s_in).sum(axis=-1).min())
+        print("p * ~C * s_out:", (p * (~C) * s_out).sum(axis=-1).min())
+        if not np.allclose(q_final.sum(axis=-1), 1.0, rtol=0, atol=1e-4):
+            raise ValueError(f"Each row of q must sum to 1. Got min sum value: {q_final.sum(axis=-1).min()}")
+        return q_final
 
 
 class ConformalTemperatureCalibrator(CalibratorBase):
