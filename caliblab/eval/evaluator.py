@@ -56,7 +56,7 @@ class ModelEvaluator:
         if use_cache and pred_path.exists() and not force_recompute:
             print(f"Using cached predictions at: {pred_path}")
             data = np.load(pred_path)
-            return data["logits"], data["true_labels"]
+            return data["logits"].astype(np.float64), data["true_labels"].astype(np.int64)
 
         print(f"Computing predictions for {cache_name}...")
         all_logits = []
@@ -65,19 +65,19 @@ class ModelEvaluator:
             for inputs, labels in tqdm(loader):
                 inputs = inputs.to(self.device)
                 logits = self.model(inputs)
-                all_logits.append(logits.cpu().numpy())
-                all_labels.append(labels.cpu().numpy())
+                all_logits.append(logits.cpu().numpy().astype(np.float64))
+                all_labels.append(labels.cpu().numpy().astype(np.int64))
 
-        logits = np.concatenate(all_logits)
-        true_labels = np.concatenate(all_labels)
+        all_logits_np = np.concatenate(all_logits, axis=0)
+        all_labels_np = np.concatenate(all_labels, axis=0)
 
         if use_cache:
             np.savez(
-                pred_path, logits=logits, true_labels=true_labels
+                pred_path, logits=all_logits_np, true_labels=all_labels_np
             )
             print(f"Saved predictions to: {pred_path}")
 
-        return logits, true_labels
+        return all_logits_np, all_labels_np
 
     def evaluate(
         self, use_cache: bool = True, force_recompute: bool = False
@@ -110,7 +110,7 @@ class ModelEvaluator:
             logits = deepcopy(test_logits)
             if calibrator is not None:
                 calibrator.fit(
-                    logits=test_logits, y_true=test_labels, run_dir=self.run_dir
+                    logits=test_logits, y_true=test_labels
                 )
                 final_probs = calibrator.predict_proba(logits=logits)
             else:
