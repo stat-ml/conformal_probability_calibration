@@ -56,10 +56,9 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
         q = p * (C * s_in + (~C) * s_out)
 
         q_final = np.where(
-            (np.isclose(P_in, 1.0)), p, q
+            (np.isclose(P_in, 1.0) | np.isclose(P_in, 0.0)), p, q
         )  # this could be only for the empty set or for full set. In this case do nothing
 
         if not np.allclose(q_final.sum(axis=-1), 1.0, rtol=0, atol=1e-4):
-            import pdb; pdb.set_trace()
             raise ValueError(f"Each row of q must sum to 1. Got min sum value: {q_final.sum(axis=-1).min()}")
         return q_final

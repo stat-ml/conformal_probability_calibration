@@ -15,12 +15,14 @@
         }
     },
     "calibrators": [
-        {"name": "conformal_calibrator", 
-            "params": { "score_type": "aps", "quantile_method": "nearest" , "inversion_type": "normalizing_flow"}
-        }
+        "temperature_scaling",
+        "isotonic_regression",
+        {"name": "conformal_mass_threshold", "params": { "score_type": "aps", "alpha": 0.1 }},
+        {"name": "conformal_temperature", "params": { "score_type": "aps", "alpha": 0.1 }}
     ],
     "metrics": [
         "accuracy",
+        "roc_auc",
         { "name": "ece", "params": { "n_bins": 20 } },
         { "name": "mce", "params": { "n_bins": 20 } },
         { "name": "cw-ece", "params": { "n_bins": 20 } },
