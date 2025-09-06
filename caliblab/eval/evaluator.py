@@ -110,7 +110,7 @@ class ModelEvaluator:
             logits = deepcopy(test_logits)
             if calibrator is not None:
                 calibrator.fit(
-                    logits=test_logits, y_true=test_labels
+                    logits=cal_logits, y_true=cal_labels
                 )
                 final_probs = calibrator.predict_proba(logits=logits)
             else:

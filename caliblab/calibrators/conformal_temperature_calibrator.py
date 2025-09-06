@@ -35,7 +35,7 @@ class ConformalTemperatureCalibrator(CalibratorBase):
 
     @property
     def name(self) -> str:
-        return f"conformal_temperature_{self.alpha}"
+        return f"conformal_temperature_alpha={self.alpha}"
 
     def fit(
         self,
@@ -44,6 +44,7 @@ class ConformalTemperatureCalibrator(CalibratorBase):
         y_true: np.ndarray,
     ) -> "ConformalTemperatureCalibrator":
         self._conf.fit(logits=logits, y_true=y_true)
+        self._mark_fitted()
         return self
 
     def _mass_in_set(
