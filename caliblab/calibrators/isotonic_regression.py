@@ -1,4 +1,5 @@
 from typing import Optional
+from ..utils.computations import softmax
 
 import numpy as np
 import torch
@@ -19,16 +20,17 @@ class IsotonicRegression(CalibratorBase):
     def fit(
         self,
         *,
-        logits: Optional[np.ndarray] = None,
         probs: Optional[np.ndarray] = None,
+        logits: Optional[np.ndarray] = None,
         y_true: np.ndarray,
+        **kwargs,
     ) -> "IsotonicRegression":
         if probs is None:
             if logits is None:
                 raise ValueError(
                     "Either logits or probs must be provided to IsotonicRegression."
                 )
-            probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
+            probs = softmax(logits)
 
         n_classes = probs.shape[1]
         self.calibrators = [
@@ -47,8 +49,8 @@ class IsotonicRegression(CalibratorBase):
     def predict_proba(
         self,
         *,
-        logits: Optional[np.ndarray] = None,
         probs: Optional[np.ndarray] = None,
+        logits: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
         if probs is None:
@@ -56,7 +58,7 @@ class IsotonicRegression(CalibratorBase):
                 raise ValueError(
                     "Either logits or probs must be provided to IsotonicRegression."
                 )
-            probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
+            probs = softmax(logits)
 
         n_samples, n_classes = probs.shape
         calibrated_probs = np.zeros_like(probs)

@@ -2,7 +2,10 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
 
-from ..calibrators import CalibratorBase, get_calibrator
+from ..calibrators import (
+    CalibratorBase,
+    get_calibrator,
+)
 from ..datasets import BaseDataset, dataset_getter
 from ..eval.runner import EvaluationConfig
 from ..metrics import MetricBase, get_metric
@@ -55,11 +58,12 @@ def parse_config(
         if isinstance(calibrator_config, str):
             calibrators.append(get_calibrator(calibrator_config))
         elif isinstance(calibrator_config, dict):
-            calibrators.append(
-                get_calibrator(
-                    calibrator_config["name"], **calibrator_config.get("params", {})
-                )
-            )
+            name = calibrator_config.get("name")
+            params = calibrator_config.get("params", {})
+            calibrators.append(get_calibrator(name, **params))
+        else:
+            raise ValueError(f"Unknown calibrator config: {calibrator_config}")
+
 
     # --- Parse metric configurations ---
     metrics: List[MetricBase] = []

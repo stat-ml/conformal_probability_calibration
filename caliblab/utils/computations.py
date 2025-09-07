@@ -31,3 +31,9 @@ def get_cumulative_mass_scores(
     # Get the cumulative mass at the rank of the true class
     scores = cum_probs[np.arange(len(y_true)), true_class_ranks]
     return scores
+
+
+def softmax(logits: np.ndarray, axis: int = -1) -> np.ndarray:
+    z = logits - np.max(logits, axis=axis, keepdims=True)
+    e = np.exp(z)
+    return e / np.sum(e, axis=axis, keepdims=True)

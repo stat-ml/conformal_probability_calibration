@@ -3,16 +3,17 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+import torch
 
 import numpy as np
-import torch
+from ..utils.computations import softmax
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from ..calibrators.base import CalibratorBase
 from ..datasets.base import BaseDataset
-from ..metrics import MetricBase
-from ..models import ModelBase
+from ..metrics.base import MetricBase
+from ..models.base import ModelBase
 from .constants import EvaluationReport
 
 
@@ -55,7 +56,7 @@ class ModelEvaluator:
         if use_cache and pred_path.exists() and not force_recompute:
             print(f"Using cached predictions at: {pred_path}")
             data = np.load(pred_path)
-            return data["logits"], data["true_labels"]
+            return data["logits"].astype(np.float64), data["true_labels"].astype(np.int64)
 
         print(f"Computing predictions for {cache_name}...")
         all_logits = []
@@ -64,19 +65,19 @@ class ModelEvaluator:
             for inputs, labels in tqdm(loader):
                 inputs = inputs.to(self.device)
                 logits = self.model(inputs)
-                all_logits.append(logits.cpu().numpy())
-                all_labels.append(labels.cpu().numpy())
+                all_logits.append(logits.cpu().numpy().astype(np.float64))
+                all_labels.append(labels.cpu().numpy().astype(np.int64))
 
-        logits = np.concatenate(all_logits)
-        true_labels = np.concatenate(all_labels)
+        all_logits_np = np.concatenate(all_logits, axis=0)
+        all_labels_np = np.concatenate(all_labels, axis=0)
 
         if use_cache:
             np.savez(
-                pred_path, logits=logits, true_labels=true_labels
+                pred_path, logits=all_logits_np, true_labels=all_labels_np
             )
             print(f"Saved predictions to: {pred_path}")
 
-        return logits, true_labels
+        return all_logits_np, all_labels_np
 
     def evaluate(
         self, use_cache: bool = True, force_recompute: bool = False
@@ -108,10 +109,12 @@ class ModelEvaluator:
             print(f"\nEvaluating calibrator: {calibrator_name}")
             logits = deepcopy(test_logits)
             if calibrator is not None:
-                calibrator.fit(logits=cal_logits, y_true=cal_labels)
+                calibrator.fit(
+                    logits=cal_logits, y_true=cal_labels
+                )
                 final_probs = calibrator.predict_proba(logits=logits)
             else:
-                final_probs = torch.softmax(torch.from_numpy(logits), dim=1).numpy()
+                final_probs = softmax(logits)
 
             calibrated_metrics = {}
             for metric in self.metrics:
