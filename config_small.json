@@ -18,7 +18,9 @@
         "temperature_scaling",
         "isotonic_regression",
         {"name": "conformal_mass_threshold", "params": { "score_type": "aps", "alpha": 0.1 }},
-        {"name": "conformal_temperature", "params": { "score_type": "aps", "alpha": 0.1 }}
+        {"name": "conformal_temperature", "params": { "score_type": "aps", "alpha": 0.1 }},
+        {"name": "venn_abers", "params": {"va_type": "one_vs_one"}},
+        {"name": "venn_abers", "params": {"va_type": "one_vs_all"}}
     ],
     "metrics": [
         "accuracy",
