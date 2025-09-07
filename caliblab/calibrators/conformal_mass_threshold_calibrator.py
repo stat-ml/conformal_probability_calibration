@@ -5,6 +5,7 @@ from .base import CalibratorBase
 from ..conformal_prediction.conformal_set_helper import ConformalSetHelper
 from ..utils.computations import softmax
 
+
 class ConformalMassThresholdCalibrator(CalibratorBase):
     """
     Two-bucket rescaling:
@@ -60,5 +61,7 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
         )  # this could be only for the empty set or for full set. In this case do nothing
 
         if not np.allclose(q_final.sum(axis=-1), 1.0, rtol=0, atol=1e-4):
-            raise ValueError(f"Each row of q must sum to 1. Got min sum value: {q_final.sum(axis=-1).min()}")
+            raise ValueError(
+                f"Each row of q must sum to 1. Got min sum value: {q_final.sum(axis=-1).min()}"
+            )
         return q_final

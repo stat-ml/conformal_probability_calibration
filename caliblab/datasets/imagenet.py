@@ -57,12 +57,8 @@ class ImageNetMiniDataset(BaseDataset):
                 "Please download and extract it into 'train' and 'val' subdirectories."
             )
 
-        self.train_dataset = ImageFolder(
-            train_path, transform=self.train_transform
-        )
-        original_test_dataset = ImageFolder(
-            val_path, transform=self.test_transform
-        )
+        self.train_dataset = ImageFolder(train_path, transform=self.train_transform)
+        original_test_dataset = ImageFolder(val_path, transform=self.test_transform)
 
         self.cal_dataset, self.test_dataset = split_dataset(
             original_test_dataset, self.cal_ratio, self.seed

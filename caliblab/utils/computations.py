@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def make_one_hot(y_true: np.ndarray, n_classes: int) -> np.ndarray:
     """
     Converts a 1D array of integer labels into a 2D one-hot encoded array.
@@ -10,9 +11,7 @@ def make_one_hot(y_true: np.ndarray, n_classes: int) -> np.ndarray:
     return one_hot
 
 
-def get_cumulative_mass_scores(
-    probs: np.ndarray, y_true: np.ndarray
-) -> np.ndarray:
+def get_cumulative_mass_scores(probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
     """
     Computes the cumulative mass score for each sample.
 
