@@ -2,7 +2,10 @@ from typing import Optional
 import numpy as np
 
 from .base import CalibratorBase
-from ..conformal_prediction.conformal_set_helper import ConformalSetHelper
+from ..conformal_prediction.conformal_set_helper import (
+    ConformalSetHelper,
+    ScoreTransformation,
+)
 from ..utils.computations import softmax
 
 
@@ -15,10 +18,19 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
     base probabilities at prediction time.
     """
 
-    def __init__(self, score_type: str, alpha: float):
+    def __init__(
+        self,
+        score_type: str,
+        alpha: float,
+        score_transformation: ScoreTransformation = ScoreTransformation.IDENTITY,
+    ):
         super().__init__()
         self.alpha = float(alpha)
-        self._conf = ConformalSetHelper(score_type=score_type, alpha=alpha)
+        self._conf = ConformalSetHelper(
+            score_type=score_type,
+            alpha=alpha,
+            score_transformation=score_transformation,
+        )
 
     @property
     def name(self) -> str:
