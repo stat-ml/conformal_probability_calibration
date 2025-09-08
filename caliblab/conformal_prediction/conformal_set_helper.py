@@ -93,11 +93,9 @@ class ConformalSetHelper:
         order = np.argsort(-probs, axis=1)
         sorted_p = np.take_along_axis(probs, order, axis=1)
         csum = np.cumsum(sorted_p, axis=1)
-        if np.isscalar(threshold):
-            k_star = (csum >= threshold).argmax(axis=1)
-        else:
-            threshold_expanded = threshold[:, np.newaxis]  # Shape: (n_batch, 1)
-            k_star = (csum >= threshold_expanded).argmax(axis=1)
+        if not np.isscalar(threshold):
+            threshold = threshold[:, np.newaxis]
+        k_star = (csum >= threshold).argmax(axis=1)
         mask = np.zeros_like(probs, dtype=bool)
         for i in range(n):
             mask[i, order[i, : k_star[i] + 1]] = True
