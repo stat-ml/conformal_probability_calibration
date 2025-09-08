@@ -55,7 +55,11 @@
         {"name": "mce", "params": {"n_bins": 20}},
         {"name": "cw-ece", "params": {"n_bins": 20}},
         "nll",
-        "brier_score"
+        "brier_score",
+        {
+            "name": "coverage_around_one_minus_alpha",
+            "params": {"alpha": 0.1, "eps": 0.02}
+        }
     ],
     "evaluations": [
         {
