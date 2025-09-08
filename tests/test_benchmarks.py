@@ -65,9 +65,7 @@ def test_model_benchmark_accuracy(
     try:
         dataset = dataset_getter(dataset_name, data_dir=str(data_dir))
     except Exception as e:
-        pytest.skip(
-            f"Skipping {dataset_name} due to download or setup error: {e}"
-        )
+        pytest.skip(f"Skipping {dataset_name} due to download or setup error: {e}")
 
     # 2. Load the pretrained model
     model = get_model(
@@ -87,6 +85,6 @@ def test_model_benchmark_accuracy(
     print(f"Accuracy of {model_name} on {dataset_name}: {accuracy:.4f}")
 
     # 6. Assert that accuracy is above the threshold
-    assert (
-        accuracy > min_accuracy
-    ), f"Expected accuracy for {model_name} on {dataset_name} to be > {min_accuracy}, but got {accuracy:.4f}"
+    assert accuracy > min_accuracy, (
+        f"Expected accuracy for {model_name} on {dataset_name} to be > {min_accuracy}, but got {accuracy:.4f}"
+    )

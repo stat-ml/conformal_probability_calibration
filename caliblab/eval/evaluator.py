@@ -48,7 +48,11 @@ class ModelEvaluator:
         self.test_loader = self.dataset.get_test_loader(batch_size=128, num_workers=4)
 
     def _predict(
-        self, loader: DataLoader, use_cache: bool, force_recompute: bool, cache_name: str
+        self,
+        loader: DataLoader,
+        use_cache: bool,
+        force_recompute: bool,
+        cache_name: str,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Get model predictions for a given data loader, with caching."""
         pred_path = self.run_dir / f"{cache_name}.npz"
@@ -56,7 +60,9 @@ class ModelEvaluator:
         if use_cache and pred_path.exists() and not force_recompute:
             print(f"Using cached predictions at: {pred_path}")
             data = np.load(pred_path)
-            return data["logits"].astype(np.float64), data["true_labels"].astype(np.int64)
+            return data["logits"].astype(np.float64), data["true_labels"].astype(
+                np.int64
+            )
 
         print(f"Computing predictions for {cache_name}...")
         all_logits = []
@@ -72,9 +78,7 @@ class ModelEvaluator:
         all_labels_np = np.concatenate(all_labels, axis=0)
 
         if use_cache:
-            np.savez(
-                pred_path, logits=all_logits_np, true_labels=all_labels_np
-            )
+            np.savez(pred_path, logits=all_logits_np, true_labels=all_labels_np)
             print(f"Saved predictions to: {pred_path}")
 
         return all_logits_np, all_labels_np
@@ -109,9 +113,7 @@ class ModelEvaluator:
             print(f"\nEvaluating calibrator: {calibrator_name}")
             logits = deepcopy(test_logits)
             if calibrator is not None:
-                calibrator.fit(
-                    logits=cal_logits, y_true=cal_labels
-                )
+                calibrator.fit(logits=cal_logits, y_true=cal_labels)
                 final_probs = calibrator.predict_proba(logits=logits)
             else:
                 final_probs = softmax(logits)
@@ -131,6 +133,5 @@ class ModelEvaluator:
                     true_labels=test_labels,
                 )
             )
-            
-        return results
 
+        return results

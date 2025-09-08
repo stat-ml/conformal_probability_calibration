@@ -53,7 +53,9 @@ def run_evaluations(
     for config in configs:
         dataset, model = config
         print("-" * 80)
-        print(f"Running evaluation for model '{model.name}' on dataset '{dataset.name}'")
+        print(
+            f"Running evaluation for model '{model.name}' on dataset '{dataset.name}'"
+        )
 
         # Create the run-specific directory
         run_dir = output_dir / f"{dataset.name}_{model.name}"

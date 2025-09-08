@@ -7,30 +7,23 @@
         "visualization_n_bins": 20
     },
     "visualizations": {
-        "confidence_curve": {
-            "n_bins": 20
-        },
-        "cumulative_mass_curve": {
-            "n_bins": 20
-        }
+        "confidence_curve": {"n_bins": 20},
+        "cumulative_mass_curve": {"n_bins": 20}
     },
-    "calibrators": [
-        "temperature_scaling",
-        "isotonic_regression"
-    ],
+    "calibrators": ["temperature_scaling", "isotonic_regression"],
     "metrics": [
         "accuracy",
         "roc_auc",
         "pr_auc",
-        { "name": "ece", "params": { "n_bins": 20 } },
-        { "name": "mce", "params": { "n_bins": 20 } },
-        { "name": "cw-ece", "params": { "n_bins": 20 } },
+        {"name": "ece", "params": {"n_bins": 20}},
+        {"name": "mce", "params": {"n_bins": 20}},
+        {"name": "cw-ece", "params": {"n_bins": 20}},
         "nll",
         "brier_score"
     ],
     "evaluations": [
         {
-            "dataset": { "name": "cifar10" },
+            "dataset": {"name": "cifar10"},
             "model": {
                 "source": "torch_hub",
                 "repo": "chenyaofo/pytorch-cifar-models",
@@ -39,10 +32,7 @@
             }
         },
         {
-            "dataset": {
-                "name": "cifar100",
-                "params": { "image_size": 224 }
-            },
+            "dataset": {"name": "cifar100", "params": {"image_size": 224}},
             "model": {
                 "source": "vit",
                 "name": "pkr7098/cifar100-vit-base-patch16-224-in21k",
