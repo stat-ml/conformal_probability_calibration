@@ -14,7 +14,7 @@ class VennAbersCalibrator(CalibratorBase):
     but rather uses the calibration data at prediction time.
     """
 
-    def __init__(self, va_type: str = "one_vs_one"):
+    def __init__(self, va_type: str = "one_vs_all"):
         super().__init__()
         if va_type not in ["one_vs_one", "one_vs_all"]:
             raise ValueError(f"Unknown va_type: {va_type}")
