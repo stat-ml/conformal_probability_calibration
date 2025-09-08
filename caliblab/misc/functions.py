@@ -186,7 +186,6 @@ def initialize(p1, eta):
     name = names[k]
     model = wrapper(dim, name)
     model.score.eta = min([eta, model.score.eta])
-    print(nameString)
     if name not in [baseline]:
         optimizer = optim.Adam(model.parameters(), model.score.eta)
     else:
