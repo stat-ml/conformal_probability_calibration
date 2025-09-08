@@ -5,6 +5,7 @@ from .isotonic_regression import IsotonicRegression
 from .temperature_scaling import TemperatureScaling
 from .conformal_mass_threshold_calibrator import ConformalMassThresholdCalibrator
 from .conformal_temperature_calibrator import ConformalTemperatureCalibrator
+from .venn_abers import VennAbersCalibrator
 
 
 def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
@@ -20,6 +21,8 @@ def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
         return ConformalMassThresholdCalibrator(**kwargs)
     elif name == "conformal_temperature":
         return ConformalTemperatureCalibrator(**kwargs)
+    elif name == "venn_abers":
+        return VennAbersCalibrator(**kwargs)
     else:
         raise ValueError(f"Unknown calibrator: {name}")
 
@@ -32,5 +35,6 @@ __all__ = [
     "TemperatureScaling",
     "ConformalMassThresholdCalibrator",
     "ConformalTemperatureCalibrator",
+    "VennAbersCalibrator",
     "get_calibrator",
 ]
