@@ -10,7 +10,11 @@ from ..datasets import BaseDataset, dataset_getter
 from ..eval.runner import EvaluationConfig
 from ..metrics import MetricBase, get_metric
 from ..models import ModelBase, get_model
-from ..visualizations import ConfidenceVisualizer, CumulativeMassVisualizer
+from ..visualizations import (
+    ConfidenceVisualizer,
+    CumulativeMassVisualizer,
+    OneMinusAlphaCoverageVisualizer,
+)
 
 # A simple type alias for the JSON config
 Config = Dict[str, Any]
@@ -51,6 +55,9 @@ def parse_config(
     if "cumulative_mass_curve" in vis_config:
         n_bins = vis_config["cumulative_mass_curve"].get("n_bins", 15)
         visualizers.append(CumulativeMassVisualizer(n_bins=n_bins))
+    if "one_minus_alpha_coverage_curve" in vis_config:
+        params = vis_config["one_minus_alpha_coverage_curve"]
+        visualizers.append(OneMinusAlphaCoverageVisualizer(**params))
 
     # --- Parse calibrator configurations ---
     calibrators: List[CalibratorBase] = []

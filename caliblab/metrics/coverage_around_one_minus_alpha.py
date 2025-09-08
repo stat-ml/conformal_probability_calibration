@@ -11,14 +11,24 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
         self.eps = eps
         self.requires_labels = True
 
+        if eps >= 0:
+            self.lower_bound = 1 - alpha
+            self.upper_bound = 1 - alpha + eps
+        else:
+            self.lower_bound = 1 - alpha + eps
+            self.upper_bound = 1 - alpha
+
     @property
     def name(self) -> str:
-        return f"coverage_[{1 - self.alpha - self.eps}, {1 - self.alpha + self.eps}]"
+        lower_bound = round(self.lower_bound, 3)
+        upper_bound = round(self.upper_bound, 3)
+        return f"coverage_[{lower_bound}, {upper_bound}]"
 
     def _compute(self, *, probs: np.ndarray, y_true: np.ndarray, **kwargs) -> float:
         """
         Computes the empirical coverage for all prediction sets whose cumulative
-        probability mass falls within the range [1-alpha-eps, 1-alpha+eps].
+        probability mass falls within an asymmetric interval where one of the
+        endpoints is 1-alpha.
         """
         n_samples, n_classes = probs.shape
 
@@ -39,9 +49,7 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
         all_coverages = coverage_matrix.flatten()
 
         # Step 5: Filter the pairs where cumulative mass is in the desired interval
-        lower_bound = 1 - self.alpha - self.eps
-        upper_bound = 1 - self.alpha + self.eps
-        mask = (all_cum_scores >= lower_bound) & (all_cum_scores <= upper_bound)
+        mask = (all_cum_scores >= self.lower_bound) & (all_cum_scores <= self.upper_bound)
 
         if mask.sum() == 0:
             return 0.0
