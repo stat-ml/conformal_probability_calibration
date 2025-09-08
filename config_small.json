@@ -7,33 +7,59 @@
         "visualization_n_bins": 20
     },
     "visualizations": {
-        "confidence_curve": {
-            "n_bins": 20
-        },
-        "cumulative_mass_curve": {
-            "n_bins": 20
-        }
+        "confidence_curve": {"n_bins": 20},
+        "cumulative_mass_curve": {"n_bins": 20}
     },
     "calibrators": [
         "temperature_scaling",
         "isotonic_regression",
-        {"name": "conformal_mass_threshold", "params": { "score_type": "aps", "alpha": 0.1 }},
-        {"name": "conformal_temperature", "params": { "score_type": "aps", "alpha": 0.1 }},
         {"name": "venn_abers", "params": {"va_type": "one_vs_one"}},
-        {"name": "venn_abers", "params": {"va_type": "one_vs_all"}}
+        {"name": "venn_abers", "params": {"va_type": "one_vs_all"}},
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.1,
+                "score_transformation": "identity"
+            }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.1,
+                "score_transformation": "identity"
+            }
+        },
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.1,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.1,
+                "score_transformation": "normalizing_flow"
+            }
+        }
     ],
     "metrics": [
         "accuracy",
         "roc_auc",
-        { "name": "ece", "params": { "n_bins": 20 } },
-        { "name": "mce", "params": { "n_bins": 20 } },
-        { "name": "cw-ece", "params": { "n_bins": 20 } },
+        {"name": "ece", "params": {"n_bins": 20}},
+        {"name": "mce", "params": {"n_bins": 20}},
+        {"name": "cw-ece", "params": {"n_bins": 20}},
         "nll",
         "brier_score"
     ],
     "evaluations": [
         {
-            "dataset": { "name": "cifar10" },
+            "dataset": {"name": "cifar10"},
             "model": {
                 "source": "torch_hub",
                 "repo": "chenyaofo/pytorch-cifar-models",
@@ -42,10 +68,7 @@
             }
         },
         {
-            "dataset": {
-                "name": "cifar100",
-                "params": { "image_size": 224 }
-            },
+            "dataset": {"name": "cifar100", "params": {"image_size": 224}},
             "model": {
                 "source": "vit",
                 "name": "pkr7098/cifar100-vit-base-patch16-224-in21k",

@@ -19,22 +19,22 @@ class MetricBase(ABC):
         raise NotImplementedError
 
     def __call__(
-            self,
-            *,
-            probs: np.ndarray,
-            y_true: Optional[np.ndarray] = None,
-            true_proba: Optional[np.ndarray] = None,
-        ) -> float:
-            self._validate_inputs(
-                probs=probs,
-                y_true=y_true,
-                true_proba=true_proba,
-            )
-            return self._compute(
-                probs=probs,
-                y_true=y_true,
-                true_proba=true_proba,
-            )
+        self,
+        *,
+        probs: np.ndarray,
+        y_true: Optional[np.ndarray] = None,
+        true_proba: Optional[np.ndarray] = None,
+    ) -> float:
+        self._validate_inputs(
+            probs=probs,
+            y_true=y_true,
+            true_proba=true_proba,
+        )
+        return self._compute(
+            probs=probs,
+            y_true=y_true,
+            true_proba=true_proba,
+        )
 
     @abstractmethod
     def _compute(self, **kwargs: Any) -> float:
@@ -75,7 +75,7 @@ class LabelBasedMetricBase(MetricBase, ABC):
         *,
         probs: np.ndarray,
         y_true: Optional[np.ndarray],
-        true_proba: Optional[np.ndarray]
+        true_proba: Optional[np.ndarray],
     ) -> float:
         raise NotImplementedError
 
@@ -93,6 +93,6 @@ class TrueProbMetricBase(MetricBase, ABC):
         *,
         probs: np.ndarray,
         y_true: Optional[np.ndarray],
-        true_proba: Optional[np.ndarray]
+        true_proba: Optional[np.ndarray],
     ) -> float:
         raise NotImplementedError

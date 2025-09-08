@@ -9,8 +9,12 @@ class BrierScore(MetricBase):
         return "brier_score"
 
     def _compute(self, *, probs, y_true=None, true_proba=None, **kwargs):
-        if (y_true is None and true_proba is None) or (y_true is not None and true_proba is not None):
-            raise ValueError("Provide exactly one of y_true (labels) or true_proba (probabilities).")
+        if (y_true is None and true_proba is None) or (
+            y_true is not None and true_proba is not None
+        ):
+            raise ValueError(
+                "Provide exactly one of y_true (labels) or true_proba (probabilities)."
+            )
 
         if y_true is not None:
             n_samples, n_classes = probs.shape
@@ -19,15 +23,18 @@ class BrierScore(MetricBase):
         return np.mean(np.sum((probs - true_proba) ** 2, axis=1), axis=0)
 
 
-
 class NegativeLogLikelihood(MetricBase):
     @property
     def name(self) -> str:
         return "nll"
 
     def _compute(self, *, probs, y_true=None, true_proba=None, **kwargs):
-        if (y_true is None and true_proba is None) or (y_true is not None and true_proba is not None):
-            raise ValueError("Provide exactly one of y_true (labels) or true_proba (probabilities).")
+        if (y_true is None and true_proba is None) or (
+            y_true is not None and true_proba is not None
+        ):
+            raise ValueError(
+                "Provide exactly one of y_true (labels) or true_proba (probabilities)."
+            )
 
         if y_true is not None:
             correct_probs = probs[np.arange(len(y_true)), y_true]

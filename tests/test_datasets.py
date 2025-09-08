@@ -85,4 +85,3 @@ def test_imagenet_mini_dataset(tmp_path):
     assert train_images.shape[0] == 1
     assert cal_images.shape[0] == 1
     assert test_images.shape[0] == 1
-

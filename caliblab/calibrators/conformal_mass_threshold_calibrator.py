@@ -2,8 +2,12 @@ from typing import Optional
 import numpy as np
 
 from .base import CalibratorBase
-from ..conformal_prediction.conformal_set_helper import ConformalSetHelper
+from ..conformal_prediction.conformal_set_helper import (
+    ConformalSetHelper,
+    ScoreTransformation,
+)
 from ..utils.computations import softmax
+
 
 class ConformalMassThresholdCalibrator(CalibratorBase):
     """
@@ -14,10 +18,19 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
     base probabilities at prediction time.
     """
 
-    def __init__(self, score_type: str, alpha: float):
+    def __init__(
+        self,
+        score_type: str,
+        alpha: float,
+        score_transformation: ScoreTransformation = ScoreTransformation.IDENTITY,
+    ):
         super().__init__()
         self.alpha = float(alpha)
-        self._conf = ConformalSetHelper(score_type=score_type, alpha=alpha)
+        self._conf = ConformalSetHelper(
+            score_type=score_type,
+            alpha=alpha,
+            score_transformation=score_transformation,
+        )
 
     @property
     def name(self) -> str:
@@ -60,5 +73,7 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
         )  # this could be only for the empty set or for full set. In this case do nothing
 
         if not np.allclose(q_final.sum(axis=-1), 1.0, rtol=0, atol=1e-4):
-            raise ValueError(f"Each row of q must sum to 1. Got min sum value: {q_final.sum(axis=-1).min()}")
+            raise ValueError(
+                f"Each row of q must sum to 1. Got min sum value: {q_final.sum(axis=-1).min()}"
+            )
         return q_final

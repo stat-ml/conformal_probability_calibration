@@ -31,7 +31,7 @@ __all__ = [
     "CalibratorBase",
     "IsotonicRegression",
     "TemperatureScaling",
-    'ConformalCalibrator',
+    "ConformalCalibrator",
     "TemperatureScaling",
     "ConformalMassThresholdCalibrator",
     "ConformalTemperatureCalibrator",

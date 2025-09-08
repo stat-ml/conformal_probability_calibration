@@ -12,7 +12,5 @@ class EvaluationReport:
     metrics: Dict[str, float]
     n_samples: int
     n_classes: int
-    calibrated_probabilities: Optional[np.ndarray] = field(
-        default=None, repr=False
-    )
+    calibrated_probabilities: Optional[np.ndarray] = field(default=None, repr=False)
     true_labels: Optional[np.ndarray] = field(default=None, repr=False)

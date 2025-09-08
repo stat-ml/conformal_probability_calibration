@@ -64,7 +64,6 @@ def parse_config(
         else:
             raise ValueError(f"Unknown calibrator config: {calibrator_config}")
 
-
     # --- Parse metric configurations ---
     metrics: List[MetricBase] = []
     for metric_config in config.get("metrics", []):

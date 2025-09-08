@@ -2,7 +2,10 @@ from typing import Optional
 import numpy as np
 
 from .base import CalibratorBase
-from ..conformal_prediction.conformal_set_helper import ConformalSetHelper
+from ..conformal_prediction.conformal_set_helper import (
+    ConformalSetHelper,
+    ScoreTransformation,
+)
 from ..utils.computations import softmax
 
 
@@ -24,6 +27,7 @@ class ConformalTemperatureCalibrator(CalibratorBase):
         max_iter: int = 60,
         tau_min: float = 1e-4,
         tau_max: float = 1e6,
+        score_transformation: str = ScoreTransformation.IDENTITY.value,
     ):
         super().__init__()
         self.alpha = float(alpha)
@@ -31,7 +35,11 @@ class ConformalTemperatureCalibrator(CalibratorBase):
         self.max_iter = int(max_iter)
         self.tau_min = float(tau_min)
         self.tau_max = float(tau_max)
-        self._conf = ConformalSetHelper(score_type=score_type, alpha=alpha)
+        self._conf = ConformalSetHelper(
+            score_type=score_type,
+            alpha=alpha,
+            score_transformation=score_transformation,
+        )
 
     @property
     def name(self) -> str:

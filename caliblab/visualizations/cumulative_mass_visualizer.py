@@ -28,10 +28,7 @@ class CumulativeMassVisualizer:
         ax.plot([0, 1], [0, 1], "k--", label="Perfectly calibrated")
 
         for report in reports:
-            if (
-                report.calibrated_probabilities is None
-                or report.true_labels is None
-            ):
+            if report.calibrated_probabilities is None or report.true_labels is None:
                 continue
 
             probs = report.calibrated_probabilities
