@@ -123,6 +123,13 @@ class ModelEvaluator:
                 calibrated_metrics[metric.name] = metric(
                     probs=final_probs, y_true=test_labels
                 )
+
+            conformal_set_sizes = None
+            if calibrator is not None and calibrator.uses_conformal_set_helper():
+                conformal_set_sizes = calibrator.get_conformal_set_sizes(
+                    logits=logits
+                )
+
             results.append(
                 EvaluationReport(
                     calibrator_name=calibrator_name,
@@ -131,6 +138,7 @@ class ModelEvaluator:
                     n_classes=n_classes,
                     calibrated_probabilities=final_probs,
                     true_labels=test_labels,
+                    conformal_set_sizes=conformal_set_sizes,
                 )
             )
 

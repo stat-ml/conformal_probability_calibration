@@ -8,9 +8,28 @@
     },
     "visualizations": {
         "confidence_curve": {"n_bins": 20},
-        "cumulative_mass_curve": {"n_bins": 20}
+        "cumulative_mass_curve": {"n_bins": 20},
+        "conformal_set_size_distribution": {}
     },
-    "calibrators": ["temperature_scaling", "isotonic_regression"],
+    "calibrators": [
+        "temperature_scaling",
+        "isotonic_regression",
+        {"name": "venn_abers", "params": {"va_type": "one_vs_all"}},
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "one_minus_prob",
+                "alpha": 0.1
+            }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "one_minus_prob",
+                "alpha": 0.1
+            }
+        }
+    ],
     "metrics": [
         "accuracy",
         "roc_auc",
@@ -32,10 +51,45 @@
             }
         },
         {
+            "dataset": {"name": "cifar10"},
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar10_resnet20",
+                "alias": "ResNet20"
+            }
+        },
+        {
+            "dataset": {"name": "cifar100", "params": {"image_size": 32}},
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar100_resnet20",
+                "alias": "ResNet20"
+            }
+        },
+        {
+            "dataset": {"name": "cifar100", "params": {"image_size": 32}},
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar100_resnet56",
+                "alias": "ResNet56"
+            }
+        },
+        {
             "dataset": {"name": "cifar100", "params": {"image_size": 224}},
             "model": {
                 "source": "vit",
                 "name": "pkr7098/cifar100-vit-base-patch16-224-in21k",
+                "alias": "ViT-B16"
+            }
+        },
+        {
+            "dataset": {"name": "imagenet-mini"},
+            "model": {
+                "source": "vit",
+                "name": "google/vit-base-patch16-224",
                 "alias": "ViT-B16"
             }
         }

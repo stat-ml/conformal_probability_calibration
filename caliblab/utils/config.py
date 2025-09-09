@@ -14,6 +14,7 @@ from ..visualizations import (
     ConfidenceVisualizer,
     CumulativeMassVisualizer,
     OneMinusAlphaCoverageVisualizer,
+    ConformalSetSizeVisualizer,
 )
 
 # A simple type alias for the JSON config
@@ -58,6 +59,8 @@ def parse_config(
     if "one_minus_alpha_coverage_curve" in vis_config:
         params = vis_config["one_minus_alpha_coverage_curve"]
         visualizers.append(OneMinusAlphaCoverageVisualizer(**params))
+    if "conformal_set_size_distribution" in vis_config:
+        visualizers.append(ConformalSetSizeVisualizer())
 
     # --- Parse calibrator configurations ---
     calibrators: List[CalibratorBase] = []
