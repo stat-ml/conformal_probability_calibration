@@ -34,7 +34,7 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
 
     @property
     def name(self) -> str:
-        return f"conformal_mass_threshold_alpha={self.alpha}"
+        return f"cnfrml_mass_thrsh:a={self.alpha},sс.tp={self._conf.score_type[:3]},sс.trnf={self._conf.score_transformation[:4]}"
 
     def fit(
         self,
