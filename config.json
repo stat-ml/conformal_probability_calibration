@@ -9,7 +9,8 @@
     "visualizations": {
         "confidence_curve": {"n_bins": 20},
         "cumulative_mass_curve": {"n_bins": 20},
-        "conformal_set_size_distribution": {}
+        "conformal_set_size_distribution": {},
+        "one_minus_alpha_coverage_curve": {"alpha": 0.1}
     },
     "calibrators": [
         "temperature_scaling",
