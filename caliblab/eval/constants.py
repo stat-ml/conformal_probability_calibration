@@ -14,3 +14,4 @@ class EvaluationReport:
     n_classes: int
     calibrated_probabilities: Optional[np.ndarray] = field(default=None, repr=False)
     true_labels: Optional[np.ndarray] = field(default=None, repr=False)
+    conformal_set_sizes: Optional[np.ndarray] = field(default=None, repr=False)

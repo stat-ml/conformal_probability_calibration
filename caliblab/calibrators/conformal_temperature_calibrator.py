@@ -121,3 +121,15 @@ class ConformalTemperatureCalibrator(CalibratorBase):
                 q[i] = softmax(L[i] / tau_i)
 
         return q
+
+    def uses_conformal_set_helper(self) -> bool:
+        return True
+
+    def get_conformal_set_sizes(
+        self,
+        *,
+        logits: Optional[np.ndarray] = None,
+    ) -> np.ndarray:
+        self.check_fitted()
+        C = self._conf.make_mask(logits)  # (n, K) fixed set
+        return C.sum(axis=1)

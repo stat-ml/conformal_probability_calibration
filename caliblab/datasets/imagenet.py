@@ -48,6 +48,7 @@ class ImageNetMiniDataset(BaseDataset):
 
     def _setup(self):
         # Assumes a standard ImageNet folder structure with 'train' and 'val' folders.
+        # Downloaded from https://www.kaggle.com/datasets/ifigotin/imagenetmini-1000
         train_path = self.data_dir / "train"
         val_path = self.data_dir / "val"
 
@@ -58,8 +59,7 @@ class ImageNetMiniDataset(BaseDataset):
             )
 
         self.train_dataset = ImageFolder(train_path, transform=self.train_transform)
-        original_test_dataset = ImageFolder(val_path, transform=self.test_transform)
 
         self.cal_dataset, self.test_dataset = split_dataset(
-            original_test_dataset, self.cal_ratio, self.seed
+            self.train_dataset, self.cal_ratio, self.seed
         )

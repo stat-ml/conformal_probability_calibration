@@ -40,3 +40,15 @@ class CalibratorBase(ABC):
         logits: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         raise NotImplementedError
+
+    def uses_conformal_set_helper(self) -> bool:
+        return False
+
+    def get_conformal_set_sizes(
+        self,
+        *,
+        logits: Optional[np.ndarray] = None,
+    ) -> np.ndarray:
+        raise NotImplementedError(
+            "This method is not applicable to the current calibrator."
+        )
