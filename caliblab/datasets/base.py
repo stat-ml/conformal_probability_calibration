@@ -7,7 +7,6 @@ class BaseDataset(ABC):
     """A base class for datasets."""
 
     train_dataset: Dataset
-    cal_dataset: Dataset
     test_dataset: Dataset
 
     @property
@@ -28,18 +27,6 @@ class BaseDataset(ABC):
             pin_memory=True,
         )
 
-    def get_cal_loader(
-        self, batch_size: int, shuffle: bool = False, num_workers: int = 4
-    ) -> DataLoader:
-        """Get a DataLoader for the calibration set."""
-        return DataLoader(
-            self.cal_dataset,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            num_workers=num_workers,
-            pin_memory=True,
-        )
-
     def get_test_loader(
         self, batch_size: int, shuffle: bool = False, num_workers: int = 4
     ) -> DataLoader:
@@ -49,5 +36,5 @@ class BaseDataset(ABC):
             batch_size=batch_size,
             shuffle=shuffle,
             num_workers=num_workers,
-            pin_memory=True,
+            pin_memory=False,
         )

@@ -52,15 +52,6 @@
             }
         },
         {
-            "dataset": {"name": "cifar10"},
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar10_resnet20",
-                "alias": "ResNet20"
-            }
-        },
-        {
             "dataset": {"name": "cifar100", "params": {"image_size": 32}},
             "model": {
                 "source": "torch_hub",

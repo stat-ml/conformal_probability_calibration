@@ -1,4 +1,5 @@
 from typing import Tuple
+import numpy as np
 
 import torch
 from torch.utils.data import Dataset, Subset, random_split
@@ -30,3 +31,24 @@ def split_dataset(
         [cal_size, test_size],
         generator=torch.Generator().manual_seed(seed),
     )
+
+
+def split_data(
+    outputs: np.ndarray, labels: np.ndarray, cal_ratio: float, seed: int
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    if not 0.0 < cal_ratio < 1.0:
+        raise ValueError("cal_ratio must be between 0 and 1.")
+
+    num_samples = outputs.shape[0]
+    cal_size = int(cal_ratio * num_samples)
+
+    rng = np.random.default_rng(seed)
+    indices = rng.permutation(num_samples)
+
+    cal_indices = indices[:cal_size]
+    test_indices = indices[cal_size:]
+
+    cal_outputs, test_outputs = outputs[cal_indices], outputs[test_indices]
+    cal_labels, test_labels = labels[cal_indices], labels[test_indices]
+
+    return cal_outputs, test_outputs, cal_labels, test_labels
