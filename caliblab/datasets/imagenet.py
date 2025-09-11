@@ -59,7 +59,8 @@ class ImageNetMiniDataset(BaseDataset):
             )
 
         self.train_dataset = ImageFolder(train_path, transform=self.train_transform)
+        original_test_dataset = ImageFolder(val_path, transform=self.test_transform)
 
         self.cal_dataset, self.test_dataset = split_dataset(
-            self.train_dataset, self.cal_ratio, self.seed
+            original_test_dataset, self.cal_ratio, self.seed
         )

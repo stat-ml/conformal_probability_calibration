@@ -19,13 +19,12 @@ from ..visualizations import (
 
 # A simple type alias for the JSON config
 Config = Dict[str, Any]
-EvaluationConfig = Tuple[BaseDataset, ModelBase]
 
 
 def parse_config(
     config_path: Path,
 ) -> Tuple[
-    List[EvaluationConfig],
+    List[Dict[str, Any]],
     List[CalibratorBase],
     List[MetricBase],
     Dict[str, Any],
@@ -46,6 +45,7 @@ def parse_config(
     data_root_str = config.get("data_root", "data")
     data_root = Path(data_root_str)
     data_root.mkdir(parents=True, exist_ok=True)
+    runner_settings["data_root"] = data_root
 
     # --- Parse visualization settings ---
     visualizers = []
@@ -85,32 +85,12 @@ def parse_config(
             )
 
     # --- Parse evaluation configurations ---
-    evaluation_configs: List[EvaluationConfig] = []
+    evaluation_configs: List[Dict[str, Any]] = []
     for eval_config in config.get("evaluations", []):
-        # Instantiate dataset
         dataset_config = eval_config["dataset"]
-        dataset_name = dataset_config["name"]
-        dataset_params = dataset_config.get("params", {})
-        dataset = dataset_getter(
-            dataset_name, data_dir=str(data_root / dataset_name), **dataset_params
-        )
-
-        # Instantiate model
         model_config = eval_config["model"]
-        model_name = model_config["name"]
-        model_source = model_config["source"]
-        model_alias = model_config.get("alias")
-        model_repo = model_config.get("repo")  # Can be None
-        model_params = model_config.get("params", {})
-        model = get_model(
-            name=model_name,
-            source=model_source,
-            alias=model_alias,
-            repo=model_repo,
-            cache_dir=runner_settings.get("model_cache_dir"),
-            **model_params,
+        evaluation_configs.append(
+            {"dataset_config": dataset_config, "model_config": model_config}
         )
-
-        evaluation_configs.append((dataset, model))
 
     return evaluation_configs, calibrators, metrics, runner_settings, visualizers

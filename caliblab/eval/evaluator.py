@@ -44,8 +44,8 @@ class ModelEvaluator:
         self.model.to(self.device)
         self.model.eval()
 
-        self.cal_loader = self.dataset.get_cal_loader(batch_size=128, num_workers=4)
-        self.test_loader = self.dataset.get_test_loader(batch_size=128, num_workers=4)
+        self.cal_loader = self.dataset.get_cal_loader(batch_size=128, num_workers=4, pin_memory=False)
+        self.test_loader = self.dataset.get_test_loader(batch_size=128, num_workers=4, pin_memory=False)
 
     def _predict(
         self,
