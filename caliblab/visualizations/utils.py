@@ -26,7 +26,7 @@ def calculate_confidence_bins(
     predictions = np.argmax(probs, axis=1)
     accuracies = (predictions == y_true).astype(float)
 
-    bin_lowers, bin_uppers = get_bin_lowers_uppers(n_bins)
+    bin_lowers, bin_uppers = get_bin_lowers_uppers(confidences, n_bins)
 
     bin_accuracies = np.zeros(n_bins)
     bin_confidences = np.zeros(n_bins)
@@ -114,7 +114,7 @@ def calculate_cumulative_mass_bins(
     all_coverages = coverage_matrix.flatten().astype(float)
 
     # Step 6: Bin the data points based on their cumulative mass score.
-    bin_lowers, bin_uppers = get_bin_lowers_uppers(n_bins)
+    bin_lowers, bin_uppers = get_bin_lowers_uppers(all_cum_scores, n_bins)
 
     bin_mean_scores = np.zeros(n_bins)
     bin_mean_coverages = np.zeros(n_bins)
