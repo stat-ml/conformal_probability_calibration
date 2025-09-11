@@ -43,7 +43,7 @@ class ConformalTemperatureCalibrator(CalibratorBase):
 
     @property
     def name(self) -> str:
-        return f"conformal_temperature_alpha={self.alpha}"
+        return f"cnfrml_temp:a={self.alpha},sс.tp={self._conf.score_type[:3]},sс.trnf={self._conf.score_transformation[:4]}"
 
     def fit(
         self,
