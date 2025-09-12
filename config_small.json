@@ -19,7 +19,7 @@
         {
             "name": "conformal_mass_threshold",
             "params": {
-                "score_type": "aps",
+                "score_type": "one_minus_prob",
                 "alpha": 0.1,
                 "score_transformation": "identity"
             }
@@ -27,7 +27,7 @@
         {
             "name": "conformal_temperature",
             "params": {
-                "score_type": "aps",
+                "score_type": "one_minus_prob",
                 "alpha": 0.1,
                 "score_transformation": "identity"
             }

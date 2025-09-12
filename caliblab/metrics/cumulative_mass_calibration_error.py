@@ -69,6 +69,6 @@ class CumulativeMassCalibrationError(LabelBasedMetricBase):
         bin_diffs = _compute_cumulative_mass_calibration_error(probs, y_true, self.n_bins, self.strategy)
         
         if self.weighted:
-            return sum(weight * diff for weight, diff in bin_diffs)
+            return sum(weight * np.abs(diff) for weight, diff in bin_diffs)
         else:
-            return np.mean([diff for _, diff in bin_diffs])
+            return np.mean([np.abs(diff) for _, diff in bin_diffs])
