@@ -14,7 +14,6 @@
     "calibrators": [
         "temperature_scaling",
         "isotonic_regression",
-        {"name": "venn_abers", "params": {"va_type": "one_vs_one"}},
         {"name": "venn_abers", "params": {"va_type": "one_vs_all"}},
         {
             "name": "conformal_mass_threshold",
@@ -78,6 +77,16 @@
                 "repo": "chenyaofo/pytorch-cifar-models",
                 "name": "cifar10_resnet56",
                 "alias": "ResNet56"
+            }
+        },
+        {
+            "dataset": {
+                "name": "inaturalist"
+            },
+            "model": {
+                "source": "vit",
+                "name": "bryanzhou008/vit-base-patch16-224-in21k-finetuned-inaturalist",
+                "alias": "ViT-B16"
             }
         }
     ]

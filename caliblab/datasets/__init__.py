@@ -1,6 +1,7 @@
 from .base import BaseDataset
 from .cifar import CIFAR10Dataset, CIFAR100Dataset
 from .imagenet import ImageNetMiniDataset
+from .inaturalist import INaturalistDataset
 from .mnist import MNISTDataset
 
 
@@ -17,6 +18,8 @@ def dataset_getter(name: str, **kwargs) -> BaseDataset:
         return MNISTDataset(**kwargs)
     elif name == "imagenet-mini":
         return ImageNetMiniDataset(**kwargs)
+    elif name == "inaturalist":
+        return INaturalistDataset(**kwargs)
     else:
         raise ValueError(f"Unknown dataset: {name}")
 
@@ -27,5 +30,6 @@ __all__ = [
     "CIFAR100Dataset",
     "MNISTDataset",
     "ImageNetMiniDataset",
+    "INaturalistDataset",
     "dataset_getter",
 ]

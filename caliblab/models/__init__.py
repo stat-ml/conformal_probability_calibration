@@ -29,4 +29,4 @@ def get_model(
         raise ValueError(f"Unknown model source: '{source}'")
 
 
-__all__ = ["ModelBase", "get_model", "HubModel", "ViTModel"]
+__all__ = ["ModelBase",  "get_model", "HubModel", "ViTModel"]
