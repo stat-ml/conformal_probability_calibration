@@ -43,6 +43,41 @@
     ],
     "evaluations": [
         {
+            "dataset": {"name": "cifar10"},
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar10_resnet56",
+                "alias": "ResNet56"
+            }
+        },
+        {
+            "dataset": {"name": "cifar100", "params": {"image_size": 32}},
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar100_resnet20",
+                "alias": "ResNet20"
+            }
+        },
+        {
+            "dataset": {"name": "cifar100", "params": {"image_size": 32}},
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar100_resnet56",
+                "alias": "ResNet56"
+            }
+        },
+        {
+            "dataset": {"name": "cifar100", "params": {"image_size": 224}},
+            "model": {
+                "source": "vit",
+                "name": "pkr7098/cifar100-vit-base-patch16-224-in21k",
+                "alias": "ViT-B16"
+            }
+        },
+        {
             "dataset": {"name": "imagenet-mini"},
             "model": {
                 "source": "vit",
