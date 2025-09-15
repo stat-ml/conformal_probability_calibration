@@ -1,7 +1,10 @@
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Tuple
 
+import numpy as np
+import torch
 from tabulate import tabulate
+from torch.utils.data import DataLoader
 
 from ..datasets import BaseDataset
 from ..models import ModelBase
@@ -67,3 +70,29 @@ def generate_and_save_summary(
         f.write("=" * 80 + "\n")
         f.write(table_string)
     print(f"\nResults table saved to {output_path}")
+
+
+def get_predictions(
+    model: ModelBase,
+    loader: DataLoader,
+    device: torch.device,
+    cache_path: Path,
+    use_cache: bool = True,
+    force_recompute: bool = False,
+) -> Tuple[np.ndarray, np.ndarray]:
+    if use_cache and not force_recompute and cache_path.exists():
+        print(f"Loading cached predictions from {cache_path}")
+        cached_data = np.load(cache_path)
+        if "outputs" in cached_data and "labels" in cached_data:
+            return cached_data["outputs"], cached_data["labels"]
+        elif "logits" in cached_data and "true_labels" in cached_data:
+            return cached_data["logits"], cached_data["true_labels"]
+        else:
+            raise KeyError(
+                "Could not find 'outputs'/'labels' or 'logits'/'true_labels' in cached file."
+            )
+
+    print(f"Computing predictions and saving to {cache_path}")
+    outputs, labels = model.predict(loader, device)
+    np.savez(cache_path, outputs=outputs, labels=labels)
+    return outputs, labels

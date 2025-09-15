@@ -17,6 +17,12 @@ def main():
         type=str,
         help="Path to the JSON configuration file.",
     )
+    parser.add_argument(
+        "--num_splits",
+        type=int,
+        default=1,
+        help="Number of different train/test splits to average results over.",
+    )
     args = parser.parse_args()
     config_path = Path(args.config_file)
     if not config_path.is_file():
@@ -31,6 +37,7 @@ def main():
         calibrators=calibrators,
         metrics=metrics,
         visualizers=visualizers,
+        num_splits=args.num_splits,
         **runner_settings,
     )
 

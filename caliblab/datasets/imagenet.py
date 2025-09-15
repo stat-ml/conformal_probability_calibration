@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 
 from .base import BaseDataset
-from .utils import split_dataset
+
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
@@ -20,14 +20,10 @@ class ImageNetMiniDataset(BaseDataset):
     def __init__(
         self,
         data_dir: str,
-        cal_ratio: float = 0.5,
         size: int = 224,
-        seed: int = 0,
     ):
         self.data_dir = Path(data_dir)
-        self.cal_ratio = cal_ratio
         self.size = size
-        self.seed = seed
         self.train_transform = T.Compose(
             [
                 T.RandomResizedCrop(size),
@@ -58,8 +54,4 @@ class ImageNetMiniDataset(BaseDataset):
                 "Please download and extract it into 'train' and 'val' subdirectories."
             )
 
-        self.train_dataset = ImageFolder(train_path, transform=self.train_transform)
-
-        self.cal_dataset, self.test_dataset = split_dataset(
-            self.train_dataset, self.cal_ratio, self.seed
-        )
+        self.test_dataset = ImageFolder(train_path, transform=self.test_transform)
