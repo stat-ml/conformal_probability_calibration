@@ -9,7 +9,7 @@ from ..metrics import CoverageAroundOneMinusAlpha
 
 
 class OneMinusAlphaCoverageVisualizer:
-    def __init__(self, alpha: float, n_eps_steps: int = 50):
+    def __init__(self, alpha: float, n_eps_steps: int = 25):
         self.alpha = alpha
         self.eps_values = np.linspace(-self.alpha, self.alpha, n_eps_steps)
 
@@ -31,10 +31,14 @@ class OneMinusAlphaCoverageVisualizer:
             y_true = report.true_labels
             name = report.calibrator_name
 
+            sorted_idx = np.argsort(probs, axis=1)[:, ::-1]
+
             coverage_values = []
             for eps in self.eps_values:
                 metric = CoverageAroundOneMinusAlpha(alpha=self.alpha, eps=eps)
-                coverage = metric(probs=probs, y_true=y_true)
+                coverage = metric.compute_from_sorted(
+                    probs=probs, y_true=y_true, sorted_idx=sorted_idx
+                )
                 coverage_values.append(coverage)
 
             ax.plot(
