@@ -17,6 +17,7 @@ from .calibration_errors import (
 from .classification import Accuracy, RocAuc, PrAuc
 from .proper_scores import BrierScore, NegativeLogLikelihood
 from .coverage_around_one_minus_alpha import CoverageAroundOneMinusAlpha
+from .cumulative_mass_calibration_error import CumulativeMassCalibrationError
 
 
 def get_metric(name: str, **kwargs: Any) -> MetricBase:
@@ -42,6 +43,8 @@ def get_metric(name: str, **kwargs: Any) -> MetricBase:
         return BrierScore()
     elif name == "coverage_around_one_minus_alpha":
         return CoverageAroundOneMinusAlpha(**kwargs)
+    elif name == "cmce":
+        return CumulativeMassCalibrationError(**kwargs)
     else:
         raise ValueError(f"Unknown metric: {name}")
 
@@ -60,4 +63,5 @@ __all__ = [
     "PrAuc",
     "get_metric",
     "CoverageAroundOneMinusAlpha",
+    "CumulativeMassCalibrationError",
 ]
