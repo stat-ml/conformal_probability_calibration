@@ -26,34 +26,15 @@ class ModelEvaluator:
     def __init__(
         self,
         *,
-        model: ModelBase,
         metrics: List[MetricBase],
-        calibrators: List[CalibratorBase],
+        calibrators: List[CalibratorBase | None],
         run_dir: Path,
         device: torch.device,
     ):
-        self.model = model
         self.metrics = metrics
         self.calibrators = calibrators
         self.run_dir = run_dir
         self.device = device
-
-    def get_predictions(
-        self,
-        loader: DataLoader,
-        cache_path: Path,
-        use_cache: bool = True,
-        force_recompute: bool = False,
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        if use_cache and not force_recompute and cache_path.exists():
-            print(f"Loading cached predictions from {cache_path}")
-            cached_data = np.load(cache_path)
-            return cached_data["outputs"], cached_data["labels"]
-
-        print(f"Computing predictions and saving to {cache_path}")
-        outputs, labels = self.model.predict(loader, self.device)
-        np.savez(cache_path, outputs=outputs, labels=labels)
-        return outputs, labels
 
     def run_calibration_and_metrics(
         self,
@@ -64,19 +45,23 @@ class ModelEvaluator:
     ) -> List[EvaluationReport]:
         reports = []
 
-        uncalibrated_report = self._evaluate_calibrator(
-            None, test_outputs, test_labels
-        )
-        reports.append(uncalibrated_report)
+        all_calibrators = [None] + self.calibrators
 
-        for calibrator in self.calibrators:
-            start_time = time.time()
-            calibrator.fit(logits=cal_outputs, y_true=cal_labels)
-            train_time = time.time() - start_time
+        for calibrator in all_calibrators:
+            if calibrator is None:
+                calibrated_test_outputs = test_outputs
+                train_time = 0.0
+                predict_time = 0.0
+            else:
+                start_time = time.time()
+                calibrator.fit(logits=cal_outputs, y_true=cal_labels)
+                train_time = time.time() - start_time
 
-            start_time = time.time()
-            calibrated_test_outputs = calibrator.predict_proba(logits=test_outputs)
-            predict_time = time.time() - start_time
+                start_time = time.time()
+                calibrated_test_outputs = calibrator.predict_proba(
+                    logits=test_outputs
+                )
+                predict_time = time.time() - start_time
 
             report = self._evaluate_calibrator(
                 calibrator,
@@ -91,7 +76,7 @@ class ModelEvaluator:
 
     def _evaluate_calibrator(
         self,
-        calibrator: CalibratorBase,
+        calibrator: CalibratorBase | None,
         outputs: np.ndarray,
         labels: np.ndarray,
         train_time: float = 0.0,

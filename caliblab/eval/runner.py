@@ -19,6 +19,7 @@ from .evaluator import ModelEvaluator
 from ..utils.device import get_device
 from .runner_utils import (
     generate_and_save_summary,
+    get_predictions,
     print_and_collect_run_results,
 )
 
@@ -76,15 +77,8 @@ def run_evaluations(
         test_loader = dataset.get_test_loader(batch_size=512)
         test_preds_path = base_run_dir / "test_preds.npz"
 
-        pred_evaluator = ModelEvaluator(
-            model=model,
-            metrics=[],
-            calibrators=[],
-            run_dir=base_run_dir,
-            device=device,
-        )
-        test_outputs, test_labels = pred_evaluator.get_predictions(
-            test_loader, test_preds_path, use_cache, force_recompute
+        test_outputs, test_labels = get_predictions(
+            model, test_loader, device, test_preds_path, use_cache, force_recompute
         )
 
         for split_seed in range(num_splits):
@@ -104,7 +98,6 @@ def run_evaluations(
             )
 
             evaluator = ModelEvaluator(
-                model=model,
                 metrics=metrics,
                 calibrators=calibrators,
                 run_dir=run_dir,
