@@ -10,7 +10,7 @@ from .utils import calculate_confidence_bins
 
 class ConfidenceVisualizer:
     def __init__(self, n_bins: int):
-        self.n_bins = n_bins
+        self.bins = np.linspace(0, 1, n_bins + 1)
 
     def plot(
         self,
@@ -45,7 +45,7 @@ class ConfidenceVisualizer:
                 bin_confidences,
                 bin_accuracies,
                 bin_counts,
-            ) = calculate_confidence_bins(probs, y_true, self.n_bins)
+            ) = calculate_confidence_bins(probs, y_true, self.bins)
 
             non_empty_bins = bin_counts > 0
             if np.any(non_empty_bins):

@@ -18,10 +18,22 @@ def main():
         help="Path to the JSON configuration file.",
     )
     parser.add_argument(
-        "--num_splits",
+        "--num-splits",
         type=int,
         default=1,
         help="Number of different train/test splits to average results over.",
+    )
+    parser.add_argument(
+        "--cal-ratio",
+        type=float,
+        default=0.3,
+        help="Ratio of data to use for calibration.",
+    )
+    parser.add_argument(
+        "--subset-items",
+        type=int,
+        default=40_000,
+        help="Number of items to use for calibration.",
     )
     args = parser.parse_args()
     config_path = Path(args.config_file)
@@ -38,6 +50,8 @@ def main():
         metrics=metrics,
         visualizers=visualizers,
         num_splits=args.num_splits,
+        cal_ratio=args.cal_ratio,
+        subset_items=args.subset_items,
         **runner_settings,
     )
 

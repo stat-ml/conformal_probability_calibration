@@ -89,23 +89,8 @@ def parse_config(
     for eval_config in config.get("evaluations", []):
         dataset_config = eval_config["dataset"]
         model_config = eval_config["model"]
-<<<<<<< HEAD
         evaluation_configs.append(
             {"dataset_config": dataset_config, "model_config": model_config}
-=======
-        model_name = model_config.pop("name")
-        model_source = model_config.pop("source")
-        model_alias = model_config.pop("alias", None)
-        model_repo = model_config.pop("repo", None)
-
-        model = get_model(
-            name=model_name,
-            source=model_source,
-            alias=model_alias,
-            repo=model_repo,
-            cache_dir=runner_settings.get("model_cache_dir"),
-            **model_config,
->>>>>>> 7d0812d (build(datasets): added inaturlist dataset)
         )
 
     return evaluation_configs, calibrators, metrics, runner_settings, visualizers

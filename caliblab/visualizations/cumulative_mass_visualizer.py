@@ -10,7 +10,7 @@ from .utils import calculate_cumulative_mass_bins
 
 class CumulativeMassVisualizer:
     def __init__(self, n_bins: int):
-        self.n_bins = n_bins
+        self.bins = np.linspace(0, 1, n_bins + 1)
 
     def plot(
         self,
@@ -39,7 +39,7 @@ class CumulativeMassVisualizer:
                 bin_mean_scores,
                 bin_mean_coverages,
                 bin_counts,
-            ) = calculate_cumulative_mass_bins(probs, y_true, self.n_bins)
+            ) = calculate_cumulative_mass_bins(probs, y_true, self.bins)
 
             non_empty_bins = bin_counts > 0
             if np.any(non_empty_bins):

@@ -26,10 +26,14 @@ class ModelBase(ABC, nn.Module):
 
         all_outputs = []
         all_labels = []
-        for inputs, labels in tqdm(loader):
+        for i, (inputs, labels) in enumerate(tqdm(loader)):
             inputs = inputs.to(device)
             outputs = self.model(inputs)
+            assert outputs.shape[0] == inputs.shape[0]
             all_outputs.append(outputs.cpu().numpy().astype(np.float64))
             all_labels.append(labels.cpu().numpy().astype(np.int64))
+            if i >= 10:
+                print(outputs.shape, labels.shape)
+                break
 
         return np.concatenate(all_outputs), np.concatenate(all_labels)

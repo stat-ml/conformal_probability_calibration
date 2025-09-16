@@ -1,6 +1,7 @@
 from typing import Optional
 
 from .base import ModelBase
+from .birder import BirderModel
 from .hub import HubModel
 from .vit import ViTModel
 
@@ -25,8 +26,10 @@ def get_model(
                 "For 'torch_hub' source, the 'repo' parameter is required."
             )
         return HubModel(repo, name, alias=alias, cache_dir=cache_dir, **kwargs)
+    elif source == "birder":
+        return BirderModel(name, alias=alias, cache_dir=cache_dir, **kwargs)
     else:
         raise ValueError(f"Unknown model source: '{source}'")
 
 
-__all__ = ["ModelBase",  "get_model", "HubModel", "ViTModel"]
+__all__ = ["ModelBase", "get_model", "HubModel", "ViTModel", "BirderModel"]

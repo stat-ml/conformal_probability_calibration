@@ -6,7 +6,7 @@ from ..utils.bins import get_bin_lowers_uppers
 
 
 def calculate_confidence_bins(
-    probs: np.ndarray, y_true: np.ndarray, n_bins: int
+    probs: np.ndarray, y_true: np.ndarray, bins: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculates accuracy, confidence, and counts for each confidence bin.
@@ -14,7 +14,7 @@ def calculate_confidence_bins(
     Args:
         probs (np.ndarray): Array of predicted probabilities for each class.
         y_true (np.ndarray): Array of true labels.
-        n_bins (int): The number of bins to use for calibration analysis.
+        bins (np.ndarray): The bins to use for calibration analysis.
 
     Returns:
         Tuple[np.ndarray, np.ndarray, np.ndarray]: A tuple containing:
@@ -26,7 +26,8 @@ def calculate_confidence_bins(
     predictions = np.argmax(probs, axis=1)
     accuracies = (predictions == y_true).astype(float)
 
-    bin_lowers, bin_uppers = get_bin_lowers_uppers(confidences, n_bins)
+    bin_lowers, bin_uppers = bins[:-1], bins[1:]
+    n_bins = len(bin_lowers)
 
     bin_accuracies = np.zeros(n_bins)
     bin_confidences = np.zeros(n_bins)
@@ -44,7 +45,7 @@ def calculate_confidence_bins(
 
 
 def calculate_cumulative_mass_bins(
-    probs: np.ndarray, y_true: np.ndarray, n_bins: int
+    probs: np.ndarray, y_true: np.ndarray, bins: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculates the empirical coverage for binned cumulative probability masses.
@@ -65,7 +66,7 @@ def calculate_cumulative_mass_bins(
     Args:
         probs (np.ndarray): Predicted probabilities, shape (n_samples, n_classes).
         y_true (np.ndarray): True labels, shape (n_samples,).
-        n_bins (int): The number of bins to use for the analysis.
+        bins (np.ndarray): The number of bins to use for the analysis.
 
     Returns:
         Tuple[np.ndarray, np.ndarray, np.ndarray]: A tuple containing:
@@ -114,7 +115,8 @@ def calculate_cumulative_mass_bins(
     all_coverages = coverage_matrix.flatten().astype(float)
 
     # Step 6: Bin the data points based on their cumulative mass score.
-    bin_lowers, bin_uppers = get_bin_lowers_uppers(all_cum_scores, n_bins)
+    bin_lowers, bin_uppers = bins[:-1], bins[1:]
+    n_bins = len(bin_lowers)
 
     bin_mean_scores = np.zeros(n_bins)
     bin_mean_coverages = np.zeros(n_bins)

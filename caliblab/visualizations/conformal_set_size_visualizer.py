@@ -34,22 +34,22 @@ class ConformalSetSizeVisualizer:
 
         for name, set_sizes in results.items():
             ax.hist(
-                set_sizes,
-                bins=np.arange(0, set_sizes.max() + 2) - 0.5,
+                set_sizes.clip(0, 50),
+                bins=50,
                 alpha=0.6,
                 label=f"{name} (median: {np.median(set_sizes):.2f})",
-                rwidth=0.8,
             )
+
+        for name, set_sizes in results.items():
+            quantiles = np.percentile(set_sizes, [0, 25, 50, 75, 100])
+            print(f"{name} conformal set size quantiles (min, 25%, 50%, 75%, max): {quantiles}")
 
         ax.set_xlabel("Conformal Set Size")
         ax.set_ylabel("Frequency")
         ax.set_title(title)
         ax.legend(loc="upper right")
-        ax.grid(True, linestyle="--", alpha=0.6)
-        ax.set_xticks(
-            np.arange(0, max(sz.max() for sz in results.values()) + 1, 1)
-        )
 
         plt.tight_layout()
+        plt.grid(True, linestyle="--", alpha=0.6)
         plt.savefig(output_path)
         plt.close()

@@ -13,7 +13,7 @@
     },
     "calibrators": [
         "temperature_scaling",
-        "isotonic_regression",
+        {"name": "venn_abers", "params": {"va_type": "one_vs_one"}},
         {"name": "venn_abers", "params": {"va_type": "one_vs_all"}},
         {
             "name": "conformal_mass_threshold",
@@ -21,30 +21,6 @@
                 "score_type": "one_minus_prob",
                 "alpha": 0.1,
                 "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "one_minus_prob",
-                "alpha": 0.1,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.1,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.1,
-                "score_transformation": "normalizing_flow"
             }
         }
     ],
@@ -80,9 +56,7 @@
             }
         },
         {
-            "dataset": {
-                "name": "inaturalist"
-            },
+            "dataset": {"name": "inaturalist"},
             "model": {
                 "source": "vit",
                 "name": "bryanzhou008/vit-base-patch16-224-in21k-finetuned-inaturalist",

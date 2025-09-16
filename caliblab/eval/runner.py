@@ -5,6 +5,8 @@ import torch
 from tabulate import tabulate
 
 import os
+import cProfile
+import pstats
 
 import numpy as np
 
@@ -18,8 +20,8 @@ from .constants import EvaluationReport
 from .evaluator import ModelEvaluator
 from ..utils.device import get_device
 from .runner_utils import (
-    generate_and_save_summary,
     get_predictions,
+    generate_and_save_summary,
     print_and_collect_run_results,
 )
 
@@ -37,6 +39,8 @@ def run_evaluations(
     force_recompute: bool,
     visualizers: Optional[List[Any]] = None,
     num_splits: int = 1,
+    cal_ratio: float = 0.3,
+    subset_items: int = 40_000,
     **kwargs: Any,
 ) -> List[EvaluationReport]:
     all_reports: List[EvaluationReport] = []
@@ -92,9 +96,8 @@ def run_evaluations(
             run_dir = base_run_dir / f"split_{split_seed}"
             run_dir.mkdir(parents=True, exist_ok=True)
 
-            cal_ratio = dataset_params.get("cal_ratio", 0.5)
             cal_outputs, test_outputs_split, cal_labels, test_labels_split = split_data(
-                test_outputs, test_labels, cal_ratio, split_seed
+                test_outputs, test_labels, cal_ratio, split_seed, subset_items
             )
 
             evaluator = ModelEvaluator(
