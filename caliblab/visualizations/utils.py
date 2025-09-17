@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 
 from ..utils.bins import get_bin_lowers_uppers
+from ..utils.computations import cumulative_mass_and_coverage
 
 
 def calculate_confidence_bins(
@@ -83,29 +84,7 @@ def calculate_cumulative_mass_bins(
 
     n_samples, n_classes = probs.shape
 
-    # Step 1: For each sample, sort the predicted probabilities in descending order
-    # using a stable sort so ties are handled consistently with other metrics.
-    # Example: probs=[0.1, 0.7, 0.2] -> sorted_indices=[1, 2, 0], sorted_probs=[0.7, 0.2, 0.1]
-    sorted_indices = np.argsort(probs, axis=1)[:, ::-1]
-    sorted_probs = np.take_along_axis(probs, sorted_indices, axis=1)
-
-    # Step 2: Calculate the cumulative sum of the sorted probabilities. This gives
-    # the "cumulative mass" for prediction sets of increasing size (1, 2, ..., C).
-    # Example: sorted_probs=[0.7, 0.2, 0.1] -> cum_probs=[0.7, 0.9, 1.0]
-    cum_probs = np.cumsum(sorted_probs, axis=1)
-
-    # Step 3: Find the rank (0-indexed position) of the true class within the
-    # sorted list of predictions for each sample.
-    # Example: y_true=0, sorted_indices=[1, 2, 0] -> true_class_rank=2
-    # The `np.where` trick efficiently finds the column index of the true label.
-    true_class_ranks = np.where(sorted_indices == y_true[:, np.newaxis])[1]
-
-    # Step 4: Create a "coverage" matrix. An element (i, j) is True if the
-    # prediction set of size (j+1) for sample i contains the true class. This
-    # is equivalent to checking if the true class's rank is j or less.
-    # Example: true_class_rank=2 -> coverage=[F, F, T] (since 2<=0 is F, 2<=1 is F, 2<=2 is T)
-    ranks = np.arange(n_classes)
-    coverage_matrix = true_class_ranks[:, np.newaxis] <= ranks[np.newaxis, :]
+    cum_probs, coverage_matrix, _ = cumulative_mass_and_coverage(probs, y_true)
 
     # Step 5: Flatten both the cumulative probabilities and the coverage matrix.
     # We now have two long vectors. `all_cum_scores[k]` is the cumulative mass

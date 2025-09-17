@@ -6,6 +6,7 @@ import numpy as np
 
 from ..eval.constants import EvaluationReport
 from ..metrics import CoverageAroundOneMinusAlpha
+from ..utils.computations import cumulative_mass_and_coverage
 
 
 class OneMinusAlphaCoverageVisualizer:
@@ -31,16 +32,16 @@ class OneMinusAlphaCoverageVisualizer:
             y_true = report.true_labels
             name = report.calibrator_name
 
-            sorted_idx = np.argsort(probs, axis=1)[:, ::-1]
+            # Use shared utility to precompute cum_probs and true_rank
+            cum_probs, _coverage_matrix, sorted_idx = cumulative_mass_and_coverage(probs, y_true)
+            true_rank = np.where(sorted_idx == y_true[:, np.newaxis])[1]
 
             coverage_values = []
             for eps in self.eps_values:
                 metric = CoverageAroundOneMinusAlpha(alpha=self.alpha, eps=eps)
-                coverage = metric.compute_from_sorted(
-                    probs=probs, y_true=y_true, sorted_idx=sorted_idx
-                )
+                coverage = metric.compute_from_cumsum(cum_probs=cum_probs, true_rank=true_rank)
                 coverage_values.append(coverage)
-
+            
             ax.plot(
                 self.eps_values,
                 coverage_values,
