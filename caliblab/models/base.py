@@ -32,8 +32,6 @@ class ModelBase(ABC, nn.Module):
             assert outputs.shape[0] == inputs.shape[0]
             all_outputs.append(outputs.cpu().numpy().astype(np.float64))
             all_labels.append(labels.cpu().numpy().astype(np.int64))
-            if i >= 10:
-                print(outputs.shape, labels.shape)
-                break
+
 
         return np.concatenate(all_outputs), np.concatenate(all_labels)

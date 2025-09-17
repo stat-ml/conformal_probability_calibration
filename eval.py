@@ -32,7 +32,7 @@ def main():
     parser.add_argument(
         "--subset-items",
         type=int,
-        default=40_000,
+        default=1_000_000,
         help="Number of items to use for calibration.",
     )
     args = parser.parse_args()

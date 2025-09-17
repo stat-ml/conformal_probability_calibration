@@ -35,7 +35,7 @@ class ConformalSetSizeVisualizer:
         for name, set_sizes in results.items():
             ax.hist(
                 set_sizes.clip(0, 50),
-                bins=50,
+                bins=np.arange(0, 51),
                 alpha=0.6,
                 label=f"{name} (median: {np.median(set_sizes):.2f})",
             )
@@ -48,8 +48,8 @@ class ConformalSetSizeVisualizer:
         ax.set_ylabel("Frequency")
         ax.set_title(title)
         ax.legend(loc="upper right")
+        ax.grid(True, linestyle="--", alpha=0.6)
 
         plt.tight_layout()
-        plt.grid(True, linestyle="--", alpha=0.6)
         plt.savefig(output_path)
         plt.close()

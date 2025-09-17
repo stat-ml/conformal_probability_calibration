@@ -28,7 +28,7 @@ class BaseDataset(ABC):
         )
 
     def get_test_loader(
-        self, batch_size: int, shuffle: bool = True, num_workers: int = 4
+        self, batch_size: int, shuffle: bool = False, num_workers: int = 4
     ) -> DataLoader:
         """Get a DataLoader for the test set."""
         return DataLoader(

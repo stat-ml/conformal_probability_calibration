@@ -5,8 +5,6 @@ import torch
 from tabulate import tabulate
 
 import os
-import cProfile
-import pstats
 
 import numpy as np
 
@@ -20,8 +18,8 @@ from .constants import EvaluationReport
 from .evaluator import ModelEvaluator
 from ..utils.device import get_device
 from .runner_utils import (
-    get_predictions,
     generate_and_save_summary,
+    get_predictions,
     print_and_collect_run_results,
 )
 
