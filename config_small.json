@@ -42,7 +42,7 @@
         },
         {
             "name": "cmce",
-            "params": {"n_bins": 15, "strategy": "uniform", "weighted": true}
+            "params": {"n_bins": 25, "strategy": "uniform", "weighted": true}
         }
     ],
     "evaluations": [
@@ -56,11 +56,35 @@
             }
         },
         {
+            "dataset": {"name": "imagenet-mini"},
+            "model": {
+                "source": "vit",
+                "name": "google/vit-base-patch16-224",
+                "alias": "ViT-B16"
+            }
+        },
+        {
             "dataset": {"name": "inaturalist"},
             "model": {
                 "source": "vit",
                 "name": "bryanzhou008/vit-base-patch16-224-in21k-finetuned-inaturalist",
                 "alias": "ViT-B16"
+            }
+        },
+        {
+            "dataset": {"name": "imagenet-mini"},
+            "model": {
+                "source": "vit",
+                "name": "google/vit-base-patch16-224",
+                "alias": "ViT-B16"
+            }
+        },
+        {
+            "dataset": {"name": "inaturalist", "params": {"image_size": 224}},
+            "model": {
+                "source": "birder",
+                "name": "rope_vit_reg4_b14_capi-inat21-224px",
+                "alias": "Birder-ViT-B14"
             }
         }
     ]

@@ -74,7 +74,7 @@ class IsotonicRegression(CalibratorBase):
             # For rows with a sum of 0, use a uniform distribution.
             normalized_probs = np.where(
                 row_sums == 0,
-                1.0 / calibrated_probs.shape[1],
+                probs,
                 calibrated_probs / row_sums,
             )
 

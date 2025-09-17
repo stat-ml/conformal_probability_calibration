@@ -83,11 +83,11 @@ def calculate_cumulative_mass_bins(
 
     n_samples, n_classes = probs.shape
 
-    # Step 1: For each sample, sort the predicted probabilities in descending order.
-    # We also get the original indices of the classes in this new sorted order.
+    # Step 1: For each sample, sort the predicted probabilities in descending order
+    # using a stable sort so ties are handled consistently with other metrics.
     # Example: probs=[0.1, 0.7, 0.2] -> sorted_indices=[1, 2, 0], sorted_probs=[0.7, 0.2, 0.1]
-    sorted_indices = np.argsort(-probs, axis=1)
-    sorted_probs = -np.sort(-probs, axis=1)
+    sorted_indices = np.argsort(probs, axis=1)[:, ::-1]
+    sorted_probs = np.take_along_axis(probs, sorted_indices, axis=1)
 
     # Step 2: Calculate the cumulative sum of the sorted probabilities. This gives
     # the "cumulative mass" for prediction sets of increasing size (1, 2, ..., C).
@@ -124,7 +124,11 @@ def calculate_cumulative_mass_bins(
 
     for i, (lower, upper) in enumerate(zip(bin_lowers, bin_uppers)):
         # Find all scores that fall into the current bin.
-        in_bin_mask = (all_cum_scores > lower) & (all_cum_scores <= upper)
+        # Use [lower, upper) for all bins except the last, which is [lower, upper].
+        if i == n_bins - 1:
+            in_bin_mask = (all_cum_scores >= lower) & (all_cum_scores <= upper)
+        else:
+            in_bin_mask = (all_cum_scores >= lower) & (all_cum_scores < upper)
         bin_counts[i] = np.sum(in_bin_mask)
 
         if bin_counts[i] > 0:
