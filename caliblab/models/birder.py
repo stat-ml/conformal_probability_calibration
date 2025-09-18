@@ -9,6 +9,7 @@ from torchvision.transforms.functional import to_pil_image
 from tqdm import tqdm
 
 from .base import ModelBase
+from caliblab.utils.device import get_device
 
 
 class _BirderModel(ModelBase):
@@ -45,6 +46,7 @@ def BirderModel(
     if "inference" not in kwargs:
         kwargs["inference"] = True
 
-    net, model_info = birder.load_pretrained_model(model_name, device='mps', **kwargs)
+    device = get_device()
+    net, model_info = birder.load_pretrained_model(model_name, device=device.type, **kwargs)
 
     return _BirderModel(net, alias or model_name, model_info)
