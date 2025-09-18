@@ -68,9 +68,15 @@ class IsotonicRegression(CalibratorBase):
 
         # Normalize probabilities to sum to 1
         row_sums = calibrated_probs.sum(axis=1, keepdims=True)
-        # Avoid division by zero
-        safe_row_sums = np.where(row_sums == 0, 1, row_sums)
-        normalized_probs = calibrated_probs / safe_row_sums
+
+        # Using errstate to avoid warnings for division by zero, which is handled.
+        with np.errstate(divide="ignore", invalid="ignore"):
+            # For rows with a sum of 0, use a uniform distribution.
+            normalized_probs = np.where(
+                row_sums == 0,
+                probs,
+                calibrated_probs / row_sums,
+            )
 
         return normalized_probs
 

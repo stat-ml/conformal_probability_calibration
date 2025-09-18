@@ -1,6 +1,7 @@
 import numpy as np
 
 from caliblab.metrics.base import LabelBasedMetricBase
+from caliblab.utils.computations import cumulative_mass_and_coverage
 
 
 class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
@@ -27,30 +28,28 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
         ub = round(self.upper_bound, 3)
         return f"coverage_[{lb}, {ub}]"
 
-    def compute_from_sorted(
-        self, *, probs: np.ndarray, y_true: np.ndarray, sorted_idx: np.ndarray, **kwargs
+    
+
+    def compute_from_cumsum(
+        self, *, cum_probs: np.ndarray, true_rank: np.ndarray
     ) -> float:
         """
-        Computes the empirical coverage from pre-sorted probability indices.
-        """
-        if probs.ndim != 2:
-            raise ValueError("probs must be a 2D array of shape (n_samples, n_classes)")
-        if y_true.ndim != 1 or y_true.shape[0] != probs.shape[0]:
-            raise ValueError("y_true must be a 1D array aligned with probs rows")
+        Computes the empirical coverage from precomputed cumulative sums and true ranks.
 
-        n_samples, n_classes = probs.shape
+        Args:
+            cum_probs: Cumulative sums of descending-sorted probabilities, shape (n_samples, n_classes).
+            true_rank: Rank of the true class in descending order, shape (n_samples,).
+        """
+        if cum_probs.ndim != 2:
+            raise ValueError("cum_probs must be a 2D array of shape (n_samples, n_classes)")
+        if true_rank.ndim != 1 or true_rank.shape[0] != cum_probs.shape[0]:
+            raise ValueError("true_rank must be a 1D array aligned with cum_probs rows")
+
+        n_samples, n_classes = cum_probs.shape
         lb, ub = self.lower_bound, self.upper_bound
 
         if ub < lb:
             return 0.0
-
-        sorted_probs = np.take_along_axis(probs, sorted_idx, axis=1)
-        cum_probs = np.cumsum(sorted_probs, axis=1)
-
-        inv_idx = np.empty_like(sorted_idx)
-        row_ids = np.arange(n_samples)[:, None]
-        inv_idx[row_ids, sorted_idx] = np.arange(n_classes)[None, :]
-        true_rank = inv_idx[np.arange(n_samples), y_true.astype(int)]
 
         L = (cum_probs < lb).sum(axis=1)
         R = (cum_probs <= ub).sum(axis=1) - 1
@@ -72,7 +71,13 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
         Empirical coverage over all top-k prediction sets whose cumulative mass
         lies in [lower_bound, upper_bound].
         """
-        sorted_idx = np.argsort(probs, axis=1)[:, ::-1]
-        return self.compute_from_sorted(
-            probs=probs, y_true=y_true, sorted_idx=sorted_idx, **kwargs
-        )
+        if probs.ndim != 2:
+            raise ValueError("probs must be a 2D array of shape (n_samples, n_classes)")
+        if y_true.ndim != 1 or y_true.shape[0] != probs.shape[0]:
+            raise ValueError("y_true must be a 1D array aligned with probs rows")
+
+        # Use shared utility to get cumulative sums and sorting indices
+        cum_probs, _coverage_matrix, sorted_idx = cumulative_mass_and_coverage(probs, y_true)
+        true_rank = np.where(sorted_idx == y_true[:, np.newaxis])[1]
+
+        return self.compute_from_cumsum(cum_probs=cum_probs, true_rank=true_rank)

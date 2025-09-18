@@ -67,6 +67,7 @@ class ModelEvaluator:
                 calibrator,
                 calibrated_test_outputs,
                 test_labels,
+                test_outputs,
                 train_time,
                 predict_time,
             )
@@ -79,10 +80,13 @@ class ModelEvaluator:
         calibrator: CalibratorBase | None,
         outputs: np.ndarray,
         labels: np.ndarray,
+        logits: np.ndarray,
         train_time: float = 0.0,
         predict_time: float = 0.0,
     ) -> EvaluationReport:
         calibrator_name = calibrator.name if calibrator else "uncalibrated"
+        print("Evaluating calibrator: ", calibrator_name)
+
         metric_results = {}
 
         if calibrator is None:
@@ -95,6 +99,12 @@ class ModelEvaluator:
         for metric in self.metrics:
             metric_results[metric.name] = metric(probs=probs, y_true=labels)
 
+        conformal_test_sizes = None
+        if calibrator and calibrator.uses_conformal_set_helper():
+            conformal_test_sizes = calibrator.get_conformal_set_sizes(
+                logits=logits
+            )
+
         return EvaluationReport(
             calibrator_name=calibrator_name,
             metrics=metric_results,
@@ -104,4 +114,5 @@ class ModelEvaluator:
             true_labels=labels,
             train_time=train_time,
             predict_time=predict_time,
+            conformal_set_sizes=conformal_test_sizes,
         )

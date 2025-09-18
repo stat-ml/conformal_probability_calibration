@@ -3,10 +3,11 @@ from typing import Tuple
 import numpy as np
 
 from ..utils.bins import get_bin_lowers_uppers
+from ..utils.computations import cumulative_mass_and_coverage
 
 
 def calculate_confidence_bins(
-    probs: np.ndarray, y_true: np.ndarray, n_bins: int
+    probs: np.ndarray, y_true: np.ndarray, bins: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculates accuracy, confidence, and counts for each confidence bin.
@@ -14,7 +15,7 @@ def calculate_confidence_bins(
     Args:
         probs (np.ndarray): Array of predicted probabilities for each class.
         y_true (np.ndarray): Array of true labels.
-        n_bins (int): The number of bins to use for calibration analysis.
+        bins (np.ndarray): The bins to use for calibration analysis.
 
     Returns:
         Tuple[np.ndarray, np.ndarray, np.ndarray]: A tuple containing:
@@ -26,7 +27,8 @@ def calculate_confidence_bins(
     predictions = np.argmax(probs, axis=1)
     accuracies = (predictions == y_true).astype(float)
 
-    bin_lowers, bin_uppers = get_bin_lowers_uppers(confidences, n_bins)
+    bin_lowers, bin_uppers = bins[:-1], bins[1:]
+    n_bins = len(bin_lowers)
 
     bin_accuracies = np.zeros(n_bins)
     bin_confidences = np.zeros(n_bins)
@@ -44,7 +46,7 @@ def calculate_confidence_bins(
 
 
 def calculate_cumulative_mass_bins(
-    probs: np.ndarray, y_true: np.ndarray, n_bins: int
+    probs: np.ndarray, y_true: np.ndarray, bins: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculates the empirical coverage for binned cumulative probability masses.
@@ -65,7 +67,7 @@ def calculate_cumulative_mass_bins(
     Args:
         probs (np.ndarray): Predicted probabilities, shape (n_samples, n_classes).
         y_true (np.ndarray): True labels, shape (n_samples,).
-        n_bins (int): The number of bins to use for the analysis.
+        bins (np.ndarray): The number of bins to use for the analysis.
 
     Returns:
         Tuple[np.ndarray, np.ndarray, np.ndarray]: A tuple containing:
@@ -82,29 +84,7 @@ def calculate_cumulative_mass_bins(
 
     n_samples, n_classes = probs.shape
 
-    # Step 1: For each sample, sort the predicted probabilities in descending order.
-    # We also get the original indices of the classes in this new sorted order.
-    # Example: probs=[0.1, 0.7, 0.2] -> sorted_indices=[1, 2, 0], sorted_probs=[0.7, 0.2, 0.1]
-    sorted_indices = np.argsort(-probs, axis=1)
-    sorted_probs = -np.sort(-probs, axis=1)
-
-    # Step 2: Calculate the cumulative sum of the sorted probabilities. This gives
-    # the "cumulative mass" for prediction sets of increasing size (1, 2, ..., C).
-    # Example: sorted_probs=[0.7, 0.2, 0.1] -> cum_probs=[0.7, 0.9, 1.0]
-    cum_probs = np.cumsum(sorted_probs, axis=1)
-
-    # Step 3: Find the rank (0-indexed position) of the true class within the
-    # sorted list of predictions for each sample.
-    # Example: y_true=0, sorted_indices=[1, 2, 0] -> true_class_rank=2
-    # The `np.where` trick efficiently finds the column index of the true label.
-    true_class_ranks = np.where(sorted_indices == y_true[:, np.newaxis])[1]
-
-    # Step 4: Create a "coverage" matrix. An element (i, j) is True if the
-    # prediction set of size (j+1) for sample i contains the true class. This
-    # is equivalent to checking if the true class's rank is j or less.
-    # Example: true_class_rank=2 -> coverage=[F, F, T] (since 2<=0 is F, 2<=1 is F, 2<=2 is T)
-    ranks = np.arange(n_classes)
-    coverage_matrix = true_class_ranks[:, np.newaxis] <= ranks[np.newaxis, :]
+    cum_probs, coverage_matrix, _ = cumulative_mass_and_coverage(probs, y_true)
 
     # Step 5: Flatten both the cumulative probabilities and the coverage matrix.
     # We now have two long vectors. `all_cum_scores[k]` is the cumulative mass
@@ -114,7 +94,8 @@ def calculate_cumulative_mass_bins(
     all_coverages = coverage_matrix.flatten().astype(float)
 
     # Step 6: Bin the data points based on their cumulative mass score.
-    bin_lowers, bin_uppers = get_bin_lowers_uppers(all_cum_scores, n_bins)
+    bin_lowers, bin_uppers = bins[:-1], bins[1:]
+    n_bins = len(bin_lowers)
 
     bin_mean_scores = np.zeros(n_bins)
     bin_mean_coverages = np.zeros(n_bins)
@@ -122,7 +103,11 @@ def calculate_cumulative_mass_bins(
 
     for i, (lower, upper) in enumerate(zip(bin_lowers, bin_uppers)):
         # Find all scores that fall into the current bin.
-        in_bin_mask = (all_cum_scores > lower) & (all_cum_scores <= upper)
+        # Use [lower, upper) for all bins except the last, which is [lower, upper].
+        if i == n_bins - 1:
+            in_bin_mask = (all_cum_scores >= lower) & (all_cum_scores <= upper)
+        else:
+            in_bin_mask = (all_cum_scores >= lower) & (all_cum_scores < upper)
         bin_counts[i] = np.sum(in_bin_mask)
 
         if bin_counts[i] > 0:

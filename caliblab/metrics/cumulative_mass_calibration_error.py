@@ -3,23 +3,15 @@ import numpy as np
 from typing import Optional
 
 from ..utils.bins import get_bin_boundaries
+from ..utils.computations import cumulative_mass_and_coverage
 
 
 def _compute_cumulative_mass_calibration_error(
     probs: np.ndarray, y_true: np.ndarray, n_bins: int, strategy: str
 ) -> list:
     
-    n_samples, n_classes = probs.shape
 
-    sorted_indices = np.argsort(-probs, axis=1)
-    sorted_probs = -np.sort(-probs, axis=1)
-
-    cum_probs = np.cumsum(sorted_probs, axis=1)
-
-    true_class_ranks = np.where(sorted_indices == y_true[:, np.newaxis])[1]
-
-    ranks = np.arange(n_classes)
-    coverage_matrix = true_class_ranks[:, np.newaxis] <= ranks[np.newaxis, :]
+    cum_probs, coverage_matrix, _ = cumulative_mass_and_coverage(probs, y_true)
 
     all_cum_scores = cum_probs.flatten()
     all_coverages = coverage_matrix.flatten().astype(float)
