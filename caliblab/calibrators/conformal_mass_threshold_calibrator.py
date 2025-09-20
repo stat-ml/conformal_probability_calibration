@@ -7,6 +7,7 @@ from ..conformal_prediction.conformal_set_helper import (
     ScoreTransformation,
 )
 from ..utils.computations import softmax
+from scipy.special import logsumexp
 
 
 class ConformalMassThresholdCalibrator(CalibratorBase):
@@ -52,28 +53,37 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
         logits: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
-        p = softmax(logits)
-        C = self._conf.make_mask(logits)  # (n, K) fixed set
-        nontrivial_sets = np.all(C, axis=-1) ^ np.any(C, axis=-1)
+        z = np.asarray(logits, dtype=np.float64)                  # (n, K)
+        C = self._conf.make_mask(logits).astype(bool)             # (n, K)
 
-        P_in = (p * C).sum(axis=1)  # (n, 1)
-        P_out = 1.0 - P_in
+        # log partition terms
+        logZ     = logsumexp(z, axis=1)                           # (n,)
+        logZ_in  = logsumexp(np.where(C,  z, -np.inf), axis=1)    # (n,)
+        logZ_out = logsumexp(np.where(~C, z, -np.inf), axis=1)    # (n,)
+
+        # log P_in = logZ_in - logZ ; log P_out = logZ_out - logZ
+        # coverage in logs
         coverage = 1.0 - self.alpha
+        log_cov  = np.log(coverage)
+        log_1mc  = np.log1p(-coverage)                            # log(1-coverage)
 
-        s_in  = np.ones_like(P_in)
-        s_out = np.ones_like(P_out)
-        np.divide(coverage,        P_in,  out=s_in,  where=nontrivial_sets)
-        np.divide(1.0 - coverage,  P_out, out=s_out, where=nontrivial_sets)
+        trivial = np.all(C, axis=1) | ~np.any(C, axis=1)
 
-        s_in  = s_in[:,  None]
-        s_out = s_out[:, None]
+        log_s_in  = np.zeros_like(logZ)                           # default 0 for trivial rows
+        log_s_out = np.zeros_like(logZ)
+        nontriv = ~trivial
+        log_s_in[nontriv]  = log_cov +  (logZ[nontriv] -  logZ_in[nontriv])
+        log_s_out[nontriv] = log_1mc + (logZ[nontriv] - logZ_out[nontriv])
 
-        q_final = p * (C * s_in + (~C) * s_out)
+        a = z + np.where(C, log_s_in[:, None], log_s_out[:, None])
+
+        q_final = softmax(a)
 
         if not np.allclose(q_final.sum(axis=-1), 1.0, rtol=0, atol=1e-4):
             raise ValueError(
                 f"Each row of q must sum to 1. Got min sum value: {q_final.sum(axis=-1).min()}"
             )
+
         return q_final
 
     def uses_conformal_set_helper(self) -> bool:
