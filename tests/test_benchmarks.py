@@ -4,6 +4,7 @@ from ..utils.computations import softmax
 from tqdm import tqdm
 
 from caliblab.datasets import dataset_getter
+from caliblab.utils.device import get_device
 from caliblab.metrics.classification import Accuracy
 from caliblab.models import get_model
 
@@ -76,7 +77,7 @@ def test_model_benchmark_accuracy(
     test_loader = dataset.get_test_loader(batch_size=256, num_workers=4)
 
     # 4. Get predictions
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = get_device()
     probs, labels = _get_predictions(model, test_loader, device)
 
     # 5. Calculate accuracy using the new metric
