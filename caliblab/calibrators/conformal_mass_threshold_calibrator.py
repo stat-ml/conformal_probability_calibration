@@ -54,23 +54,21 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
         self.check_fitted()
         p = softmax(logits)
         C = self._conf.make_mask(logits)  # (n, K) fixed set
+        nontrivial_sets = np.all(C, axis=-1) ^ np.any(C, axis=-1)
 
-        P_in = (p * C).sum(axis=1, keepdims=True)  # (n, 1)
-
-        P_in = np.where(
-            (np.isclose(P_in, 0)), 1, P_in
-        )  # this could be only for the empty set or for full set. In this case do nothing
+        P_in = (p * C).sum(axis=1)  # (n, 1)
         P_out = 1.0 - P_in
-
         coverage = 1.0 - self.alpha
 
-        s_in = coverage / P_in
-        s_out = (1.0 - coverage) / P_out
-        q = p * (C * s_in + (~C) * s_out)
+        s_in  = np.ones_like(P_in)
+        s_out = np.ones_like(P_out)
+        np.divide(coverage,        P_in,  out=s_in,  where=nontrivial_sets)
+        np.divide(1.0 - coverage,  P_out, out=s_out, where=nontrivial_sets)
 
-        q_final = np.where(
-            (np.isclose(P_in, 1.0) | np.isclose(P_in, 0.0)), p, q
-        )  # this could be only for the empty set or for full set. In this case do nothing
+        s_in  = s_in[:,  None]
+        s_out = s_out[:, None]
+
+        q_final = p * (C * s_in + (~C) * s_out)
 
         if not np.allclose(q_final.sum(axis=-1), 1.0, rtol=0, atol=1e-4):
             raise ValueError(
