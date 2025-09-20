@@ -25,8 +25,8 @@ class ConformalTemperatureCalibrator(CalibratorBase):
         alpha: float = 0.1,
         tol: float = 1e-10,
         max_iter: int = 60,
-        tau_min: float = 1e-4,
-        tau_max: float = 1e6,
+        tau_min: float = 1e-10,
+        tau_max: float = 1e10,
         score_transformation: str = ScoreTransformation.IDENTITY.value,
     ):
         super().__init__()
@@ -70,6 +70,10 @@ class ConformalTemperatureCalibrator(CalibratorBase):
         if r_lo < target - self.tol:
             # If even at extreme sharpening we can't hit target (rare), return tau_lo.
             return tau_lo
+        
+        r_hi = self._mass_in_set(logit_row, mask_row, self.tau_max)
+        if r_hi - self.tol > target:
+            return 1.0 # do nothing then
 
         tau_hi = 1.0
         r_hi = self._mass_in_set(logit_row, mask_row, tau_hi)
@@ -105,12 +109,16 @@ class ConformalTemperatureCalibrator(CalibratorBase):
         L = logits
         p_base = softmax(logits)
         C = self._conf.make_mask(logits)
+        trivial = np.all(C, axis=1) | ~np.any(C, axis=1)
 
         n, _ = L.shape
         q = np.empty_like(p_base, dtype=np.float64)
         target = 1.0 - self.alpha
 
         for i in range(n):
+            if trivial[i]:
+                q[i] = p_base[i]
+                continue
             tau_i = self._bisection_tau(L[i], C[i], target)
             q[i] = softmax(L[i] / tau_i)
 
