@@ -35,9 +35,10 @@ class NormalizingFlowTransform(BaseEstimator, RegressorMixin):
         return self.model_.forward(scores, X).detach().numpy()
 
     def inverse(self, scores: np.ndarray, X: np.ndarray):
+        # returns MATRIX of size [X.shape[0], 1]
         scores = torch.tensor(scores, dtype=torch.float64)
         X = torch.tensor(X, dtype=torch.float64)
-        return self.model_.inverse(scores, X).detach().numpy()
+        return self.model_.inverse(scores, X).detach().numpy()[:, None]
 
 
 class IdentityTransform:
