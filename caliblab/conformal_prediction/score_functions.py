@@ -7,7 +7,7 @@ from caliblab.utils.computations import get_cumulative_mass_scores
 
 
 class ScoreTypes(str, Enum):
-    ONE_MINUS_PROB = "one_minus_prob"
+    thr = "thr"
     APS = "aps"
 
     @classmethod
@@ -15,7 +15,7 @@ class ScoreTypes(str, Enum):
         return {item.value for item in cls}
 
 
-def one_minus_prob_scores(probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
+def thr_scores(probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
     n, _ = probs.shape
     cal_smx = probs
     cal_labels = y_true

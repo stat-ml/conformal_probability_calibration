@@ -5,7 +5,7 @@ import numpy as np
 from caliblab.utils.computations import softmax
 from caliblab.conformal_prediction.score_functions import (
     ScoreTypes,
-    one_minus_prob_scores,
+    thr_scores,
     aps_scores,
 )
 from caliblab.misc.score_transforms import NormalizingFlowTransform, IdentityTransform
@@ -64,8 +64,8 @@ class ConformalSetHelper:
         if y_true.ndim != 1 or y_true.shape[0] != p.shape[0]:
             raise ValueError("y_true must be shape (n,) and match probs/logits rows.")
 
-        if self.score_type == ScoreTypes.ONE_MINUS_PROB.value:
-            scores = one_minus_prob_scores(p, y_true)
+        if self.score_type == ScoreTypes.thr.value:
+            scores = thr_scores(p, y_true)
         elif self.score_type == ScoreTypes.APS.value:
             scores = aps_scores(p, y_true)
         else:
@@ -107,7 +107,7 @@ class ConformalSetHelper:
         if p.ndim != 2:
             raise ValueError("base_probs must be 2D: (n, K).")
 
-        if self.score_type == ScoreTypes.ONE_MINUS_PROB.value:
+        if self.score_type == ScoreTypes.thr.value:
             return p >= 1 - self.scores_transformer.inverse(self.q_hat_, base_logits)
         elif self.score_type == ScoreTypes.APS.value:
             return self._topk_mask_by_cumsum(

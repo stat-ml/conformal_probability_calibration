@@ -54,4 +54,9 @@ class ImageNetMiniDataset(BaseDataset):
                 "Please download and extract it into 'train' and 'val' subdirectories."
             )
 
-        self.test_dataset = ImageFolder(train_path, transform=self.test_transform)
+        train_dataset = ImageFolder(train_path, transform=self.test_transform)
+        num_classes = len(train_dataset.classes)
+        num_train = len(train_dataset)
+        total_images = num_train
+        print(f"{self.name}: {total_images} images, {num_classes} classes (train={num_train})")
+        self.test_dataset = train_dataset
