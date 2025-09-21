@@ -20,7 +20,7 @@
         {
             "name": "conformal_temperature",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.1,
                 "score_transformation": "identity"
             }
@@ -36,7 +36,7 @@
         {
             "name": "conformal_mass_threshold",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.1,
                 "score_transformation": "identity"
             }
@@ -52,7 +52,7 @@
         {
             "name": "conformal_temperature",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.1,
                 "score_transformation": "normalizing_flow"
             }
@@ -68,7 +68,7 @@
         {
             "name": "conformal_mass_threshold",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.1,
                 "score_transformation": "normalizing_flow"
             }
@@ -84,7 +84,7 @@
         {
             "name": "conformal_temperature",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.01,
                 "score_transformation": "identity"
             }
@@ -100,7 +100,7 @@
         {
             "name": "conformal_mass_threshold",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.01,
                 "score_transformation": "identity"
             }
@@ -116,7 +116,7 @@
         {
             "name": "conformal_temperature",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.01,
                 "score_transformation": "normalizing_flow"
             }
@@ -132,7 +132,7 @@
         {
             "name": "conformal_mass_threshold",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.01,
                 "score_transformation": "normalizing_flow"
             }
@@ -148,7 +148,7 @@
         {
             "name": "conformal_temperature",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.3,
                 "score_transformation": "identity"
             }
@@ -164,7 +164,7 @@
         {
             "name": "conformal_mass_threshold",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.3,
                 "score_transformation": "identity"
             }
@@ -180,7 +180,7 @@
         {
             "name": "conformal_temperature",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.3,
                 "score_transformation": "normalizing_flow"
             }
@@ -196,7 +196,7 @@
         {
             "name": "conformal_mass_threshold",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "thr",
                 "alpha": 0.3,
                 "score_transformation": "normalizing_flow"
             }
