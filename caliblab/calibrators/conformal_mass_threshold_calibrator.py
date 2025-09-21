@@ -53,27 +53,26 @@ class ConformalMassThresholdCalibrator(CalibratorBase):
         logits: Optional[np.ndarray] = None,
     ) -> np.ndarray:
         self.check_fitted()
-        z = np.asarray(logits, dtype=np.float64)                  # (n, K)
-        C = self._conf.make_mask(logits).astype(bool)             # (n, K)
+        z = np.asarray(logits, dtype=np.float64)  # (n, K)
+        C = self._conf.make_mask(logits).astype(bool)  # (n, K)
 
         # log partition terms
-        logZ     = logsumexp(z, axis=1)                           # (n,)
-        logZ_in  = logsumexp(np.where(C,  z, -np.inf), axis=1)    # (n,)
-        logZ_out = logsumexp(np.where(~C, z, -np.inf), axis=1)    # (n,)
+        logZ_in = logsumexp(np.where(C, z, -np.inf), axis=1)  # (n,)
+        logZ_out = logsumexp(np.where(~C, z, -np.inf), axis=1)  # (n,)
 
         # log P_in = logZ_in - logZ ; log P_out = logZ_out - logZ
         # coverage in logs
         coverage = 1.0 - self.alpha
-        log_cov  = np.log(coverage)
-        log_1mc  = np.log1p(-coverage)                            # log(1-coverage)
+        log_cov = np.log(coverage)
+        log_1mc = np.log1p(-coverage)  # log(1-coverage)
 
         trivial = np.all(C, axis=1) | ~np.any(C, axis=1)
 
-        log_s_in  = np.zeros_like(logZ)                           # default 0 for trivial rows
-        log_s_out = np.zeros_like(logZ)
+        log_s_in = np.zeros_like(logZ_in)  # default 0 for trivial rows
+        log_s_out = np.zeros_like(logZ_out)
         nontriv = ~trivial
-        log_s_in[nontriv]  = log_cov +  (logZ[nontriv] -  logZ_in[nontriv])
-        log_s_out[nontriv] = log_1mc + (logZ[nontriv] - logZ_out[nontriv])
+        log_s_in[nontriv] = log_cov - logZ_in[nontriv]
+        log_s_out[nontriv] = log_1mc - logZ_out[nontriv]
 
         a = z + np.where(C, log_s_in[:, None], log_s_out[:, None])
 
