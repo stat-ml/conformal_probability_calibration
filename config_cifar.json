@@ -10,7 +10,9 @@
         "confidence_curve": {"n_bins": 25},
         "cumulative_mass_curve": {"n_bins": 25},
         "conformal_set_size_distribution": {},
-        "one_minus_alpha_coverage_curve": {"alpha": 0.1}
+        "one_minus_alpha_coverage_curve": {"alpha": 0.1},
+        "one_minus_alpha_coverage_curve": {"alpha": 0.01},
+        "one_minus_alpha_coverage_curve": {"alpha": 0.3}
     },
     "calibrators": [
         "temperature_scaling",
@@ -62,6 +64,102 @@
             "name": "conformal_temperature",
             "params": {
                 "score_type": "one_minus_prob",
+                "alpha": 0.1,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.1,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "one_minus_prob",
+                "alpha": 0.1,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.1,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "one_minus_prob",
+                "alpha": 0.01,
+                "score_transformation": "identity"
+            }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.01,
+                "score_transformation": "identity"
+            }
+        },
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "one_minus_prob",
+                "alpha": 0.01,
+                "score_transformation": "identity"
+            }
+        },
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.01,
+                "score_transformation": "identity"
+            }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "one_minus_prob",
+                "alpha": 0.01,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.01,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "one_minus_prob",
+                "alpha": 0.01,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.01,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "one_minus_prob",
                 "alpha": 0.3,
                 "score_transformation": "identity"
             }
@@ -89,6 +187,38 @@
                 "alpha": 0.3,
                 "score_transformation": "identity"
             }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "one_minus_prob",
+                "alpha": 0.3,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_temperature",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.3,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "one_minus_prob",
+                "alpha": 0.3,
+                "score_transformation": "normalizing_flow"
+            }
+        },
+        {
+            "name": "conformal_mass_threshold",
+            "params": {
+                "score_type": "aps",
+                "alpha": 0.3,
+                "score_transformation": "normalizing_flow"
+            }
         }
     ],
     "metrics": [
@@ -100,6 +230,18 @@
         {
             "name": "cmce",
             "params": {"n_bins": 25, "strategy": "uniform", "weighted": true}
+        },
+        {
+            "name": "coverage_around_one_minus_alpha",
+            "params": {"alpha": 0.1, "eps": 0.02}
+        },
+        {
+            "name": "coverage_around_one_minus_alpha",
+            "params": {"alpha": 0.3, "eps": 0.02}
+        },
+        {
+            "name": "coverage_around_one_minus_alpha",
+            "params": {"alpha": 0.01, "eps": 0.005}
         }
     ],
     "evaluations": [
@@ -110,23 +252,6 @@
                 "repo": "chenyaofo/pytorch-cifar-models",
                 "name": "cifar10_resnet56",
                 "alias": "ResNet56"
-            }
-        },
-        {
-            "dataset": {"name": "cifar100", "params": {"image_size": 32}},
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar100_resnet56",
-                "alias": "ResNet56"
-            }
-        },
-        {
-            "dataset": {"name": "cifar100", "params": {"image_size": 224}},
-            "model": {
-                "source": "vit",
-                "name": "pkr7098/cifar100-vit-base-patch16-224-in21k",
-                "alias": "ViT-B16"
             }
         }
     ]

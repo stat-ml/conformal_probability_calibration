@@ -43,7 +43,7 @@ def run_evaluations(
 ) -> List[EvaluationReport]:
     all_reports: List[EvaluationReport] = []
     table_data = []
-    all_metric_names: Set[str] = set()
+    all_metric_names: List[str] = [metric.name for metric in metrics]
 
     device = get_device(verbose=True)
     model_cache_dir = kwargs.get("model_cache_dir")
