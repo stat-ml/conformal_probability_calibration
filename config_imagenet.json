@@ -7,12 +7,6 @@
         "visualization_n_bins": 25
     },
     "visualizations": {
-        "confidence_curve": {"n_bins": 25},
-        "cumulative_mass_curve": {"n_bins": 25},
-        "conformal_set_size_distribution": {},
-        "one_minus_alpha_coverage_curve": {"alpha": 0.1},
-        "one_minus_alpha_coverage_curve": {"alpha": 0.01},
-        "one_minus_alpha_coverage_curve": {"alpha": 0.3}
     },
     "calibrators": [
         "temperature_scaling",
@@ -213,22 +207,22 @@
     ],
     "metrics": [
         "accuracy",
+        "nll",
+        "brier_score",
         {"name": "ece", "params": {"n_bins": 25}},
         {"name": "mce", "params": {"n_bins": 25}},
         {"name": "cw-ece", "params": {"n_bins": 25}},
-        "nll",
-        "brier_score",
         {
             "name": "cmce",
             "params": {"n_bins": 25, "strategy": "uniform", "weighted": true}
         },
         {
             "name": "coverage_around_one_minus_alpha",
-            "params": {"alpha": 0.1, "eps": 0.02}
+            "params": {"alpha": 0.3, "eps": 0.02}
         },
         {
             "name": "coverage_around_one_minus_alpha",
-            "params": {"alpha": 0.3, "eps": 0.02}
+            "params": {"alpha": 0.1, "eps": 0.02}
         },
         {
             "name": "coverage_around_one_minus_alpha",

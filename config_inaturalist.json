@@ -17,7 +17,6 @@
     "calibrators": [
         "temperature_scaling",
         "isotonic_regression",
-        {"name": "venn_abers", "params": {"va_type": "one_vs_all"}},
         {
             "name": "conformal_temperature",
             "params": {
@@ -224,11 +223,11 @@
         },
         {
             "name": "coverage_around_one_minus_alpha",
-            "params": {"alpha": 0.1, "eps": 0.02}
+            "params": {"alpha": 0.3, "eps": 0.02}
         },
         {
             "name": "coverage_around_one_minus_alpha",
-            "params": {"alpha": 0.3, "eps": 0.02}
+            "params": {"alpha": 0.1, "eps": 0.02}
         },
         {
             "name": "coverage_around_one_minus_alpha",
