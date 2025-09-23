@@ -40,6 +40,7 @@ def run_evaluations(
     num_splits: int = 1,
     cal_ratio: float = 0.3,
     subset_items: int = 40_000,
+    do_not_stratify: bool = False,
     **kwargs: Any,
 ) -> List[EvaluationReport]:
     all_reports: List[EvaluationReport] = []
@@ -105,7 +106,7 @@ def run_evaluations(
                 from_cache = True
             else:
                 cal_outputs, test_outputs_split, cal_labels, test_labels_split = split_data(
-                    test_outputs, test_labels, cal_ratio, split_seed, subset_items
+                    test_outputs, test_labels, cal_ratio, split_seed, subset_items, do_not_stratify=do_not_stratify
                 )
 
                 evaluator = ModelEvaluator(

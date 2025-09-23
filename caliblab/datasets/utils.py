@@ -16,6 +16,7 @@ def split_data(
     cal_ratio: float,
     seed: int,
     subset_items: int = -1,
+    do_not_stratify: bool = False
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     if not 0.0 < cal_ratio < 1.0:
         raise ValueError("cal_ratio must be between 0 and 1.")
@@ -32,9 +33,14 @@ def split_data(
 
     test_ratio = 1.0 - cal_ratio
 
-    cal_outputs, test_outputs, cal_labels, test_labels = train_test_split(
-        outputs, labels, test_size=test_ratio, random_state=seed, 
-        stratify=labels
-    )
+    if do_not_stratify:
+        cal_outputs, test_outputs, cal_labels, test_labels = train_test_split(
+            outputs, labels, test_size=test_ratio, random_state=seed
+        )
+    else: 
+        cal_outputs, test_outputs, cal_labels, test_labels = train_test_split(
+            outputs, labels, test_size=test_ratio, random_state=seed, 
+            stratify=labels
+        )
 
     return cal_outputs, test_outputs, cal_labels, test_labels

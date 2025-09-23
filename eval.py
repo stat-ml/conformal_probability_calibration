@@ -35,6 +35,11 @@ def main():
         default=1_000_000,
         help="Number of items to use for calibration.",
     )
+    parser.add_argument(
+        "--do-not-stratify",
+        action="store_true",
+        help="Do not stratify the data for calibration.",
+    )
     args = parser.parse_args()
     config_path = Path(args.config_file)
     if not config_path.is_file():
@@ -52,6 +57,7 @@ def main():
         num_splits=args.num_splits,
         cal_ratio=args.cal_ratio,
         subset_items=args.subset_items,
+        do_not_stratify=args.do_not_stratify,
         **runner_settings,
     )
 
