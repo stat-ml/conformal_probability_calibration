@@ -15,7 +15,17 @@
     "calibrators": [
         "temperature_scaling",
         "isotonic_regression",
-        {"name": "venn_abers", "params": {"va_type": "one_vs_all"}},
+        "platt_regression",
+        {
+            "name": "dirichlet",
+            "params": {
+                "matrix_type": "full",
+                "l2": 0.01,
+                "comp_l2": false,
+                "initializer": "identity"
+            }
+        },
+        "adaptive_temperature_scaling",
         {
             "name": "conformal_temperature",
             "params": {
@@ -87,7 +97,6 @@
         {"name": "mce", "params": {"n_bins": 25}},
         {"name": "cw-ece", "params": {"n_bins": 25}},
         "nll",
-        "brier_score",
         {
             "name": "cmce",
             "params": {"n_bins": 25, "strategy": "uniform", "weighted": true}
