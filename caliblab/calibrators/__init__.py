@@ -9,6 +9,7 @@ from .venn_abers_wrapper import VAbersCalibrator
 from .platt_regression import PlattRegression
 from .dirichlet_calibration import DirichletCalibration
 from .adaptive_temperature_scaling import AdaptiveTemperatureScaling
+from .naive_cmce_calibrator import GridTemperatureScaling
 
 
 def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
@@ -32,6 +33,9 @@ def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
         return DirichletCalibration(**kwargs)
     elif name == "adaptive_temperature_scaling":
         return AdaptiveTemperatureScaling(**kwargs)
+        return VennAbersCalibrator(**kwargs)
+    elif name == "naive_cmce":
+        return GridTemperatureScaling(**kwargs)
     else:
         raise ValueError(f"Unknown calibrator: {name}")
 
@@ -48,5 +52,6 @@ __all__ = [
     "PlattRegression",
     "DirichletCalibration",
     "AdaptiveTemperatureScaling",
+    "GridTemperatureScaling",
     "get_calibrator",
 ]

@@ -55,7 +55,6 @@ class CumulativeMassVisualizer:
                     "o-",
                     label=display_label,
                     linewidth=2,
-                    **color_kwargs,
                 )
 
         ax.set_xlabel("Cumulative Mass", fontsize=18, labelpad=12)

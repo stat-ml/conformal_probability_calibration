@@ -13,9 +13,11 @@ def main():
         description="Run model calibration evaluations from a config file."
     )
     parser.add_argument(
-        "config_file",
+        "--config_file",
         type=str,
         help="Path to the JSON configuration file.",
+        default="config_cifar.json",
+        required=False
     )
     parser.add_argument(
         "--num-splits",

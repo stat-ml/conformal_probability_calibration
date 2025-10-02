@@ -14,6 +14,7 @@
     },
     "calibrators": [
         "platt_regression",
+        {"name": "naive_cmce", "params": {"tau_min": 1e-3, "tau_max": 1e2, "num_taus": 1000, "n_bins": 25, "strategy": "uniform", "weighted": true}},
         {
             "name": "dirichlet",
             "params": {
@@ -50,24 +51,6 @@
         }
     ],
     "evaluations": [
-        {
-            "dataset": {"name": "cifar10"},
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar10_resnet20",
-                "alias": "ResNet20"
-            }
-        },
-        {
-            "dataset": {"name": "cifar10"},
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar10_resnet56",
-                "alias": "ResNet56"
-            }
-        },
         {
             "dataset": {"name": "cifar100"},
             "model": {
