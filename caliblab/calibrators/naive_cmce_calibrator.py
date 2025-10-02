@@ -63,7 +63,7 @@ class GridTemperatureScaling(CalibratorBase):
 
     @property
     def name(self) -> str:
-        return "temp_scaling_grid"
+        return "Naive CMCE Calibrator"
 
     def fit(
         self,
