@@ -6,6 +6,7 @@ from .temperature_scaling import TemperatureScaling
 from .conformal_mass_threshold_calibrator import ConformalMassThresholdCalibrator
 from .conformal_temperature_calibrator import ConformalTemperatureCalibrator
 from .venn_abers import VennAbersCalibrator
+from .platt_regression import PlattRegression
 
 
 def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
@@ -23,6 +24,8 @@ def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
         return ConformalTemperatureCalibrator(**kwargs)
     elif name == "venn_abers":
         return VennAbersCalibrator(**kwargs)
+    elif name == "platt_regression":
+        return PlattRegression(**kwargs)
     else:
         raise ValueError(f"Unknown calibrator: {name}")
 
@@ -36,5 +39,6 @@ __all__ = [
     "ConformalMassThresholdCalibrator",
     "ConformalTemperatureCalibrator",
     "VennAbersCalibrator",
+    "PlattRegression",
     "get_calibrator",
 ]
