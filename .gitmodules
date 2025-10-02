@@ -1,3 +1,0 @@
-[submodule "caliblab/calibrators/dirichlet"]
-	path = caliblab/calibrators/dirichlet
-	url = https://github.com/dirichletcal/dirichlet_python

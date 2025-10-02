@@ -6,6 +6,7 @@ import numpy as np
 
 from ..utils.computations import softmax
 from .base import CalibratorBase
+from .dirichlet import DirichletCalibrator
 
 
 def _ensure_dirichlet_on_path() -> None:
@@ -19,14 +20,7 @@ class DirichletCalibration(CalibratorBase):
     def __init__(self, matrix_type: str = "full", l2: float | list[float] = 0.0, comp_l2: bool | list[bool] = False, initializer: str = "identity"):
         super().__init__()
         _ensure_dirichlet_on_path()
-        try:
-            # Import after path injection
-            from dirichlet import DirichletCalibrator as ExternalDirichletCalibrator  # type: ignore
-        except Exception as exc:
-            raise ImportError(
-                "Failed to import external 'dirichlet' package from submodule. Ensure dependencies (jax, scipy, scikit-learn) are installed."
-            ) from exc
-        self._ExternalDirichletCalibrator = ExternalDirichletCalibrator
+        self.calibrator = DirichletCalibrator(matrix_type=matrix_type, l2=l2, comp_l2=comp_l2, initializer=initializer)
         self.matrix_type = matrix_type
         self.l2 = l2
         self.comp_l2 = comp_l2
@@ -56,13 +50,7 @@ class DirichletCalibration(CalibratorBase):
             p = np.asarray(probs, dtype=np.float64)
             self._trained_on = "probs"
 
-        model = self._ExternalDirichletCalibrator(
-            matrix_type=self.matrix_type,
-            l2=self.l2,
-            comp_l2=self.comp_l2,
-            initializer=self.initializer,
-        )
-        self._model = model.fit(p, y_true)
+        self._model = self.calibrator.fit(p, y_true)
         self._mark_fitted()
         return self
 
