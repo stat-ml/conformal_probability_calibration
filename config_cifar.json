@@ -1,7 +1,7 @@
 {
     "data_root": "data",
     "runner_settings": {
-        "output_dir": "experiments_cifar",
+        "output_dir": "experiments_cifar_small",
         "use_cache": true,
         "force_recompute": false,
         "visualization_n_bins": 25
@@ -10,9 +10,7 @@
         "confidence_curve": {"n_bins": 25},
         "cumulative_mass_curve": {"n_bins": 25},
         "conformal_set_size_distribution": {},
-        "one_minus_alpha_coverage_curve": {"alpha": 0.1},
-        "one_minus_alpha_coverage_curve": {"alpha": 0.01},
-        "one_minus_alpha_coverage_curve": {"alpha": 0.3}
+        "one_minus_alpha_coverage_curve": {"alpha": 0.01, "replace_naming_with_ours": true}
     },
     "calibrators": [
         "temperature_scaling",
@@ -34,190 +32,6 @@
                 "score_type": "thr",
                 "alpha": 0.1,
                 "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.1,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.1,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.1,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.1,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.1,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.1,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.1,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.01,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.01,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.01,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.01,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.01,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.01,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.01,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.01,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.3,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.3,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.3,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.3,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.3,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.3,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.3,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.3,
-                "score_transformation": "normalizing_flow"
             }
         }
     ],
@@ -246,38 +60,12 @@
     ],
 "evaluations": [
         {
-            "dataset": {"name": "cifar10"},
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar10_resnet20",
-                "alias": "ResNet20"
-            }
-        },
-        {
-            "dataset": {"name": "cifar10"},
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar10_resnet56",
-                "alias": "ResNet56"
-            }
-        },
-        {
-            "dataset": {"name": "cifar100", "params": {"image_size": 32}},
+            "dataset": {"name": "cifar100"},
             "model": {
                 "source": "torch_hub",
                 "repo": "chenyaofo/pytorch-cifar-models",
                 "name": "cifar100_resnet56",
                 "alias": "ResNet56"
-            }
-        },
-        {
-            "dataset": {"name": "cifar100", "params": {"image_size": 224}},
-            "model": {
-                "source": "vit",
-                "name": "pkr7098/cifar100-vit-base-patch16-224-in21k",
-                "alias": "ViT"
             }
         }
     ]

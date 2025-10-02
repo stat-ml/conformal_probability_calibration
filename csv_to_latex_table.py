@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 Generate a LaTeX table from a CSV with metrics like "mean ± std".
 
 Rules:
@@ -54,6 +54,13 @@ def latex_escape(text: str) -> str:
     if text is None:
         return ""
     # Only escape the ones likely in your data; underscore is the big one.
+    # Normalize Cyrillic 'с'/'С' to Latin 'c'/'C' to avoid visually similar characters
+    out = str(text)
+    try:
+        out = out.translate(Cyrillic_C_MAP)
+    except NameError:
+        # Map may not be defined yet at import time; skip gracefully
+        out = out
     replacements = {
         "\\": r"\textbackslash{}",
         "_": r"\_",
@@ -66,10 +73,139 @@ def latex_escape(text: str) -> str:
         "~": r"\textasciitilde{}",
         "^": r"\textasciicircum{}",
     }
-    out = str(text)
     for k, v in replacements.items():
         out = out.replace(k, v)
     return out
+
+Cyrillic_C_MAP = str.maketrans({"с": "c", "С": "C"})
+
+def parse_calibrator_meta(name: str) -> Dict[str, str]:
+    """Extract alpha (a), score_type (sc.tp), and transform (sc.trnf) from calibrator string.
+    Returns empty strings when not present.
+    Handles Cyrillic 'с' in keys by normalizing to Latin 'c'.
+    """
+    result = {"alpha": "", "score_type": "", "transform": ""}
+    if not name:
+        return result
+    s = str(name)
+    # Normalize potential Cyrillic characters in the entire string
+    s = s.translate(Cyrillic_C_MAP)
+    if ":" not in s:
+        return result
+    try:
+        _prefix, params = s.split(":", 1)
+    except ValueError:
+        return result
+    for part in params.split(","):
+        kv = part.strip()
+        if "=" not in kv:
+            continue
+        key, val = kv.split("=", 1)
+        key = key.strip().lower()
+        val = val.strip()
+        if key == "a":
+            result["alpha"] = val
+        elif key in {"sc.tp", "sc_type", "score_type", "sctp"}:
+            result["score_type"] = val
+        elif key in {"sc.trnf", "sc.tr", "transform", "sctrnf"}:
+            result["transform"] = val
+    return result
+
+def map_calibrator_display(name: str) -> str:
+    """Map raw calibrator names to display labels.
+    - cnfrml_mass_thrsh:* -> ours(cumulative_mass_threshold)
+    - cnfrml_temp:*       -> ours(temperature_scaling)
+    - cnfrml_*            -> ours(<suffix>)
+    Other names shown as-is. Normalizes Cyrillic 'с'/'С'.
+    """
+    if name is None:
+        return ""
+    s = str(name).translate(Cyrillic_C_MAP)
+    base = s.split(":", 1)[0].strip().lower()
+    if base in {"uncalibrated", "none"}:
+        return "Base"
+    if base.startswith("isotonic"):
+        return "Isotonic"
+    if base == "venn_abers_one_vs_all":
+        return "V.-Abers (OvA)"
+    if base in {"temp_scaling", "temperature_scaling"}:
+        return "Temp. scaling"
+    if base.startswith("cnfrml_mass_thrsh"):
+        return "CMT (ours)"
+    if base.startswith("cnfrml_temp"):
+        return "TS (ours)"
+    if base.startswith("cnfrml_"):
+        suffix = base[len("cnfrml_"):].replace("_", " ")
+        return f"ours({suffix})"
+    return s
+
+def map_transform_display(value: str) -> str:
+    """Map transform short codes to display names."""
+    if value is None:
+        return ""
+    s = str(value).strip().lower()
+    if s in {"temp_scaling", "temperature_scaling", "temp"}:
+        return "Temp. scaling"
+    if s in {"norm", "norm_flow"}:
+        return "NF"
+    if s in {"iden", "identity"}:
+        return "I"
+    return str(value)
+
+def map_score_type_display(value: str) -> str:
+    """Map score_type values to display names."""
+    if value is None:
+        return ""
+    s = str(value).strip().lower()
+    if s == "aps":
+        return "APS"
+    if s == "thr":
+        return "MSP"
+    if s == "temp_scaling":
+        return "Temp. scaling"
+    return str(value)
+
+def map_header_display(name: str) -> str:
+    """Map header column display names, including text and metric columns.
+    Uses a placeholder token for math to avoid escaping (replaced after escaping step).
+    """
+    if name is None:
+        return ""
+    key = str(name).strip().lower()
+    if key == "alpha":
+        return "<<ALPHA>>"
+    if key == "score_type":
+        return "Score"
+    if key == "transform":
+        return "Transf."
+    return map_metric_header_display(name)
+
+def map_metric_header_display(name: str) -> str:
+    """Pretty-print metric header names for LaTeX output.
+    Only adjusts display casing for specific metrics like ECE/MCE.
+    """
+    if name is None:
+        return ""
+    s = str(name)
+    key = s.strip().lower()
+    # Coverage columns -> "Coverage [L, U]"
+    cov = is_coverage_col(s)
+    if cov is not None:
+        lo, hi = cov
+        return f"Coverage [{lo}, {hi}]"
+    if key == "cw-ece":
+        return "cw-ECE"
+    if key == "nll":
+        return "NLL"
+    if key == "ece":
+        return "ECE"
+    if key == "mce":
+        return "MCE"
+    if key == "cmce":
+        return "CMCE"
+    if key == "brier_score":
+        return "Brier score"
+    return s
 
 COVERAGE_COL_RE = re.compile(r"^coverage_\[\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*\]\s*$")
 
@@ -119,19 +255,25 @@ def format_math(mean: float, std: float, bold: bool = False) -> str:
 def generate_latex_table(df: pd.DataFrame,
                          caption: str,
                          label: str,
-                         wrap_resizebox: bool = True) -> str:
-    # Identify fixed text columns and metric columns
-    # Expecting the first three text columns as in your data:
-    text_cols = ["Dataset", "Model", "Calibrator"]
-    # Allow for varying capitalization by mapping:
+                         wrap_resizebox: bool = True,
+                         context_df: Optional[pd.DataFrame] = None) -> str:
+    # Identify available text columns and metric columns
+    # Prefer these text columns if present (order matters for display):
+    # Place calibrator-derived fields immediately after Calibrator
+    preferred_text_cols = ["dataset", "model", "calibrator", "alpha", "score_type", "transform"]
     lower_map = {c.lower(): c for c in df.columns}
-    # Normalize presence
-    for need in ["dataset", "model", "calibrator"]:
-        if need not in lower_map:
-            raise ValueError(f"Required column '{need}' not found in CSV.")
-    text_cols = [lower_map["dataset"], lower_map["model"], lower_map["calibrator"]]
+    text_cols = [lower_map[c] for c in preferred_text_cols if c in lower_map]
+    dataset_col = lower_map.get("dataset")
+    model_col = lower_map.get("model")
+    calibrator_col = lower_map.get("calibrator")
 
-    metric_cols = [c for c in df.columns if c not in text_cols]
+    # Context columns (for sorting and baseline coloring) default to df if not provided
+    ctx = context_df if context_df is not None else df
+    lower_map_ctx = {c.lower(): c for c in ctx.columns}
+    dataset_col_ctx = lower_map_ctx.get("dataset")
+    model_col_ctx = lower_map_ctx.get("model")
+    calibrator_col_ctx = lower_map_ctx.get("calibrator")
+    metric_cols = [c for c in df.columns if c not in set(text_cols)]
 
     # Pre-parse all metric cells into (mean, std) or None for non-numeric
     parsed: Dict[str, List[Optional[Tuple[float, float]]]] = {}
@@ -155,25 +297,31 @@ def generate_latex_table(df: pd.DataFrame,
 
     # Build LaTeX header
     header_cols = text_cols + metric_cols
-    header_latex = " & ".join(latex_escape(c) for c in header_cols) + r" \\"
+    header_latex = " & ".join(latex_escape(map_header_display(c)) for c in header_cols) + r" \\" 
+    # Replace math placeholders post-escape to keep LaTeX intact
+    header_latex = header_latex.replace("<<ALPHA>>", r"$\alpha$")
 
-    # Column alignment: l l l then metrics centered
-    alignment = "l l l " + " ".join(["c"] * len(metric_cols))
+    # Column alignment matches available text columns
+    alignment = " ".join(["l"] * len(text_cols) + ["c"] * len(metric_cols))
 
-    # Pre-compute uncalibrated baselines per (Dataset, Model)
+    # Pre-compute uncalibrated baselines per (Dataset, Model) when possible
     def _is_uncalibrated(name: str) -> bool:
         s = str(name).strip().lower()
         return s in {"uncalibrated", "none"}
 
     def _group_key(i: int) -> tuple:
-        return (str(df.at[i, text_cols[0]]), str(df.at[i, text_cols[1]]))
+        if dataset_col_ctx is not None and model_col_ctx is not None:
+            return (str(ctx.at[i, dataset_col_ctx]), str(ctx.at[i, model_col_ctx]))
+        # Fallback: single key per entire table
+        return ("__all__",)
 
     baseline_index_by_group: Dict[tuple, int] = {}
-    for i in range(len(df)):
-        if _is_uncalibrated(df.at[i, text_cols[2]]):
-            gk = _group_key(i)
-            if gk not in baseline_index_by_group:
-                baseline_index_by_group[gk] = i
+    if dataset_col_ctx is not None and model_col_ctx is not None and calibrator_col_ctx is not None:
+        for i in range(len(ctx)):
+            if _is_uncalibrated(ctx.at[i, calibrator_col_ctx]):
+                gk = _group_key(i)
+                if gk not in baseline_index_by_group:
+                    baseline_index_by_group[gk] = i
 
     def _is_better(col: str, mean: float, base_mean: float) -> bool:
         if is_coverage_col(col):
@@ -205,19 +353,30 @@ def generate_latex_table(df: pd.DataFrame,
         return 1
 
     indices = list(range(len(df)))
-    ordered_indices = sorted(indices, key=lambda i: (_calibrator_group(df.at[i, text_cols[2]]), i))
+    if calibrator_col_ctx is not None:
+        ordered_indices = sorted(indices, key=lambda i: (_calibrator_group(ctx.at[i, calibrator_col_ctx]), i))
+    else:
+        ordered_indices = indices
 
     body_lines: List[str] = []
     prev_group: Optional[int] = None
     for i in ordered_indices:
-        cur_group = _calibrator_group(df.at[i, text_cols[2]])
-        if prev_group is not None and cur_group > prev_group:
-            body_lines.append(r"\\")
-        prev_group = cur_group
+        if calibrator_col_ctx is not None:
+            cur_group = _calibrator_group(ctx.at[i, calibrator_col_ctx])
+            if prev_group is not None and cur_group > prev_group:
+                body_lines.append(r"\\")
+            prev_group = cur_group
         row_cells: List[str] = []
         # text cells
         for col in text_cols:
-            row_cells.append(latex_escape(df.at[i, col]))
+            if calibrator_col is not None and col == calibrator_col:
+                row_cells.append(latex_escape(map_calibrator_display(df.at[i, col])))
+            elif col.lower() == "transform":
+                row_cells.append(latex_escape(map_transform_display(df.at[i, col])))
+            elif col.lower() == "score_type":
+                row_cells.append(latex_escape(map_score_type_display(df.at[i, col])))
+            else:
+                row_cells.append(latex_escape(df.at[i, col]))
         # metric cells
         for col in metric_cols:
             val = parsed[col][i]
@@ -240,17 +399,18 @@ def generate_latex_table(df: pd.DataFrame,
 
             cell = format_math(mean, std, bold=bold)
 
-            # Optional green color if better than uncalibrated baseline (non-coverage metrics)
-            gk = _group_key(i)
-            base_idx = baseline_index_by_group.get(gk)
-            if base_idx is not None and cov_bounds is None:
-                base_val = parsed[col][base_idx]
-                if base_val is not None:
-                    base_mean, _ = base_val
-                    if _is_better(col, mean, base_mean):
-                        cell = r"\textcolor{green}{" + cell + r"}"
-                    elif _is_worse(col, mean, base_mean):
-                        cell = r"\textcolor{red}{" + cell + r"}"
+            # Optional green/red color if better/worse than uncalibrated baseline (non-coverage metrics)
+            if dataset_col_ctx is not None and model_col_ctx is not None and calibrator_col_ctx is not None:
+                gk = _group_key(i)
+                base_idx = baseline_index_by_group.get(gk)
+                if base_idx is not None and cov_bounds is None:
+                    base_val = parsed[col][base_idx]
+                    if base_val is not None:
+                        base_mean, _ = base_val
+                        if _is_better(col, mean, base_mean):
+                            cell = r"\textcolor{green}{" + cell + r"}"
+                        elif _is_worse(col, mean, base_mean):
+                            cell = r"\textcolor{red}{" + cell + r"}"
 
             row_cells.append(cell)
 
@@ -259,6 +419,10 @@ def generate_latex_table(df: pd.DataFrame,
     table_core = []
     table_core.append(r"\begin{table*}[htbp]")
     table_core.append(r"\centering")
+    if caption:
+        table_core.append(r"\caption{" + latex_escape(caption) + r"}")
+    if label:
+        table_core.append(r"\label{" + latex_escape(label) + r"}")
     if wrap_resizebox:
         table_core.append(r"\resizebox{\textwidth}{!}{%")
     table_core.append(r"\begin{tabular}{" + alignment + r"}")
@@ -270,10 +434,6 @@ def generate_latex_table(df: pd.DataFrame,
     table_core.append(r"\end{tabular}")
     if wrap_resizebox:
         table_core.append(r"}")
-    if caption:
-        table_core.append(r"\caption{" + latex_escape(caption) + r"}")
-    if label:
-        table_core.append(r"\label{" + latex_escape(label) + r"}")
     table_core.append(r"\end{table*}")
 
     return "\n".join(table_core)
@@ -290,6 +450,15 @@ def main():
                     help="Do not wrap the tabular in \\resizebox.")
     ap.add_argument("--datasets", nargs="+",
                     help="Only include rows with Dataset in this list (exact match, case-sensitive).")
+    ap.add_argument("--models", nargs="+",
+                    help="Only include rows with Model in this list (exact match, case-sensitive).")
+    ap.add_argument("--exclude-cols", nargs="+",
+                    help="Column names to exclude (case-insensitive). Accepts coverage_[l,u] regardless of spaces.")
+    ap.add_argument("--calib-pattern", default=None,
+                    help="Regex to include only calibrators matching the pattern (case-insensitive). Applied after dataset/model filters.")
+    ap.add_argument("--calib-exclude-pattern", default=None,
+                    help="Regex to exclude calibrators matching the pattern (case-insensitive). Applied after --calib-pattern include filter.")
+
     args = ap.parse_args()
 
     df = pd.read_csv(args.csv, delimiter=",", quoting=csv.QUOTE_MINIMAL)
@@ -304,11 +473,90 @@ def main():
         if len(df) == 0:
             raise ValueError("No rows remain after applying --datasets filter.")
 
+    # Optional model filtering
+    if getattr(args, "models", None):
+        lower_map = {c.lower(): c for c in df.columns}
+        if "model" not in lower_map:
+            raise ValueError("Required column 'model' not found in CSV for filtering by --models.")
+        model_col = lower_map["model"]
+        df = df[df[model_col].isin(set(args.models))].reset_index(drop=True)
+        if len(df) == 0:
+            raise ValueError("No rows remain after applying --models filter.")
+
+    # Optional calibrator regex include filter
+    if getattr(args, "calib_pattern", None):
+        lower_map = {c.lower(): c for c in df.columns}
+        if "calibrator" not in lower_map:
+            raise ValueError("Required column 'calibrator' not found in CSV for filtering by --calib-pattern.")
+        cal_col = lower_map["calibrator"]
+        try:
+            rx = re.compile(args.calib_pattern, re.IGNORECASE)
+        except re.error as e:
+            raise ValueError(f"Invalid --calib-pattern regex: {e}")
+        df = df[df[cal_col].astype(str).apply(lambda s: bool(rx.search(s)))].reset_index(drop=True)
+        if len(df) == 0:
+            raise ValueError("No rows remain after applying --calib-pattern filter.")
+
+    # Optional calibrator regex exclude filter
+    if getattr(args, "calib_exclude_pattern", None):
+        lower_map = {c.lower(): c for c in df.columns}
+        if "calibrator" not in lower_map:
+            raise ValueError("Required column 'calibrator' not found in CSV for filtering by --calib-exclude-pattern.")
+        cal_col = lower_map["calibrator"]
+        try:
+            rx_ex = re.compile(args.calib_exclude_pattern, re.IGNORECASE)
+        except re.error as e:
+            raise ValueError(f"Invalid --calib-exclude-pattern regex: {e}")
+        df = df[~df[cal_col].astype(str).apply(lambda s: bool(rx_ex.search(s)))].reset_index(drop=True)
+        if len(df) == 0:
+            raise ValueError("No rows remain after applying --calib-exclude-pattern filter.")
+
+    # Preserve a context copy (after row-filters, before column exclusions) for coloring/sorting
+    context_df = df.copy()
+    # Derive calibrator meta columns from Calibrator, if present
+    lower_map = {c.lower(): c for c in df.columns}
+    if "calibrator" in lower_map:
+        cal_col = lower_map["calibrator"]
+        metas = df[cal_col].apply(parse_calibrator_meta)
+        df["alpha"] = metas.apply(lambda m: m.get("alpha", ""))
+        df["score_type"] = metas.apply(lambda m: m.get("score_type", ""))
+        df["transform"] = metas.apply(lambda m: m.get("transform", ""))
+
+    # Optional column exclusion
+    if getattr(args, "exclude_cols", None):
+        lower_map = {c.lower(): c for c in df.columns}
+        # Normalize coverage names in both CSV and requested excludes by stripping spaces after comma
+        def normalize_cov(name: str) -> str:
+            m = is_coverage_col(name) if name is not None else None
+            if m is None:
+                return str(name).strip().lower()
+            lo, hi = m
+            return f"coverage_[{lo}, {hi}]".lower()
+
+        norm_csv_map: Dict[str, str] = {}
+        for c in df.columns:
+            norm_csv_map[normalize_cov(c)] = c
+
+        drop_cols = []
+        for name in args.exclude_cols:
+            norm = normalize_cov(str(name))
+            # Try exact lower-case name first
+            candidate = lower_map.get(norm)
+            if candidate is None:
+                # Try normalized coverage mapping
+                candidate = norm_csv_map.get(norm)
+            if candidate is not None:
+                drop_cols.append(candidate)
+        if drop_cols:
+            drop_cols = list(dict.fromkeys(drop_cols))
+            df = df.drop(columns=drop_cols)
+
     latex_code = generate_latex_table(
         df,
         caption=args.caption,
         label=args.label,
         wrap_resizebox=not args.no_resize,
+        context_df=context_df,
     )
 
     Path(args.out).write_text(latex_code, encoding="utf-8")

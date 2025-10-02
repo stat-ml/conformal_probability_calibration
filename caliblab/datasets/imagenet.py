@@ -15,7 +15,7 @@ IMAGENET_STD = [0.229, 0.224, 0.225]
 class ImageNetMiniDataset(BaseDataset):
     @property
     def name(self) -> str:
-        return "imagenet-mini"
+        return "imagenet"
 
     def __init__(
         self,

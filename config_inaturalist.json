@@ -1,14 +1,14 @@
 {
     "data_root": "data",
     "runner_settings": {
-        "output_dir": "experiments_inaturalist",
+        "output_dir": "experiments_inaturalist_small",
         "use_cache": true,
         "force_recompute": false,
         "visualization_n_bins": 25
     },
     "visualizations": {
         "confidence_curve": {"n_bins": 25},
-        "cumulative_mass_curve": {"n_bins": 25},
+        "cumulative_mass_curve": {"n_bins": 25, "replace_naming_with_ours": true},
         "conformal_set_size_distribution": {},
         "one_minus_alpha_coverage_curve": {"alpha": 0.1},
         "one_minus_alpha_coverage_curve": {"alpha": 0.01},
@@ -23,190 +23,6 @@
                 "score_type": "thr",
                 "alpha": 0.1,
                 "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.1,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.1,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.1,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.1,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.1,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.1,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.1,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.01,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.01,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.01,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.01,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.01,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.01,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.01,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.01,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.3,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.3,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.3,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.3,
-                "score_transformation": "identity"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.3,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.3,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.3,
-                "score_transformation": "normalizing_flow"
-            }
-        },
-        {
-            "name": "conformal_mass_threshold",
-            "params": {
-                "score_type": "aps",
-                "alpha": 0.3,
-                "score_transformation": "normalizing_flow"
             }
         }
     ],
