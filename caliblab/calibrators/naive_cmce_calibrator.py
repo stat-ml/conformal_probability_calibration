@@ -53,7 +53,7 @@ class GridTemperatureScaling(CalibratorBase):
                 raise ValueError("tau_max must be greater than tau_min.")
             if num_taus < 2:
                 raise ValueError("num_taus must be >= 2.")
-            self._grid = np.logspace(tau_min, tau_max, num=num_taus, dtype=float)
+            self._grid = np.logspace(np.log10(tau_min), np.log10(tau_max), num=num_taus, dtype=float)
 
         self.temperature: float = 1.0
         self.n_bins = n_bins
