@@ -7,6 +7,8 @@ from .conformal_mass_threshold_calibrator import ConformalMassThresholdCalibrato
 from .conformal_temperature_calibrator import ConformalTemperatureCalibrator
 from .venn_abers import VennAbersCalibrator
 from .platt_regression import PlattRegression
+from .dirichlet_calibration import DirichletCalibration
+from .adaptive_temperature_scaling import AdaptiveTemperatureScaling
 
 
 def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
@@ -26,6 +28,10 @@ def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
         return VennAbersCalibrator(**kwargs)
     elif name == "platt_regression":
         return PlattRegression(**kwargs)
+    elif name == "dirichlet":
+        return DirichletCalibration(**kwargs)
+    elif name == "adaptive_temperature_scaling":
+        return AdaptiveTemperatureScaling(**kwargs)
     else:
         raise ValueError(f"Unknown calibrator: {name}")
 
@@ -40,5 +46,7 @@ __all__ = [
     "ConformalTemperatureCalibrator",
     "VennAbersCalibrator",
     "PlattRegression",
+    "DirichletCalibration",
+    "AdaptiveTemperatureScaling",
     "get_calibrator",
 ]
