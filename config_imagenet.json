@@ -13,7 +13,8 @@
         "one_minus_alpha_coverage_curve": {"alpha": 0.1}
     },
     "calibrators": [
-        {"name": "naive_cmce", "params": {"tau_min": 1e-3, "tau_max": 1e2, "num_taus": 100, "n_bins": 25, "strategy": "uniform", "weighted": true}}
+        "platt_regression",
+        "adaptive_temperature_scaling"
     ],
     "metrics": [
         "accuracy",
