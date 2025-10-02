@@ -83,7 +83,9 @@ def get_predictions(
     if use_cache and not force_recompute and cache_path.exists():
         print(f"Loading cached predictions from {cache_path}")
         cached_data = np.load(cache_path)
-        if "outputs" in cached_data and "labels" in cached_data:
+        if "outputs" in cached_data and "labels" in cached_data and "probs" in cached_data:
+            return cached_data["outputs"], cached_data["labels"], cached_data["probs"]
+        elif "outputs" in cached_data and "labels" in cached_data:
             return cached_data["outputs"], cached_data["labels"]
         elif "logits" in cached_data and "true_labels" in cached_data:
             return cached_data["logits"], cached_data["true_labels"]
@@ -93,6 +95,6 @@ def get_predictions(
             )
 
     print(f"Computing predictions and saving to {cache_path}")
-    outputs, labels = model.predict(loader, device)
-    np.savez(cache_path, outputs=outputs, labels=labels)
-    return outputs, labels
+    outputs, labels, probs = model.predict(loader, device)
+    np.savez(cache_path, outputs=outputs, labels=labels, probs=probs)
+    return outputs, labels, probs

@@ -9,14 +9,12 @@ class BrierScore(MetricBase):
         return "brier_score"
 
     def _compute(self, *, probs, y_true=None, true_proba=None, **kwargs):
-        if (y_true is None and true_proba is None) or (
-            y_true is not None and true_proba is not None
-        ):
+        if (y_true is None and true_proba is None):
             raise ValueError(
                 "Provide exactly one of y_true (labels) or true_proba (probabilities)."
             )
 
-        if y_true is not None:
+        if true_proba is None:
             n_samples, n_classes = probs.shape
             true_proba = make_one_hot(y_true, n_classes)
 
@@ -29,22 +27,19 @@ class NegativeLogLikelihood(MetricBase):
         return "nll"
 
     def _compute(self, *, probs, y_true=None, true_proba=None, **kwargs):
-        if (y_true is None and true_proba is None) or (
-            y_true is not None and true_proba is not None
-        ):
+        if (y_true is None and true_proba is None):
             raise ValueError(
                 "Provide exactly one of y_true (labels) or true_proba (probabilities)."
             )
 
-        if y_true is not None:
-            correct_probs = probs[np.arange(len(y_true)), y_true]
-            return np.mean(-np.log(correct_probs + 1e-12))  # add epsilon for stability
-
-        else:
+        if true_proba is not None:
             if probs.shape != true_proba.shape:
                 raise ValueError("When using true_proba, its shape must match probs.")
             nll = -np.sum(true_proba * np.log(probs + 1e-12), axis=1)
             return np.mean(nll)
+        else:
+            correct_probs = probs[np.arange(len(y_true)), y_true]
+            return np.mean(-np.log(correct_probs + 1e-12))  # add epsilon for stability
 
 
 __all__ = ["BrierScore", "NegativeLogLikelihood"]

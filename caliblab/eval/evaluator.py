@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 import torch
@@ -42,6 +42,8 @@ class ModelEvaluator:
         cal_labels: np.ndarray,
         test_outputs: np.ndarray,
         test_labels: np.ndarray,
+        cal_true_probs: Optional[np.ndarray] = None,
+        test_true_probs: Optional[np.ndarray] = None,
     ) -> List[EvaluationReport]:
         reports = []
 
@@ -68,6 +70,7 @@ class ModelEvaluator:
                 calibrated_test_outputs,
                 test_labels,
                 test_outputs,
+                test_true_probs,
                 train_time,
                 predict_time,
             )
@@ -81,6 +84,7 @@ class ModelEvaluator:
         outputs: np.ndarray,
         labels: np.ndarray,
         logits: np.ndarray,
+        true_probs: Optional[np.ndarray] = None,
         train_time: float = 0.0,
         predict_time: float = 0.0,
     ) -> EvaluationReport:
@@ -97,7 +101,7 @@ class ModelEvaluator:
             probs = outputs
 
         for metric in self.metrics:
-            metric_results[metric.name] = metric(probs=probs, y_true=labels)
+            metric_results[metric.name] = metric(probs=probs, y_true=labels, true_proba=true_probs)
 
         conformal_test_sizes = None
         if calibrator and calibrator.uses_conformal_set_helper():

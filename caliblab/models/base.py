@@ -26,12 +26,22 @@ class ModelBase(ABC, nn.Module):
 
         all_outputs = []
         all_labels = []
-        for i, (inputs, labels) in enumerate(tqdm(loader)):
+        all_probs = []
+        for i, out in enumerate(tqdm(loader)):
+            inputs = out[0]
+            if len(out) == 3:
+                labels = out[1]
+                probs = out[2]
+            else:
+                labels = out[1]
+                probs = None
             inputs = inputs.to(device)
-            outputs = self.model(inputs)
+            outputs = self.forward(inputs)
             assert outputs.shape[0] == inputs.shape[0]
             all_outputs.append(outputs.cpu().numpy().astype(np.float64))
             all_labels.append(labels.cpu().numpy().astype(np.int64))
+            if probs is not None:
+                all_probs.append(probs.cpu().numpy().astype(np.float64))
 
 
-        return np.concatenate(all_outputs), np.concatenate(all_labels)
+        return np.concatenate(all_outputs), np.concatenate(all_labels), None if len(all_probs) == 0 else np.concatenate(all_probs)

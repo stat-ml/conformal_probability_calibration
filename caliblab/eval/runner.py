@@ -79,7 +79,7 @@ def run_evaluations(
         test_loader = dataset.get_test_loader(batch_size=512)
         test_preds_path = base_run_dir / "test_preds.npz"
 
-        test_outputs, test_labels = get_predictions(
+        test_outputs, test_labels, test_probs = get_predictions(
             model, test_loader, device, test_preds_path, use_cache, force_recompute
         )
 
@@ -94,8 +94,8 @@ def run_evaluations(
             run_dir = base_run_dir / f"split_{split_seed}"
             run_dir.mkdir(parents=True, exist_ok=True)
 
-            cal_outputs, test_outputs_split, cal_labels, test_labels_split = split_data(
-                test_outputs, test_labels, cal_ratio, split_seed, subset_items
+            cal_outputs, test_outputs_split, cal_labels, test_labels_split, cal_true_probs, test_true_probs = split_data(
+                test_outputs, test_labels, test_probs, cal_ratio, split_seed, subset_items
             )
 
             evaluator = ModelEvaluator(
@@ -105,7 +105,7 @@ def run_evaluations(
                 device=device,
             )
             run_reports = evaluator.run_calibration_and_metrics(
-                cal_outputs, cal_labels, test_outputs_split, test_labels_split
+                cal_outputs, cal_labels, test_outputs_split, test_labels_split, cal_true_probs=cal_true_probs, test_true_probs=test_true_probs
             )
 
             print_and_collect_run_results(
