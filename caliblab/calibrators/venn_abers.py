@@ -1,7 +1,6 @@
 from typing import Optional
 
 import numpy as np
-from venn_abers import VennAbersCalibrator as ExternalVennAbersCalibrator
 
 from ..utils.computations import softmax
 from .base import CalibratorBase
