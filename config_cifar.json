@@ -1,7 +1,7 @@
 {
     "data_root": "data",
     "runner_settings": {
-        "output_dir": "experiments_cifar_small",
+        "output_dir": "experiments_cifar_baselines",
         "use_cache": true,
         "force_recompute": false,
         "visualization_n_bins": 25
@@ -13,8 +13,6 @@
         "one_minus_alpha_coverage_curve": {"alpha": 0.01, "replace_naming_with_ours": true}
     },
     "calibrators": [
-        "temperature_scaling",
-        "isotonic_regression",
         "platt_regression",
         {
             "name": "dirichlet",
@@ -25,15 +23,7 @@
                 "initializer": "identity"
             }
         },
-        "adaptive_temperature_scaling",
-        {
-            "name": "conformal_temperature",
-            "params": {
-                "score_type": "thr",
-                "alpha": 0.1,
-                "score_transformation": "identity"
-            }
-        }
+        "adaptive_temperature_scaling"
     ],
     "metrics": [
         "accuracy",
@@ -41,6 +31,7 @@
         {"name": "mce", "params": {"n_bins": 25}},
         {"name": "cw-ece", "params": {"n_bins": 25}},
         "nll",
+        "brier_score",
         {
             "name": "cmce",
             "params": {"n_bins": 25, "strategy": "uniform", "weighted": true}
@@ -58,7 +49,25 @@
             "params": {"alpha": 0.01, "eps": 0.005}
         }
     ],
-"evaluations": [
+    "evaluations": [
+        {
+            "dataset": {"name": "cifar10"},
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar10_resnet20",
+                "alias": "ResNet20"
+            }
+        },
+        {
+            "dataset": {"name": "cifar10"},
+            "model": {
+                "source": "torch_hub",
+                "repo": "chenyaofo/pytorch-cifar-models",
+                "name": "cifar10_resnet56",
+                "alias": "ResNet56"
+            }
+        },
         {
             "dataset": {"name": "cifar100"},
             "model": {
@@ -66,6 +75,14 @@
                 "repo": "chenyaofo/pytorch-cifar-models",
                 "name": "cifar100_resnet56",
                 "alias": "ResNet56"
+            }
+        },
+        {
+            "dataset": {"name": "cifar100", "params": {"image_size": 224}},
+            "model": {
+                "source": "vit",
+                "name": "pkr7098/cifar100-vit-base-patch16-224-in21k",
+                "alias": "ViT-B16"
             }
         }
     ]

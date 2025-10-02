@@ -6,12 +6,12 @@ import numpy as np
 
 from ..eval.constants import EvaluationReport
 from .utils import calculate_cumulative_mass_bins
+from ..utils.legend import map_legend_label
 
 
 class CumulativeMassVisualizer:
-    def __init__(self, n_bins: int, replace_naming_with_ours: bool = False):
+    def __init__(self, n_bins: int):
         self.bins = np.linspace(0, 1, n_bins + 1)
-        self.replace_naming_with_ours = replace_naming_with_ours
 
     def plot(
         self,
@@ -37,13 +37,9 @@ class CumulativeMassVisualizer:
             name = report.calibrator_name
             original_name = name
 
-            # Replace naming if requested to align with one-minus-alpha visualizer behavior
-            if self.replace_naming_with_ours and name.__contains__("cnfrml_"):
-                name = "ours"
 
-            # Determine if this is our method for coloring
-            is_ours = name == "ours" or original_name.__contains__("cnfrml_")
-            color_kwargs = {"color": "#9467bd"} if is_ours else {}
+            # Map legend label for display (e.g., Uncalibrated -> Base)
+            display_label = map_legend_label(name)
 
             (
                 bin_mean_scores,
@@ -57,7 +53,7 @@ class CumulativeMassVisualizer:
                     bin_mean_scores[non_empty_bins],
                     bin_mean_coverages[non_empty_bins],
                     "o-",
-                    label=name,
+                    label=display_label,
                     linewidth=2,
                     **color_kwargs,
                 )

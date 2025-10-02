@@ -1,12 +1,13 @@
 from typing import Optional
 
 import numpy as np
+from venn_abers import VennAbersCalibrator
 
 from ..utils.computations import softmax
 from .base import CalibratorBase
 
 
-class VennAbersCalibrator(CalibratorBase):
+class VAbersCalibrator(CalibratorBase):
     """
     A wrapper for the VennAbersCalibrator.
     This calibrator does not have a separate training step for the calibrator itself,
@@ -18,7 +19,7 @@ class VennAbersCalibrator(CalibratorBase):
         if va_type not in ["one_vs_one", "one_vs_all"]:
             raise ValueError(f"Unknown va_type: {va_type}")
         self.va_type = va_type
-        self.calibrator = ExternalVennAbersCalibrator()
+        self.calibrator = VennAbersCalibrator()
         self.p_cal: Optional[np.ndarray] = None
         self.y_cal: Optional[np.ndarray] = None
 
@@ -32,7 +33,7 @@ class VennAbersCalibrator(CalibratorBase):
         logits: Optional[np.ndarray] = None,
         y_true: np.ndarray,
         **kwargs,
-    ) -> "VennAbersCalibrator":
+    ) -> "VAbersCalibrator":
         if logits is None:
             raise ValueError("Logits must be provided.")
 

@@ -3,11 +3,13 @@ r"""
 Generate a LaTeX table from a CSV with metrics like "mean ± std".
 
 Rules:
-- Bold and underline the BEST metric per column (entire formula, not just mean):
-    * accuracy:          maximize (highest mean is best)
+- Best/second-best highlighting per column (entire formula, not just mean):
+    * Best: bold
+    * Second-best: underline
+    * accuracy: maximize (highest mean is best)
     * nll, brier_score, ece, mce, cw-ece, cmce: minimize (lowest mean is best)
 - Coverage columns named like: coverage_[L, U]
-    * Bold and underline if the mean is within [L, U] (inclusive), regardless of being best.
+    * Bold and underline if the mean is within [L, U] (inclusive), regardless of ranking.
 - Every numeric cell is rendered in math mode: $<value> \pm <value>$
 - String columns (Dataset, Model, Calibrator) are printed as-is (with LaTeX escaping)
 - Uses booktabs in the LaTeX table. You can wrap it in \resizebox if it's wide.
@@ -131,13 +133,13 @@ def map_calibrator_display(name: str) -> str:
     if base in {"temp_scaling", "temperature_scaling"}:
         return "Temp. scaling"
     if base == "platt_regression":
-        return "Platt"
+        return "Platt Scaling"
     if base == "dirichlet":
         return "Dirichlet"
     if base in {"adaptive_temperature_scaling", "ada_temp_scaling"}:
-        return "Ada-Temp. scaling"
+        return "Ada-Temp Scaling"
     if base.startswith("cnfrml_mass_thrsh"):
-        return "CMT (ours)"
+        return "MR (ours)"
     if base.startswith("cnfrml_temp"):
         return "TS (ours)"
     if base.startswith("cnfrml_"):
@@ -165,7 +167,7 @@ def map_score_type_display(value: str) -> str:
     s = str(value).strip().lower()
     if s == "aps":
         return "APS"
-    if s == "thr" | s == "msp":
+    if s == "thr":
         return "MSP"
     if s == "temp_scaling":
         return "Temp. scaling"
@@ -210,7 +212,7 @@ def map_metric_header_display(name: str) -> str:
     if key == "cmce":
         return "CMCE"
     if key == "brier_score":
-        return "Brier score"
+        return "Brier Score"
     return s
 
 COVERAGE_COL_RE = re.compile(r"^coverage_\[\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*\]\s*$")
@@ -236,8 +238,8 @@ def is_higher_better(col: str) -> bool:
     return col.lower() == "accuracy"
 
 def find_best_indices(values: List[Optional[Tuple[float, float]]],
-                      minimize: bool,
-                      eps: float = 1e-12) -> List[int]:
+                     minimize: bool,
+                     eps: float = 1e-12) -> List[int]:
     """Return indices of rows that are best (min or max of mean), ties included."""
     means = [v[0] if v else (math.inf if minimize else -math.inf) for v in values]
     if minimize:
@@ -247,14 +249,54 @@ def find_best_indices(values: List[Optional[Tuple[float, float]]],
         best = max(means)
         return [i for i, m in enumerate(means) if abs(m - best) <= eps]
 
-def format_math(mean: float, std: float, bold: bool = False) -> str:
-    """Format a number as LaTeX math with optional bold/underline for the whole formula."""
-    formula = f"{mean:.4f} \\pm {std:.4f}"
-    if bold:
-        # Bold and underline the entire formula
-        return r"$\underline{\mathbf{" + formula + r"}}$"
+def find_top2_indices(values: List[Optional[Tuple[float, float]]],
+                      minimize: bool,
+                      eps: float = 1e-12) -> Tuple[List[int], List[int]]:
+    """Return (best_indices, second_best_indices) based on means.
+
+    - Includes ties in each rank set.
+    - Ignores rows with missing values (treated as +inf/-inf already).
+    - If there is no distinct second value, second_best_indices is empty.
+    """
+    means = [v[0] if v else (math.inf if minimize else -math.inf) for v in values]
+    # Filter out placeholder infinities that represent non-numeric cells
+    finite_pairs: List[Tuple[float, int]] = []
+    for idx, m in enumerate(means):
+        if minimize and m == math.inf:
+            continue
+        if not minimize and m == -math.inf:
+            continue
+        finite_pairs.append((m, idx))
+
+    if not finite_pairs:
+        return [], []
+
+    # Determine best value and indices
+    if minimize:
+        best_val = min(m for m, _ in finite_pairs)
     else:
-        return r"$" + formula + r"$"
+        best_val = max(m for m, _ in finite_pairs)
+    best_indices = [i for m, i in finite_pairs if abs(m - best_val) <= eps]
+
+    # Candidates for second-best must be distinct from best
+    candidate_vals = [m for m, _ in finite_pairs if abs(m - best_val) > eps]
+    if not candidate_vals:
+        return best_indices, []
+    if minimize:
+        second_val = min(candidate_vals)
+    else:
+        second_val = max(candidate_vals)
+    second_indices = [i for m, i in finite_pairs if abs(m - second_val) <= eps]
+    return best_indices, second_indices
+
+def format_math(mean: float, std: float, bold: bool = False, underline: bool = False) -> str:
+    """Format a number as LaTeX math with optional bold and/or underline for the whole formula."""
+    content = f"{mean:.4f} \\pm {std:.4f}"
+    if bold:
+        content = r"\mathbf{" + content + r"}"
+    if underline:
+        content = r"\underline{" + content + r"}"
+    return r"$" + content + r"$"
 
 # -------- Main generation --------
 
@@ -286,20 +328,20 @@ def generate_latex_table(df: pd.DataFrame,
     for col in metric_cols:
         parsed[col] = [parse_pm(x) for x in df[col].tolist()]
 
-    # Determine best rows for each metric (non-coverage)
-    best_indices_by_col: Dict[str, List[int]] = {}
+    # Determine best and second-best rows for each metric (non-coverage)
+    top2_indices_by_col: Dict[str, Tuple[List[int], List[int]]] = {}
     for col in metric_cols:
         if is_coverage_col(col):
             continue  # handled via interval rule
         vals = parsed[col]
         if is_higher_better(col):
-            idxs = find_best_indices(vals, minimize=False)
+            best_idxs, second_idxs = find_top2_indices(vals, minimize=False)
         elif is_lower_better(col):
-            idxs = find_best_indices(vals, minimize=True)
+            best_idxs, second_idxs = find_top2_indices(vals, minimize=True)
         else:
             # If unknown metric, default to minimizing (conservative)
-            idxs = find_best_indices(vals, minimize=True)
-        best_indices_by_col[col] = idxs
+            best_idxs, second_idxs = find_top2_indices(vals, minimize=True)
+        top2_indices_by_col[col] = (best_idxs, second_idxs)
 
     # Build LaTeX header
     header_cols = text_cols + metric_cols
@@ -393,17 +435,21 @@ def generate_latex_table(df: pd.DataFrame,
             mean, std = val
 
             bold = False
+            underline = False
             if cov_bounds is not None:
                 lo, hi = cov_bounds
-                # Bold/underline if mean in [lo, hi]
+                # Bold+underline if mean in [lo, hi]
                 if mean >= lo - 1e-12 and mean <= hi + 1e-12:
-                    bold = True
+                    bold, underline = True, True
             else:
-                # Bold/underline if this row is a best index for the metric
-                if i in best_indices_by_col.get(col, []):
+                # Bold if best, underline if second-best
+                best_idxs, second_idxs = top2_indices_by_col.get(col, ([], []))
+                if i in best_idxs:
                     bold = True
+                elif i in second_idxs:
+                    underline = True
 
-            cell = format_math(mean, std, bold=bold)
+            cell = format_math(mean, std, bold=bold, underline=underline)
 
             # Optional green/red color if better/worse than uncalibrated baseline (non-coverage metrics)
             if dataset_col_ctx is not None and model_col_ctx is not None and calibrator_col_ctx is not None:
@@ -414,7 +460,7 @@ def generate_latex_table(df: pd.DataFrame,
                     if base_val is not None:
                         base_mean, _ = base_val
                         if _is_better(col, mean, base_mean):
-                            cell = r"\textcolor{green}{" + cell + r"}"
+                            cell = r"\textcolor{ForestGreen}{" + cell + r"}"
                         elif _is_worse(col, mean, base_mean):
                             cell = r"\textcolor{red}{" + cell + r"}"
 

@@ -28,20 +28,9 @@ class DirichletCalibrator(BaseEstimator, RegressorMixin):
 
 
         if self.matrix_type == 'full':
-            # Support multiple upstream API variants
-            try:
-                self.calibrator_ = FullDirichletCalibrator(
-                    l2=self.l2, initializer=self.initializer
-                )
-                if hasattr(self.calibrator_, 'reg_lambda_list'):
-                    self.calibrator_.reg_lambda_list = self.l2_grid
-                if hasattr(self.calibrator_, 'reg_mu_list'):
-                    self.calibrator_.reg_mu_list = self.comp_l2
-            except TypeError:
-                # Older signature uses reg_lambda/reg_mu
-                self.calibrator_ = FullDirichletCalibrator(
-                    reg_lambda=self.l2, reg_mu=None, initializer=self.initializer
-                )
+            self.calibrator_ = FullDirichletCalibrator(reg_lambda_list=self.l2_grid,
+                                                       reg_mu_list=self.comp_l2,
+                                                       initializer=self.initializer)
         else:
             raise(ValueError)
 
