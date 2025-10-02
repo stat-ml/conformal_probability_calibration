@@ -4,6 +4,7 @@ from .base import ModelBase
 from .birder import BirderModel
 from .hub import HubModel
 from .vit import ViTModel
+from .mlp import MLPClassifier
 
 
 def get_model(
@@ -28,8 +29,12 @@ def get_model(
         return HubModel(repo, name, alias=alias, cache_dir=cache_dir, **kwargs)
     elif source == "birder":
         return BirderModel(name, alias=alias, cache_dir=cache_dir, **kwargs)
+    elif source == "ours":
+        model = MLPClassifier(**kwargs)
+        model.load_weights(path=f"synthetic_model_weights/model_{kwargs["n_classes"]}.pth")
+        return model
     else:
         raise ValueError(f"Unknown model source: '{source}'")
 
 
-__all__ = ["ModelBase", "get_model", "HubModel", "ViTModel", "BirderModel"]
+__all__ = ["ModelBase", "get_model", "HubModel", "ViTModel", "BirderModel", "MLPClassifier"]
