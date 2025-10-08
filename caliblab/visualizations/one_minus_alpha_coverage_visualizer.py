@@ -8,15 +8,15 @@ from ..eval.constants import EvaluationReport
 from ..metrics import CoverageAroundOneMinusAlpha
 from ..utils.computations import cumulative_mass_and_coverage
 from .utils import pretty_matplotlib_config
+from ..utils.legend import map_legend_label
+
 
 
 class OneMinusAlphaCoverageVisualizer:
-    def __init__(self, alpha: float, replace_naming_with_ours: bool = False, n_eps_steps: int = 10):
+    def __init__(self, alpha: float, n_eps_steps: int = 10):
         self.alpha = alpha
         self.eps_values = np.linspace(-self.alpha, self.alpha, n_eps_steps)
         self.eps_values = self.eps_values[~np.isclose(self.eps_values, 0)]
-        self.replace_naming_with_ours = replace_naming_with_ours
-        print(f"replace_naming_with_ours: {self.replace_naming_with_ours}")
 
     def plot(
         self,
@@ -25,10 +25,18 @@ class OneMinusAlphaCoverageVisualizer:
         dataset_name: str,
         model_name: str,
     ) -> None:
-        # Ensure consistent matplotlib styling
-        pretty_matplotlib_config()
-        plt.figure(figsize=(9, 9))
+        # Ensure consistent matplotlib styling (same as Cumulative Mass visualizer)
+        pretty_matplotlib_config(
+            fontsize=35,
+            legend_fontsize=20,
+            axes_titlesize=40,
+            axes_labelsize=35,
+            tick_labelsize=35,
+        )
+        plt.figure(figsize=(12, 12))
         ax = plt.gca()
+        ax.spines['left'].set_position(('outward', 15))
+        ax.spines['bottom'].set_position(('outward', 15))
 
         for report in reports:
             if report.calibrated_probabilities is None or report.true_labels is None:
@@ -37,15 +45,6 @@ class OneMinusAlphaCoverageVisualizer:
             probs = report.calibrated_probabilities
             y_true = report.true_labels
             name = report.calibrator_name
-            original_name = name
-
-            # Replace naming if requested
-            if self.replace_naming_with_ours and name.__contains__("cnfrml_"):
-                name = "ours"
-
-            # Determine if this is our method for coloring
-            is_ours = name == "ours" or original_name.__contains__("cnfrml_")
-            color_kwargs = {"color": "#9467bd"} if is_ours else {}
 
             # Use shared utility to precompute cum_probs and true_rank
             cum_probs, _coverage_matrix, sorted_idx = cumulative_mass_and_coverage(probs, y_true)
@@ -59,13 +58,14 @@ class OneMinusAlphaCoverageVisualizer:
                 coverage_values.append(coverage)
                 set_sizes.append(size)
             
+            display_label = map_legend_label(name)
+
             ax.plot(
                 self.eps_values,
                 coverage_values,
                 "-",
-                label=name,
+                label=display_label,
                 linewidth=2,
-                **color_kwargs,
             )
 
             sc = ax.scatter(
@@ -74,24 +74,18 @@ class OneMinusAlphaCoverageVisualizer:
                 s=70,
                 alpha=np.log(np.array(set_sizes) + 0.1) / np.log(np.array(set_sizes).sum() + 0.1), 
                 edgecolors="none",
-                **color_kwargs,
             )
         
         ax.axhline(
             y=1 - self.alpha,
             color='r',
             linestyle='--',
-            label=f"1 - alpha = {1 - self.alpha}",
             linewidth=2,
         )
 
-        ax.set_xlabel("Epsilon (eps)", labelpad=12)
-        ax.set_ylabel("Coverage in 1-alpha and 1-alpha+eps", labelpad=12)
+        ax.set_xlabel("Offset ($\epsilon$)", labelpad=12)
+        ax.set_ylabel("Coverage", labelpad=12)
         ax.set_xlim([self.eps_values.min(), self.eps_values.max()])
-        ax.set_title(
-            f"Coverage vs. Epsilon (alpha={self.alpha})\n{dataset_name} - {model_name}",
-            pad=5,
-        )
         ax.legend(loc="lower right")
         ax.grid(True, linestyle="--", alpha=0.6)
 
@@ -99,7 +93,9 @@ class OneMinusAlphaCoverageVisualizer:
         ax.tick_params(axis='both', which='minor')
 
         output_path = run_dir / f"one_minus_alpha_coverage_curve_{self.alpha}.png"
+        output_path_pdf = run_dir / f"one_minus_alpha_coverage_curve_{self.alpha}.pdf"
         print(f"Saving coverage curve to {output_path}")
         plt.tight_layout()
+        plt.savefig(output_path_pdf, dpi=300, format="pdf", bbox_inches="tight")
         plt.savefig(output_path)
         plt.close()

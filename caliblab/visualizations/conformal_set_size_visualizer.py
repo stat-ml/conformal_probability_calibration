@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..eval.constants import EvaluationReport
+from .utils import pretty_matplotlib_config
 
 
 class ConformalSetSizeVisualizer:

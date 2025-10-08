@@ -1,7 +1,7 @@
 {
     "data_root": "data",
     "runner_settings": {
-        "output_dir": "experiments_cifar_baselines",
+        "output_dir": "experiments_cifar",
         "use_cache": true,
         "force_recompute": false,
         "visualization_n_bins": 25
@@ -10,21 +10,16 @@
         "confidence_curve": {"n_bins": 25},
         "cumulative_mass_curve": {"n_bins": 25},
         "conformal_set_size_distribution": {},
-        "one_minus_alpha_coverage_curve": {"alpha": 0.01, "replace_naming_with_ours": true}
+        "one_minus_alpha_coverage_curve": {"alpha": 0.1}
     },
     "calibrators": [
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.1, "score_transformation": "identity"}},
+        {"name": "naive_cmce", "params": {"tau_min": 1e-3, "tau_max": 1e2, "num_taus": 300, "n_bins": 25, "strategy": "uniform", "weighted": true}},
+        "temperature_scaling",
+        "isotonic_regression",
+        "adaptive_temperature_scaling",
         "platt_regression",
-        {"name": "naive_cmce", "params": {"tau_min": 1e-3, "tau_max": 1e2, "num_taus": 1000, "n_bins": 25, "strategy": "uniform", "weighted": true}},
-        {
-            "name": "dirichlet",
-            "params": {
-                "matrix_type": "full",
-                "l2": 0.01,
-                "comp_l2": false,
-                "initializer": "identity"
-            }
-        },
-        "adaptive_temperature_scaling"
+        {"name": "venn_abers", "params": {"va_type": "one_vs_all"}}
     ],
     "metrics": [
         "accuracy",
