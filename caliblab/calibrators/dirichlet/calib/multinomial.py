@@ -23,7 +23,7 @@ except Exception:
 config.update("jax_enable_x64", True)
 
 class MultinomialRegression(BaseEstimator, RegressorMixin):
-    def __init__(self, weights_0=None, method=None, initializer='identity', reg_format=None, 
+    def __init__(self, weights_0=None, method=None, initializer='identity', reg_format=None,
                  reg_lambda=0.0, reg_mu=None, reg_norm=False, ref_row=True):
         if method not in [None, 'Full', 'Diag', 'FixDiag']:
             raise(ValueError('method {} not avaliable'.format(method)))
@@ -97,8 +97,8 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
             res = scipy.optimize.fmin_l_bfgs_b(func=_objective, fprime=_gradient,
                                                x0=self.weights_0_,
                                                args=(X_, XXT, target, k,
-                                                     self.method_, self.reg_lambda, self.reg_mu, 
-                                                     self.ref_row, self.initializer, 
+                                                     self.method_, self.reg_lambda, self.reg_mu,
+                                                     self.ref_row, self.initializer,
                                                      self.reg_format),
                                                maxls=128,
                                                factr=1.0)
@@ -193,7 +193,7 @@ def _get_weights(params, k, ref_row, method):
 
         elif method == 'FixDiag':
             raw_weights = np.hstack([np.eye(k) * params[0], np.zeros((k, 1))])
-            # weights[np.dgag_indices(k - 1)] = params[0] 
+            # weights[np.dgag_indices(k - 1)] = params[0]
             # weights[np.diag_indices(k)] = params[0]
         else:
             raise(ValueError("Unknown calibration method {}".format(method)))
@@ -311,10 +311,10 @@ def _newton_update(weights_0, X, XX_T, target, k, method_, maxiter=int(1024),
 
     L = _objective(weights, X, XX_T, target, k, method_, 
                    reg_lambda, reg_mu, ref_row, initializer, reg_format)
-    
+
     logging.debug("{}: after {} iterations final log-loss = {:.7e}, sum_grad = {:.7e}".format(
         method_, i, L, np.abs(gradient).sum()))
-    
+
     #logging.debug("weights = \n{}".format(weights))
 
     return weights

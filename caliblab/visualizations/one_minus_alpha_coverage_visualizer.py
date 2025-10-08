@@ -7,6 +7,7 @@ import numpy as np
 from ..eval.constants import EvaluationReport
 from ..metrics import CoverageAroundOneMinusAlpha
 from ..utils.computations import cumulative_mass_and_coverage
+from .utils import pretty_matplotlib_config
 
 
 class OneMinusAlphaCoverageVisualizer:
@@ -24,6 +25,8 @@ class OneMinusAlphaCoverageVisualizer:
         dataset_name: str,
         model_name: str,
     ) -> None:
+        # Ensure consistent matplotlib styling
+        pretty_matplotlib_config()
         plt.figure(figsize=(9, 9))
         ax = plt.gca()
 
@@ -82,19 +85,18 @@ class OneMinusAlphaCoverageVisualizer:
             linewidth=2,
         )
 
-        ax.set_xlabel("Epsilon (eps)", fontsize=18, labelpad=12)
-        ax.set_ylabel("Coverage in 1-alpha and 1-alpha+eps", fontsize=18, labelpad=12)
+        ax.set_xlabel("Epsilon (eps)", labelpad=12)
+        ax.set_ylabel("Coverage in 1-alpha and 1-alpha+eps", labelpad=12)
         ax.set_xlim([self.eps_values.min(), self.eps_values.max()])
         ax.set_title(
             f"Coverage vs. Epsilon (alpha={self.alpha})\n{dataset_name} - {model_name}",
-            fontsize=18,
             pad=5,
         )
-        ax.legend(loc="lower right", fontsize=15)
+        ax.legend(loc="lower right")
         ax.grid(True, linestyle="--", alpha=0.6)
 
-        ax.tick_params(axis='both', which='major', labelsize=14)
-        ax.tick_params(axis='both', which='minor', labelsize=14)
+        ax.tick_params(axis='both', which='major')
+        ax.tick_params(axis='both', which='minor')
 
         output_path = run_dir / f"one_minus_alpha_coverage_curve_{self.alpha}.png"
         print(f"Saving coverage curve to {output_path}")

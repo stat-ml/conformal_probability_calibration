@@ -138,6 +138,9 @@ def map_calibrator_display(name: str) -> str:
         return "Dirichlet"
     if base in {"adaptive_temperature_scaling", "ada_temp_scaling"}:
         return "Ada-Temp Scaling"
+    # Normalize Naive CMCE calibrator naming
+    if base in {"naive cmce calibrator", "naive_cmce_calibrator", "naive cmce", "naive_cmce"}:
+        return "Naive CMCE"
     if base.startswith("cnfrml_mass_thrsh"):
         return "MR (ours)"
     if base.startswith("cnfrml_temp"):

@@ -37,7 +37,7 @@ def split_data(
         cal_outputs, test_outputs, cal_labels, test_labels = train_test_split(
             outputs, labels, test_size=test_ratio, random_state=seed
         )
-    else: 
+    else:
         cal_outputs, test_outputs, cal_labels, test_labels = train_test_split(
             outputs, labels, test_size=test_ratio, random_state=seed, 
             stratify=labels

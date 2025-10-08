@@ -33,7 +33,6 @@ def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
         return DirichletCalibration(**kwargs)
     elif name == "adaptive_temperature_scaling":
         return AdaptiveTemperatureScaling(**kwargs)
-        return VennAbersCalibrator(**kwargs)
     elif name == "naive_cmce":
         return GridTemperatureScaling(**kwargs)
     else:
