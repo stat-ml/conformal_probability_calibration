@@ -1,53 +1,52 @@
-## Conformal Probability Calibration — минимальный гайд
+## Conformal Probability Calibration — concise guide
 
-Короткий README для воспроизводимости в статье. Примеры запуска идут сразу.
+Short README for paper reproducibility. Launch examples come first.
 
-### Быстрый старт (рекомендуется `uv`)
+### Quickstart (uv recommended)
 
 ```bash
-# 1) Python 3.13 и uv (https://astral.sh/uv). Создать/активировать окружение не обязательно —
-#    можно просто использовать `uv run`.
+# 1) Python 3.13 and uv (https://astral.sh/uv). You can simply use `uv run`.
 
-# CIFAR (конфиг по умолчанию)
+# CIFAR (default config)
 uv run -- python eval.py --config_file configs/config_cifar.json
 
-# CIFAR с дополнительными флагами
+# CIFAR with extra flags
 uv run -- python eval.py --config_file configs/config_cifar.json \
   --cal-ratio 0.3 --num-splits 10 --subset-items 50000
 
 # ImageNet-mini
 uv run -- python eval.py --config_file configs/config_imagenet.json
 
-# iNaturalist (пример с нестратегированной выборкой)
+# iNaturalist (example without stratification)
 uv run -- python eval.py --config_file configs/config_inaturalist.json \
   --cal-ratio 0.3 --num-splits 1 --subset-items 30000 --do-not-stratify
 ```
 
-### Что делает пайплайн
-- Загружает датасет и модель, считает предсказания (кешируются в `test_preds.npz`).
-- Делит данные на калибровку/тест по `--cal-ratio` (и числу сплитов).
-- Применяет выбранные калибраторы и считает метрики.
-- По желанию строит графики.
+### What the pipeline does
+- Loads dataset and model, computes predictions (cached in `test_preds.npz`).
+- Splits data into calibration/test by `--cal-ratio` (and across `--num-splits`).
+- Applies selected calibrators and computes metrics.
+- Optionally generates plots.
 
-### Где править эксперименты
-- Файлы конфигураций: `configs/config_cifar.json`, `configs/config_imagenet.json`, `configs/config_inaturalist.json`.
-- Ключевые поля: `evaluations` (пары датасет–модель), `calibrators`, `metrics`, `visualizations`, `runner_settings`.
-- Директория данных задаётся `data_root` (по умолчанию `data/`). Ожидается структура `data/<dataset_name>/...`.
+### Where to configure experiments
+- Config files: `configs/config_cifar.json`, `configs/config_imagenet.json`, `configs/config_inaturalist.json`.
+- Key sections: `evaluations` (dataset–model pairs), `calibrators`, `metrics`, `visualizations`, `runner_settings`.
+- Data root is `data_root` (default `data/`). Expected layout: `data/<dataset_name>/...`.
 
-### Выходные артефакты
-- Папка берётся из `runner_settings.output_dir` (например, `experiments_cifar/`).
-- Для каждой пары создаётся подкаталог `<dataset>_<model>/[split_i]/`.
-- Сводные таблицы: `summary_results.txt` и/или `summary_results.csv` в корне `output_dir`.
-- Кеш предсказаний: `<dataset>_<model>/test_preds.npz`.
-- Графики (если включены в конфиг): сохраняются в соответствующие `split_i` директории.
+### Outputs
+- Root folder from `runner_settings.output_dir` (e.g., `experiments_cifar/`).
+- Per pair: `<dataset>_<model>/[split_i]/` directories.
+- Summary tables: `summary_results.txt` and/or `summary_results.csv` in the `output_dir` root.
+- Prediction cache: `<dataset>_<model>/test_preds.npz`.
+- Plots (if enabled): saved under respective `split_i` directories.
 
-### Зависимости
+### Dependencies
 - Python 3.13 (`.python-version`).
-- Проект использует `uv` и `pyproject.toml` для зависимостей. Запуск через `uv run` автоматически их подтянет.
+- Uses `uv` and `pyproject.toml` for dependencies. Running via `uv run` will resolve them automatically.
 
-### Каталогия проекта (минимально)
-- `caliblab/` — датасеты, модели, калибраторы, метрики, визуализации и движок оценки.
-- `eval.py` — единственная точка входа (CLI) с флагами:
-  - `--config_file` (путь к JSON), `--num-splits`, `--cal-ratio`, `--subset-items`, `--do-not-stratify`.
+### Project layout (minimal)
+- `caliblab/` — datasets, models, calibrators, metrics, visualizations, and the evaluation engine.
+- `eval.py` — the single CLI entrypoint with flags:
+  - `--config_file` (path to JSON), `--num-splits`, `--cal-ratio`, `--subset-items`, `--do-not-stratify`.
 
-Если нужен ещё более краткий TL;DR: запустите одну из команд из раздела «Быстрый старт».
+TL;DR: run one of the commands from “Quickstart”.
