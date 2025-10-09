@@ -1,81 +1,53 @@
-## Architecture
+## Conformal Probability Calibration — минимальный гайд
 
-The framework is designed to be modular and extensible. The core components are organized into the `caliblab` package:
+Короткий README для воспроизводимости в статье. Примеры запуска идут сразу.
 
--   `caliblab/datasets`: Contains data loader implementations for different datasets (e.g., CIFAR-10, CIFAR-100, ImageNet-mini). Each dataset inherits from a `BaseDataset` and is responsible for providing data loaders for calibration and testing splits.
--   `caliblab/models`: Provides wrappers for models from various sources like `torch.hub` and Hugging Face Transformers. Models inherit from a `ModelBase`, ensuring a consistent interface for the evaluation pipeline.
--   `caliblab/metrics`: Implements various evaluation metrics such as Accuracy, ECE, MCE, NLL, and Brier Score. Each metric inherits from `MetricBase`.
--   `caliblab/calibrators`: Includes implementations of post-hoc calibration methods like Temperature Scaling and Isotonic Regression, inheriting from `CalibratorBase`.
--   `caliblab/eval`: The core evaluation engine.
-    -   `evaluator.py`: `ModelEvaluator` class orchestrates the process of fetching model predictions, applying calibrators, and computing metrics for a single model-dataset pair.
-    -   `runner.py`: The high-level `run_evaluations` function reads parsed configurations and manages the overall evaluation loop across all specified experiments.
--   `caliblab/visualizations`: Contains logic for generating calibration plots, such as confidence calibration curves and cumulative mass curves.
--   `eval.py`: The main command-line entry point for running the evaluation pipeline.
--   `config.json`: A JSON file that defines the entire evaluation workflow, including datasets, models, metrics, and output settings.
-
-## Installation
-
-The project uses `uv` for dependency management.
-
-1.  Create a virtual environment:
-    ```bash
-    python -m venv venv
-    source venv/bin/activate
-    ```
-
-2.  Install the required packages:
-    ```bash
-    uv pip install -e .
-    ```
-    This installs the project in editable mode and fetches all dependencies listed in `pyproject.toml`.
-
-## How to Run Evaluations
-
-All evaluations are controlled via a JSON configuration file. To run the pipeline, execute `eval.py` and pass the path to your config file.
+### Быстрый старт (рекомендуется `uv`)
 
 ```bash
-python eval.py config.json
+# 1) Python 3.13 и uv (https://astral.sh/uv). Создать/активировать окружение не обязательно —
+#    можно просто использовать `uv run`.
+
+# CIFAR (конфиг по умолчанию)
+uv run -- python eval.py --config_file configs/config_cifar.json
+
+# CIFAR с дополнительными флагами
+uv run -- python eval.py --config_file configs/config_cifar.json \
+  --cal-ratio 0.3 --num-splits 10 --subset-items 50000
+
+# ImageNet-mini
+uv run -- python eval.py --config_file configs/config_imagenet.json
+
+# iNaturalist (пример с нестратегированной выборкой)
+uv run -- python eval.py --config_file configs/config_inaturalist.json \
+  --cal-ratio 0.3 --num-splits 1 --subset-items 30000 --do-not-stratify
 ```
 
-## Configuration File (`config.json`)
+### Что делает пайплайн
+- Загружает датасет и модель, считает предсказания (кешируются в `test_preds.npz`).
+- Делит данные на калибровку/тест по `--cal-ratio` (и числу сплитов).
+- Применяет выбранные калибраторы и считает метрики.
+- По желанию строит графики.
 
-The JSON configuration file is the primary interface for defining experiments. It has the following main sections:
+### Где править эксперименты
+- Файлы конфигураций: `configs/config_cifar.json`, `configs/config_imagenet.json`, `configs/config_inaturalist.json`.
+- Ключевые поля: `evaluations` (пары датасет–модель), `calibrators`, `metrics`, `visualizations`, `runner_settings`.
+- Директория данных задаётся `data_root` (по умолчанию `data/`). Ожидается структура `data/<dataset_name>/...`.
 
-### `runner_settings`
-Global settings for the evaluation runner.
+### Выходные артефакты
+- Папка берётся из `runner_settings.output_dir` (например, `experiments_cifar/`).
+- Для каждой пары создаётся подкаталог `<dataset>_<model>/[split_i]/`.
+- Сводные таблицы: `summary_results.txt` и/или `summary_results.csv` в корне `output_dir`.
+- Кеш предсказаний: `<dataset>_<model>/test_preds.npz`.
+- Графики (если включены в конфиг): сохраняются в соответствующие `split_i` директории.
 
--   `output_dir` (string): Path to the directory where all results (logs, plots, summary tables) will be saved.
--   `use_cache` (boolean): If `true`, the runner will reuse cached model predictions (`predictions.npz`) if they exist.
--   `force_recompute` (boolean): If `true`, forces re-computation of model predictions, ignoring any existing cache.
--   `model_cache_dir` (string, optional): Path to a directory for caching downloaded model weights.
+### Зависимости
+- Python 3.13 (`.python-version`).
+- Проект использует `uv` и `pyproject.toml` для зависимостей. Запуск через `uv run` автоматически их подтянет.
 
-### `evaluations`
-A list of experiment configurations. Each element is an object defining a dataset-model pair to be evaluated.
+### Каталогия проекта (минимально)
+- `caliblab/` — датасеты, модели, калибраторы, метрики, визуализации и движок оценки.
+- `eval.py` — единственная точка входа (CLI) с флагами:
+  - `--config_file` (путь к JSON), `--num-splits`, `--cal-ratio`, `--subset-items`, `--do-not-stratify`.
 
--   **`dataset`**:
-    -   `name` (string): The name of the dataset (e.g., "cifar10", "cifar100"). Must match a registered dataset in the framework.
-    -   `params` (object, optional): A dictionary of parameters to pass to the dataset's constructor (e.g., `{"data_dir": "path/to/data", "image_size": 224}`).
--   **`model`**:
-    -   `source` (string): The source of the model. Supported values: `"torch_hub"`, `"vit"`.
-    -   `repo` (string, required for `torch_hub`): The repository name for `torch.hub.load()`.
-    -   `name` (string): The name of the model to load from the source.
-    -   `alias` (string, optional): A shorter, user-friendly name for logging and reporting.
-    -   `params` (object, optional): A dictionary of parameters to pass to the model loader (e.g., `{"num_labels": 100}`).
-
-### `calibrators`
-A list of strings specifying which calibration methods to apply. An `"uncalibrated"` baseline is always included.
-Example: `["temperature_scaling", "isotonic_regression"]`
-
-### `metrics`
-A list of metrics to compute for each calibrator. Metrics can be specified as a simple string or as an object to include parameters.
-
--   `"accuracy"`
--   `{ "name": "ece", "params": { "n_bins": 20 } }`
-
-### `visualizations`
-Configuration for generating plots.
-
--   **`confidence_curve`**:
-    -   `n_bins` (int): Number of bins for the confidence calibration curve.
--   **`cumulative_mass_curve`**:
-    -   `n_bins` (int): Number of bins for the cumulative mass calibration curve.
+Если нужен ещё более краткий TL;DR: запустите одну из команд из раздела «Быстрый старт».
