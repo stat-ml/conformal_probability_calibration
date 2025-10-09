@@ -1,5 +1,7 @@
 ## Conformal Probability Calibration — concise guide
 
+This repository contains the code accompanying the paper "Adaptive Set-Mass Calibration with Conformal Prediction", submitted to AISTATS 2026.
+
 Short README for paper reproducibility. Launch examples come first.
 
 ### Quickstart (uv recommended)
