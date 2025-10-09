@@ -1,3 +1,5 @@
+# code is taken from https://github.com/dirichletcal/dirichlet_python
+
 from __future__ import division
 
 import logging
