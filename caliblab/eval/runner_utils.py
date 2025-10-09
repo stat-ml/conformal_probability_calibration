@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple
 
 import numpy as np
+import pandas as pd
 import torch
 from tabulate import tabulate
 from torch.utils.data import DataLoader
@@ -42,33 +43,40 @@ def generate_and_save_summary(
     if not table_data:
         return
 
-    headers = ["Dataset", "Model", "Calibrator"] + (list(all_metric_names))
+    df = pd.DataFrame(table_data)
+    agg_df = (
+        df.groupby(["Dataset", "Model", "Calibrator"])
+        .agg(["mean", "std"])
+        .reset_index()
+    )
+    
+    summary_data = {
+        "Dataset": agg_df[("Dataset", "")],
+        "Model": agg_df[("Model", "")],
+        "Calibrator": agg_df[("Calibrator", "")],
+    }
 
-    # Format numbers to 4 decimal places for printing
-    formatted_rows = []
-    for row_dict in table_data:
-        formatted_row = []
-        for header in headers:
-            value = row_dict.get(header)
-            if isinstance(value, float):
-                formatted_row.append(f"{value:.4f}")
-            else:
-                formatted_row.append(value)
-        formatted_rows.append(formatted_row)
+    for metric in all_metric_names:
+        mean_col = (metric, "mean")
+        std_col = (metric, "std")
+        std_values = agg_df[std_col].fillna(0)
+        summary_data[metric] = agg_df[mean_col].apply(
+            lambda x: f"{x:.4f}"
+        ) + " ± " + std_values.apply(lambda x: f"{x:.4f}")
+    
+    summary_df = pd.DataFrame(summary_data)
 
-    print("\n" + "=" * 80)
-    print("Summary of Results")
-    print("=" * 80)
-    table_string = tabulate(formatted_rows, headers=headers, tablefmt="grid")
-    print(table_string)
+    summary_table = tabulate(
+        summary_df, headers="keys", tablefmt="pipe", showindex=False
+    )
+    summary_df.to_csv(output_dir / "summary_results.csv", index=False)
+    print(f"Saved summary_results.csv to {output_dir / 'summary_results.csv'}")
+    df.to_csv(output_dir / "results.csv", index=False)
 
-    # Save the table to a file
-    output_path = output_dir / "summary_results.txt"
-    with open(output_path, "w") as f:
-        f.write("Summary of Results\n")
-        f.write("=" * 80 + "\n")
-        f.write(table_string)
-    print(f"\nResults table saved to {output_path}")
+    summary_path = output_dir / "summary_results.txt"
+    with open(summary_path, "w") as f:
+        f.write(summary_table)
+    print(summary_table)
 
 
 def get_predictions(
@@ -81,7 +89,7 @@ def get_predictions(
 ) -> Tuple[np.ndarray, np.ndarray]:
     if use_cache and not force_recompute and cache_path.exists():
         print(f"Loading cached predictions from {cache_path}")
-        cached_data = np.load(cache_path)
+        cached_data = np.load(cache_path, allow_pickle=True)
         if "outputs" in cached_data and "labels" in cached_data and "probs" in cached_data:
             return cached_data["outputs"], cached_data["labels"], cached_data["probs"]
         elif "outputs" in cached_data and "labels" in cached_data:

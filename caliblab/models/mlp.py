@@ -59,6 +59,9 @@ class MLPClassifier(ModelBase):
 
     def save_weights(self, path: str):
         """Save only state_dict(). Recreate model with SAME hyperparams before loading."""
+        directory = os.path.dirname(os.path.abspath(path))
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
         torch.save(self.state_dict(), path)
 
     def load_weights(self, path: str, map_location="cpu", strict: bool = True):

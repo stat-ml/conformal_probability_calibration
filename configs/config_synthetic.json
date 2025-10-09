@@ -24,7 +24,7 @@
         {
             "name": "conformal_mass_threshold",
             "params": {
-                "score_type": "one_minus_prob",
+                "score_type": "msp",
                 "alpha": 0.1,
                 "score_transformation": "identity"
             }

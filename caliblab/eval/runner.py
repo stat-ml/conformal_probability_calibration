@@ -153,39 +153,6 @@ def run_evaluations(
     print("-" * 80)
     print("All evaluations complete.")
 
-    if num_splits > 1:
-        df = pd.DataFrame(table_data)
-        agg_df = (
-            df.groupby(["Dataset", "Model", "Calibrator"])
-            .agg(["mean", "std"])
-            .reset_index()
-        )
-        
-        summary_data = {
-            "Dataset": agg_df[("Dataset", "")],
-            "Model": agg_df[("Model", "")],
-            "Calibrator": agg_df[("Calibrator", "")],
-        }
-
-        for metric in all_metric_names:
-            mean_col = (metric, "mean")
-            std_col = (metric, "std")
-            std_values = agg_df[std_col].fillna(0)
-            summary_data[metric] = agg_df[mean_col].apply(
-                lambda x: f"{x:.4f}"
-            ) + " ± " + std_values.apply(lambda x: f"{x:.4f}")
-        
-        summary_df = pd.DataFrame(summary_data)
-
-        summary_table = tabulate(
-            summary_df, headers="keys", tablefmt="pipe", showindex=False
-        )
-        summary_df.to_csv(output_dir / "summary_results.csv", index=False)
-        summary_path = output_dir / "summary_results.txt"
-        with open(summary_path, "w") as f:
-            f.write(summary_table)
-        print(summary_table)
-    else:
-        generate_and_save_summary(table_data, all_metric_names, Path(output_dir))
+    generate_and_save_summary(table_data, all_metric_names, output_dir)
 
     return all_reports

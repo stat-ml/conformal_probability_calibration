@@ -18,7 +18,7 @@
         "temperature_scaling",
         "isotonic_regression",
         "adaptive_temperature_scaling",
-        "platt_regression",
+        "platt_regression"
     ],
     "metrics": [
     ],
