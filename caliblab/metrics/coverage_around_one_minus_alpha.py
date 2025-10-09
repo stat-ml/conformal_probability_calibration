@@ -64,7 +64,7 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
         covers = np.maximum(R - start_cover + 1, 0)
         total_cover = int(covers.sum())
 
-        return float(total_cover / total_sets)
+        return float(total_cover / total_sets), total_sets
 
     def _compute(self, *, probs: np.ndarray, y_true: np.ndarray, **kwargs) -> float:
         """
@@ -80,4 +80,4 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
         cum_probs, _coverage_matrix, sorted_idx = cumulative_mass_and_coverage(probs, y_true)
         true_rank = np.where(sorted_idx == y_true[:, np.newaxis])[1]
 
-        return self.compute_from_cumsum(cum_probs=cum_probs, true_rank=true_rank)
+        return self.compute_from_cumsum(cum_probs=cum_probs, true_rank=true_rank)[0]

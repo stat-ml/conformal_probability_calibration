@@ -1,4 +1,5 @@
 import json
+import inspect
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
 
@@ -54,11 +55,19 @@ def parse_config(
         n_bins = vis_config["confidence_curve"].get("n_bins", 15)
         visualizers.append(ConfidenceVisualizer(n_bins=n_bins))
     if "cumulative_mass_curve" in vis_config:
-        n_bins = vis_config["cumulative_mass_curve"].get("n_bins", 15)
-        visualizers.append(CumulativeMassVisualizer(n_bins=n_bins))
+        params = vis_config["cumulative_mass_curve"]
+        # Forward only accepted params
+        sig = inspect.signature(CumulativeMassVisualizer.__init__)
+        accepted_params = set(sig.parameters.keys()) - {"self"}
+        filtered_params = {k: v for k, v in params.items() if k in accepted_params}
+        visualizers.append(CumulativeMassVisualizer(**filtered_params))
     if "one_minus_alpha_coverage_curve" in vis_config:
         params = vis_config["one_minus_alpha_coverage_curve"]
-        visualizers.append(OneMinusAlphaCoverageVisualizer(**params))
+        # Filter params to those accepted by the visualizer constructor to avoid unexpected kwargs
+        sig = inspect.signature(OneMinusAlphaCoverageVisualizer.__init__)
+        accepted_params = set(sig.parameters.keys()) - {"self"}
+        filtered_params = {k: v for k, v in params.items() if k in accepted_params}
+        visualizers.append(OneMinusAlphaCoverageVisualizer(**filtered_params))
     if "conformal_set_size_distribution" in vis_config:
         visualizers.append(ConformalSetSizeVisualizer())
 

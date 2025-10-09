@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..eval.constants import EvaluationReport
-from .utils import calculate_confidence_bins
+from .utils import calculate_confidence_bins, pretty_matplotlib_config
 
 
 class ConfidenceVisualizer:
@@ -22,6 +22,7 @@ class ConfidenceVisualizer:
         """
         Plots a confidence calibration curve from a list of EvaluationReports.
         """
+        # Ensure consistent matplotlib styling
         results = {
             report.calibrator_name: (
                 report.calibrated_probabilities,

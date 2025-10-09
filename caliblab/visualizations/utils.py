@@ -1,9 +1,55 @@
 from typing import Tuple
 
 import numpy as np
+import matplotlib
+import shutil
 
 from ..utils.bins import get_bin_lowers_uppers
 from ..utils.computations import cumulative_mass_and_coverage
+
+
+def pretty_matplotlib_config(
+    fontsize: float = 35,
+    legend_fontsize: float | None = 25,
+    legend_title_fontsize: float | None = None,
+    axes_titlesize: float | None = 40,
+    axes_labelsize: float | None = 40,
+    tick_labelsize: float | None = 40,
+    suptitle_size: float | None = None,
+    use_tex: bool | None = None,
+) -> None:
+    """Configure matplotlib with pretty, publication-friendly defaults.
+
+    This function mutates matplotlib.rcParams globally.
+    """
+    rc = matplotlib.rcParams
+    rc["pdf.fonttype"] = 42
+    rc["ps.fonttype"] = 42
+    # Auto-detect LaTeX availability unless explicitly specified
+    if use_tex is None:
+        use_tex = shutil.which("latex") is not None
+    rc["text.usetex"] = bool(use_tex)
+
+    # Base font
+    rc["font.size"] = fontsize
+
+    # Legend
+    rc["legend.fontsize"] = legend_fontsize if legend_fontsize is not None else 0.8 * fontsize
+    rc["legend.title_fontsize"] = (
+        legend_title_fontsize if legend_title_fontsize is not None else rc["legend.fontsize"]
+    )
+
+    # Axes titles & labels
+    rc["axes.titlesize"] = axes_titlesize if axes_titlesize is not None else 1.1 * fontsize
+    rc["axes.labelsize"] = axes_labelsize if axes_labelsize is not None else 0.95 * fontsize
+
+    # Tick labels
+    rc["xtick.labelsize"] = tick_labelsize if tick_labelsize is not None else 0.85 * fontsize
+    rc["ytick.labelsize"] = tick_labelsize if tick_labelsize is not None else 0.85 * fontsize
+
+    # (optional) Figure suptitle
+    if suptitle_size is not None:
+        rc["figure.titlesize"] = suptitle_size
 
 
 def calculate_confidence_bins(

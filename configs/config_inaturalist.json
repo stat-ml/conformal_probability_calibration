@@ -1,0 +1,36 @@
+{
+    "data_root": "data",
+    "runner_settings": {
+        "output_dir": "experiments_inaturalist",
+        "use_cache": true,
+        "force_recompute": false,
+        "visualization_n_bins": 25
+    },
+    "visualizations": {
+        "confidence_curve": {"n_bins": 25},
+        "cumulative_mass_curve": {"n_bins": 25},
+        "conformal_set_size_distribution": {},
+        "one_minus_alpha_coverage_curve": {"alpha": 0.1}
+    },
+    "calibrators": [
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.1, "score_transformation": "identity"}},
+        {"name": "naive_cmce", "params": {"tau_min": 1e-3, "tau_max": 1e2, "num_taus": 300, "n_bins": 25, "strategy": "uniform", "weighted": true}},
+        "temperature_scaling",
+        "isotonic_regression",
+        "adaptive_temperature_scaling",
+        "platt_regression",
+    ],
+    "metrics": [
+    ],
+    "evaluations": [
+        {
+            "dataset": {"name": "inaturalist", "params": {"image_size": 224}},
+            "model": {
+                "source": "birder",
+                "name": "rope_vit_reg4_b14_capi-inat21-224px",
+                "alias": "Birder-ViT-B14"
+            }
+        }
+    ]
+}
+
