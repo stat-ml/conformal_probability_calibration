@@ -16,7 +16,7 @@ def print_and_collect_run_results(
     dataset: BaseDataset,
     model: ModelBase,
     table_data: List[Dict[str, Any]],
-    all_metric_names: Set[str],
+    all_metric_names: List[str],
 ) -> None:
     """Prints per-run summary and collects data for the final table."""
     print(f"\nResults for {dataset.name} with {model.name}:")
@@ -30,20 +30,19 @@ def print_and_collect_run_results(
         for metric_name, value in report.metrics.items():
             print(f"    {metric_name}: {value:.4f}")
             row[metric_name] = value
-            all_metric_names.add(metric_name)
         table_data.append(row)
 
 
 def generate_and_save_summary(
     table_data: List[Dict[str, Any]],
-    all_metric_names: Set[str],
+    all_metric_names: List[str],
     output_dir: Path,
 ) -> None:
     """Formats, prints, and saves the final summary table."""
     if not table_data:
         return
 
-    headers = ["Dataset", "Model", "Calibrator"] + sorted(list(all_metric_names))
+    headers = ["Dataset", "Model", "Calibrator"] + (list(all_metric_names))
 
     # Format numbers to 4 decimal places for printing
     formatted_rows = []

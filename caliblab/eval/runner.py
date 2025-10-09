@@ -5,6 +5,7 @@ import torch
 from tabulate import tabulate
 
 import os
+import pickle
 
 import numpy as np
 
@@ -39,11 +40,12 @@ def run_evaluations(
     num_splits: int = 1,
     cal_ratio: float = 0.3,
     subset_items: int = 40_000,
+    do_not_stratify: bool = False,
     **kwargs: Any,
 ) -> List[EvaluationReport]:
     all_reports: List[EvaluationReport] = []
     table_data = []
-    all_metric_names: Set[str] = set()
+    all_metric_names: List[str] = [metric.name for metric in metrics]
 
     device = get_device(verbose=True)
     model_cache_dir = kwargs.get("model_cache_dir")
@@ -94,25 +96,35 @@ def run_evaluations(
             run_dir = base_run_dir / f"split_{split_seed}"
             run_dir.mkdir(parents=True, exist_ok=True)
 
-            cal_outputs, test_outputs_split, cal_labels, test_labels_split, cal_true_probs, test_true_probs = split_data(
-                test_outputs, test_labels, test_probs, cal_ratio, split_seed, subset_items
-            )
+            reports_path = run_dir / "run_reports.pkl"
 
-            evaluator = ModelEvaluator(
-                metrics=metrics,
-                calibrators=calibrators,
-                run_dir=run_dir,
-                device=device,
-            )
-            run_reports = evaluator.run_calibration_and_metrics(
-                cal_outputs, cal_labels, test_outputs_split, test_labels_split, cal_true_probs=cal_true_probs, test_true_probs=test_true_probs
-            )
+            from_cache = False
+            if use_cache and not force_recompute and reports_path.exists():
+                print(f"Loading cached run_reports from {reports_path}, exists: {reports_path.exists()}")
+                with open(reports_path, "rb") as f:
+                    run_reports = pickle.load(f)
+                from_cache = True
+            else:
+                datasplit = split_data(
+                    test_outputs, test_labels, test_probs, cal_ratio, split_seed, subset_items
+                )
+
+                evaluator = ModelEvaluator(
+                    metrics=metrics,
+                    calibrators=calibrators,
+                    run_dir=run_dir,
+                    device=device,
+                )
+
+                run_reports = evaluator.run_calibration_and_metrics(
+                    datasplit
+                )
 
             print_and_collect_run_results(
                 run_reports, dataset, model, table_data, all_metric_names
             )
 
-            if visualizers:
+            if visualizers and not from_cache:
                 for visualizer in visualizers:
                     visualizer.plot(
                         reports=run_reports,
@@ -120,6 +132,21 @@ def run_evaluations(
                         dataset_name=dataset.name,
                         model_name=model.name,
                     )
+
+            # Drop large arrays before saving/aggregating to keep memory and cache light
+            for report in run_reports:
+                report.calibrated_probabilities = None
+                report.true_labels = None
+                report.conformal_set_sizes = None
+
+            # Cache pruned run_reports for this split if freshly computed
+            if not from_cache:
+                try:
+                    with open(reports_path, "wb") as f:
+                        pickle.dump(run_reports, f)
+                    print(f"Saved run_reports to {reports_path}")
+                except Exception as e:
+                    print(f"Warning: failed to save run_reports cache: {e}")
 
             all_reports.extend(run_reports)
 
@@ -153,6 +180,7 @@ def run_evaluations(
         summary_table = tabulate(
             summary_df, headers="keys", tablefmt="pipe", showindex=False
         )
+        summary_df.to_csv(output_dir / "summary_results.csv", index=False)
         summary_path = output_dir / "summary_results.txt"
         with open(summary_path, "w") as f:
             f.write(summary_table)

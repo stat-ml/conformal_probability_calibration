@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..eval.constants import EvaluationReport
+from .utils import pretty_matplotlib_config
 
 
 class ConformalSetSizeVisualizer:
@@ -18,6 +19,7 @@ class ConformalSetSizeVisualizer:
         """
         Plots a distribution of conformal set sizes from a list of EvaluationReports.
         """
+        # Ensure consistent matplotlib styling
         results = {
             report.calibrator_name: report.conformal_set_sizes
             for report in reports

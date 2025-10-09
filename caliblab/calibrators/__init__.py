@@ -5,7 +5,11 @@ from .isotonic_regression import IsotonicRegression
 from .temperature_scaling import TemperatureScaling
 from .conformal_mass_threshold_calibrator import ConformalMassThresholdCalibrator
 from .conformal_temperature_calibrator import ConformalTemperatureCalibrator
-from .venn_abers import VennAbersCalibrator
+from .venn_abers_wrapper import VAbersCalibrator
+from .platt_regression import PlattRegression
+from .dirichlet_calibration import DirichletCalibration
+from .adaptive_temperature_scaling import AdaptiveTemperatureScaling
+from .naive_cmce_calibrator import GridTemperatureScaling
 
 
 def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
@@ -22,7 +26,15 @@ def get_calibrator(name: str, **kwargs: Any) -> CalibratorBase:
     elif name == "conformal_temperature":
         return ConformalTemperatureCalibrator(**kwargs)
     elif name == "venn_abers":
-        return VennAbersCalibrator(**kwargs)
+        return VAbersCalibrator(**kwargs)
+    elif name == "platt_regression":
+        return PlattRegression(**kwargs)
+    elif name == "dirichlet":
+        return DirichletCalibration(**kwargs)
+    elif name == "adaptive_temperature_scaling":
+        return AdaptiveTemperatureScaling(**kwargs)
+    elif name == "naive_cmce":
+        return GridTemperatureScaling(**kwargs)
     else:
         raise ValueError(f"Unknown calibrator: {name}")
 
@@ -35,6 +47,10 @@ __all__ = [
     "TemperatureScaling",
     "ConformalMassThresholdCalibrator",
     "ConformalTemperatureCalibrator",
-    "VennAbersCalibrator",
+    "VAbersCalibrator",
+    "PlattRegression",
+    "DirichletCalibration",
+    "AdaptiveTemperatureScaling",
+    "GridTemperatureScaling",
     "get_calibrator",
 ]

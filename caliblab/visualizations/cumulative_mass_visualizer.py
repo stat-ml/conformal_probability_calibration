@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..eval.constants import EvaluationReport
-from .utils import calculate_cumulative_mass_bins
+from .utils import calculate_cumulative_mass_bins, pretty_matplotlib_config
+from ..utils.legend import map_legend_label
 
 
 class CumulativeMassVisualizer:
@@ -23,9 +24,20 @@ class CumulativeMassVisualizer:
         Plots a cumulative mass calibration curve from a list of EvaluationReports
         using a binning strategy.
         """
-        plt.figure(figsize=(9, 9))
+        # Ensure consistent matplotlib styling
+        pretty_matplotlib_config(
+            fontsize=35,
+            legend_fontsize=25,
+            axes_titlesize=25,   # title of each axes
+            axes_labelsize=40,   # x/y labels
+            tick_labelsize=40,   # tick labels
+        )
+        plt.figure(figsize=(12, 12))
         ax = plt.gca()
-        ax.plot([0, 1], [0, 1], "k--", label="Perfectly calibrated")
+
+        ax.spines['left'].set_position(('outward', 15))
+        ax.spines['bottom'].set_position(('outward', 15))
+        ax.plot([0, 1], [0, 1], "k--", label="Perfectly calibrated", linewidth=2)
 
         for report in reports:
             if report.calibrated_probabilities is None or report.true_labels is None:
@@ -34,6 +46,11 @@ class CumulativeMassVisualizer:
             probs = report.calibrated_probabilities
             y_true = report.true_labels
             name = report.calibrator_name
+            original_name = name
+
+
+            # Map legend label for display (e.g., Uncalibrated -> Base)
+            display_label = map_legend_label(name)
 
             (
                 bin_mean_scores,
@@ -47,19 +64,22 @@ class CumulativeMassVisualizer:
                     bin_mean_scores[non_empty_bins],
                     bin_mean_coverages[non_empty_bins],
                     "o-",
-                    label=name,
+                    linewidth=2,
+                    label=display_label,
                 )
 
         ax.set_xlabel("Cumulative Mass")
         ax.set_ylabel("Empirical Coverage")
         ax.set_xlim([0, 1])
         ax.set_ylim([0, 1])
-        ax.set_title(f"Cumulative Mass Calibration for {dataset_name} - {model_name}")
-        ax.legend(loc="lower right")
         ax.grid(True, linestyle="--", alpha=0.6)
-        ax.set_aspect("equal", adjustable="box")
+        ax.legend(loc="lower right")
+
 
         output_path = run_dir / "cumulative_mass_calibration_curve.png"
+        output_path_pdf = run_dir / "cumulative_mass_calibration_curve.pdf"
+        print(f"Saving cumulative mass curve to {output_path}")
         plt.tight_layout()
+        plt.savefig(output_path_pdf, dpi=300, format="pdf", bbox_inches="tight")
         plt.savefig(output_path)
         plt.close()
