@@ -20,7 +20,6 @@ class ConformalSetSizeVisualizer:
         Plots a distribution of conformal set sizes from a list of EvaluationReports.
         """
         # Ensure consistent matplotlib styling
-        pretty_matplotlib_config()
         results = {
             report.calibrator_name: report.conformal_set_sizes
             for report in reports

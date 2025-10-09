@@ -22,6 +22,11 @@ uv run -- python eval.py --config_file configs/config_inaturalist.json \
   --cal-ratio 0.3 --num-splits 1 --subset-items 30000 --do-not-stratify
 ```
 
+### Data placement
+- ImageNet-mini: place the dataset under `./data/imagenet-mini` (with `train/` and `val/`).
+- iNaturalist 2021 valid: extract under `./data/inaturalist/2021_valid`.
+- CIFAR-10/100: downloaded automatically by the loaders; no manual placement needed.
+
 ### What the pipeline does
 - Loads dataset and model, computes predictions (cached in `test_preds.npz`).
 - Splits data into calibration/test by `--cal-ratio` (and across `--num-splits`).

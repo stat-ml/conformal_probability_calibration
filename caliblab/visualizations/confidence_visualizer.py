@@ -23,7 +23,6 @@ class ConfidenceVisualizer:
         Plots a confidence calibration curve from a list of EvaluationReports.
         """
         # Ensure consistent matplotlib styling
-        pretty_matplotlib_config()
         results = {
             report.calibrator_name: (
                 report.calibrated_probabilities,
