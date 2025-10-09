@@ -9,6 +9,9 @@ Short README for paper reproducibility. Launch examples come first.
 ```bash
 # 1) Python 3.13 and uv (https://astral.sh/uv). You can simply use `uv run`.
 
+# Sythetic, but first you have to run notebooks/sythetic_experiment.ipynb to prepare a model.
+uv run -- python eval.py --config_file configs/config_synthetic.json
+
 # CIFAR (default config)
 uv run -- python eval.py --config_file configs/config_cifar.json
 
