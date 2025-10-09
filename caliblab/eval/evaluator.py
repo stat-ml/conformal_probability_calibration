@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 import torch
@@ -14,6 +14,7 @@ from ..metrics.base import MetricBase
 from ..models.base import ModelBase
 from ..utils.computations import softmax
 from .constants import EvaluationReport
+from ..datasets.utils import DataSplit
 
 
 class ModelEvaluator:
@@ -38,10 +39,7 @@ class ModelEvaluator:
 
     def run_calibration_and_metrics(
         self,
-        cal_outputs: np.ndarray,
-        cal_labels: np.ndarray,
-        test_outputs: np.ndarray,
-        test_labels: np.ndarray,
+        datasplit: DataSplit
     ) -> List[EvaluationReport]:
         reports = []
 
@@ -49,25 +47,26 @@ class ModelEvaluator:
 
         for calibrator in all_calibrators:
             if calibrator is None:
-                calibrated_test_outputs = test_outputs
+                calibrated_test_outputs = datasplit.test_outputs
                 train_time = 0.0
                 predict_time = 0.0
             else:
                 start_time = time.time()
-                calibrator.fit(logits=cal_outputs, y_true=cal_labels)
+                calibrator.fit(logits=datasplit.cal_outputs, y_true=datasplit.cal_labels)
                 train_time = time.time() - start_time
 
                 start_time = time.time()
                 calibrated_test_outputs = calibrator.predict_proba(
-                    logits=test_outputs
+                    logits=datasplit.test_outputs
                 )
                 predict_time = time.time() - start_time
 
             report = self._evaluate_calibrator(
                 calibrator,
                 calibrated_test_outputs,
-                test_labels,
-                test_outputs,
+                datasplit.test_labels,
+                datasplit.test_outputs,
+                datasplit.test_probs,
                 train_time,
                 predict_time,
             )
@@ -81,6 +80,7 @@ class ModelEvaluator:
         outputs: np.ndarray,
         labels: np.ndarray,
         logits: np.ndarray,
+        true_probs: Optional[np.ndarray] = None,
         train_time: float = 0.0,
         predict_time: float = 0.0,
     ) -> EvaluationReport:
@@ -97,7 +97,7 @@ class ModelEvaluator:
             probs = outputs
 
         for metric in self.metrics:
-            metric_results[metric.name] = metric(probs=probs, y_true=labels)
+            metric_results[metric.name] = metric(probs=probs, y_true=labels, true_proba=true_probs)
 
         conformal_test_sizes = None
         if calibrator and calibrator.uses_conformal_set_helper():

@@ -1,25 +1,31 @@
-from typing import Tuple
+from typing import Optional
+from dataclasses import dataclass
 
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-import numpy as np
-from typing import Tuple
 
-
-import numpy as np
+@dataclass
+class DataSplit:
+    cal_outputs: np.ndarray
+    test_outputs: np.ndarray
+    cal_labels: np.ndarray
+    test_labels: np.ndarray
+    cal_probs: Optional[np.ndarray] = None
+    test_probs: Optional[np.ndarray] = None
 
 
 def split_data(
     outputs: np.ndarray,
     labels: np.ndarray,
+    probs: Optional[np.ndarray],
     cal_ratio: float,
     seed: int,
     subset_items: int = -1,
     do_not_stratify: bool = False
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> DataSplit:
     if not 0.0 < cal_ratio < 1.0:
-        raise ValueError("cal_ratio must be between 0 and 1.")
+        raise ValueError("cal_ratio must be between 0 and 1. Received: %s" % cal_ratio)
 
     if subset_items > 0:
         if subset_items < len(outputs):
@@ -27,20 +33,31 @@ def split_data(
             indices = np.random.choice(len(outputs), subset_items, replace=False)
             outputs = outputs[indices]
             labels = labels[indices]
+            if probs is not None:
+                probs = probs[indices]
 
     if outputs.size == 0:
-        return np.array([]), np.array([]), np.array([]), np.array([])
+        return DataSplit(np.array([]), np.array([]), np.array([]), np.array([]), None, None)
 
     test_ratio = 1.0 - cal_ratio
 
-    if do_not_stratify:
-        cal_outputs, test_outputs, cal_labels, test_labels = train_test_split(
-            outputs, labels, test_size=test_ratio, random_state=seed
-        )
+    if probs is not None:
+        if do_not_stratify:
+            cal_outputs, test_outputs, cal_labels, test_labels, cal_probs, test_probs = train_test_split(
+                outputs, labels, probs, test_size=test_ratio, random_state=seed
+            )
+        else:
+            cal_outputs, test_outputs, cal_labels, test_labels, cal_probs, test_probs = train_test_split(
+                outputs, labels, probs, test_size=test_ratio, random_state=seed, stratify=labels
+            )
+        return DataSplit(cal_outputs, test_outputs, cal_labels, test_labels, cal_probs, test_probs)
     else:
-        cal_outputs, test_outputs, cal_labels, test_labels = train_test_split(
-            outputs, labels, test_size=test_ratio, random_state=seed, 
-            stratify=labels
-        )
-
-    return cal_outputs, test_outputs, cal_labels, test_labels
+        if do_not_stratify:
+            cal_outputs, test_outputs, cal_labels, test_labels = train_test_split(
+                outputs, labels, test_size=test_ratio, random_state=seed
+            )
+        else:
+            cal_outputs, test_outputs, cal_labels, test_labels = train_test_split(
+                outputs, labels, test_size=test_ratio, random_state=seed, stratify=labels
+            )
+        return DataSplit(cal_outputs, test_outputs, cal_labels, test_labels,)

@@ -16,7 +16,7 @@ def main():
         "--config_file",
         type=str,
         help="Path to the JSON configuration file.",
-        default="config_cifar.json",
+        default="config_synthetic.json",
         required=False
     )
     parser.add_argument(

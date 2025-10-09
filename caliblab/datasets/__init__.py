@@ -3,6 +3,7 @@ from .cifar import CIFAR10Dataset, CIFAR100Dataset
 from .imagenet import ImageNetMiniDataset
 from .inaturalist import INaturalistDataset
 from .mnist import MNISTDataset
+from .synthetic import Synthetic2DClassifier
 
 
 def dataset_getter(name: str, **kwargs) -> BaseDataset:
@@ -20,6 +21,8 @@ def dataset_getter(name: str, **kwargs) -> BaseDataset:
         return ImageNetMiniDataset(**kwargs)
     elif name == "inaturalist":
         return INaturalistDataset(**kwargs)
+    elif name == "synthetic":
+        return Synthetic2DClassifier(kwargs["n_classes"])
     else:
         raise ValueError(f"Unknown dataset: {name}")
 
@@ -32,4 +35,5 @@ __all__ = [
     "ImageNetMiniDataset",
     "INaturalistDataset",
     "dataset_getter",
+    "Synthetic2DClassifier"
 ]

@@ -81,7 +81,7 @@ def run_evaluations(
         test_loader = dataset.get_test_loader(batch_size=512)
         test_preds_path = base_run_dir / "test_preds.npz"
 
-        test_outputs, test_labels = get_predictions(
+        test_outputs, test_labels, test_probs = get_predictions(
             model, test_loader, device, test_preds_path, use_cache, force_recompute
         )
 
@@ -100,13 +100,13 @@ def run_evaluations(
 
             from_cache = False
             if use_cache and not force_recompute and reports_path.exists():
-                print(f"Loading cached run_reports from {reports_path}")
+                print(f"Loading cached run_reports from {reports_path}, exists: {reports_path.exists()}")
                 with open(reports_path, "rb") as f:
                     run_reports = pickle.load(f)
                 from_cache = True
             else:
-                cal_outputs, test_outputs_split, cal_labels, test_labels_split = split_data(
-                    test_outputs, test_labels, cal_ratio, split_seed, subset_items, do_not_stratify=do_not_stratify
+                datasplit = split_data(
+                    test_outputs, test_labels, test_probs, cal_ratio, split_seed, subset_items
                 )
 
                 evaluator = ModelEvaluator(
@@ -115,8 +115,9 @@ def run_evaluations(
                     run_dir=run_dir,
                     device=device,
                 )
+
                 run_reports = evaluator.run_calibration_and_metrics(
-                    cal_outputs, cal_labels, test_outputs_split, test_labels_split
+                    datasplit
                 )
 
             print_and_collect_run_results(
@@ -152,39 +153,6 @@ def run_evaluations(
     print("-" * 80)
     print("All evaluations complete.")
 
-    if num_splits > 1:
-        df = pd.DataFrame(table_data)
-        agg_df = (
-            df.groupby(["Dataset", "Model", "Calibrator"])
-            .agg(["mean", "std"])
-            .reset_index()
-        )
-        
-        summary_data = {
-            "Dataset": agg_df[("Dataset", "")],
-            "Model": agg_df[("Model", "")],
-            "Calibrator": agg_df[("Calibrator", "")],
-        }
-
-        for metric in all_metric_names:
-            mean_col = (metric, "mean")
-            std_col = (metric, "std")
-            std_values = agg_df[std_col].fillna(0)
-            summary_data[metric] = agg_df[mean_col].apply(
-                lambda x: f"{x:.4f}"
-            ) + " ± " + std_values.apply(lambda x: f"{x:.4f}")
-        
-        summary_df = pd.DataFrame(summary_data)
-
-        summary_table = tabulate(
-            summary_df, headers="keys", tablefmt="pipe", showindex=False
-        )
-        summary_df.to_csv(output_dir / "summary_results.csv", index=False)
-        summary_path = output_dir / "summary_results.txt"
-        with open(summary_path, "w") as f:
-            f.write(summary_table)
-        print(summary_table)
-    else:
-        generate_and_save_summary(table_data, all_metric_names, Path(output_dir))
+    generate_and_save_summary(table_data, all_metric_names, output_dir)
 
     return all_reports
