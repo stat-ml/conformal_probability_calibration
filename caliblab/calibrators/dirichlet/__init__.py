@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
 
 from .calib.fulldirichlet import FullDirichletCalibrator
+from .calib.diagdirichlet import DiagonalDirichletCalibrator
 
 
 class DirichletCalibrator(BaseEstimator, RegressorMixin):
@@ -29,6 +30,10 @@ class DirichletCalibrator(BaseEstimator, RegressorMixin):
 
         if self.matrix_type == 'full':
             self.calibrator_ = FullDirichletCalibrator(reg_lambda_list=self.l2_grid,
+                                                       reg_mu_list=self.comp_l2,
+                                                       initializer=self.initializer)
+        elif self.matrix_type == 'diagonal':
+            self.calibrator_ = DiagonalDirichletCalibrator(reg_lambda_list=self.l2_grid,
                                                        reg_mu_list=self.comp_l2,
                                                        initializer=self.initializer)
         else:

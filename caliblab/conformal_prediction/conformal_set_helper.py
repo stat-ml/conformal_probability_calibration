@@ -89,16 +89,9 @@ class ConformalSetHelper:
     def _topk_mask_by_cumsum(
         probs: np.ndarray, threshold: float | np.ndarray
     ) -> np.ndarray:
-        n, _ = probs.shape
-        order = np.argsort(-probs, axis=1)
-        sorted_p = np.take_along_axis(probs, order, axis=1)
-        csum = np.cumsum(sorted_p, axis=1)
-
-        k_star = (csum >= threshold).argmax(axis=1)
-        mask = np.zeros_like(probs, dtype=bool)
-        for i in range(n):
-            mask[i, order[i, : k_star[i] + 1]] = True
-        return mask
+        cal_pi = probs.argsort(1)[:, ::-1]
+        cal_srt = np.take_along_axis(probs, cal_pi, axis=1).cumsum(axis=1)
+        return np.take_along_axis(cal_srt <= threshold, cal_pi.argsort(axis=1), axis=1)
 
     def make_mask(self, base_logits: np.ndarray) -> np.ndarray:
         if self.q_hat_ is None:

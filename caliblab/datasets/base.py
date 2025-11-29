@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
+from typing import Tuple
 
 from torch.utils.data import DataLoader, Dataset
+
+from .utils import DataSplit
 
 
 class BaseDataset(ABC):
@@ -38,3 +41,10 @@ class BaseDataset(ABC):
             num_workers=num_workers,
             pin_memory=False,
         )
+
+
+def get_sizes(datasplit: DataSplit) -> Tuple[int, int]:
+    """Return the test and calibration set sizes for a given DataSplit."""
+    test_size = len(datasplit.test_labels)
+    cal_size = len(datasplit.cal_labels)
+    return test_size, cal_size

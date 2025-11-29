@@ -11,6 +11,7 @@ import numpy as np
 
 from ..calibrators.base import CalibratorBase
 from ..datasets import dataset_getter
+from ..datasets.base import get_sizes
 from ..datasets.utils import split_data
 from ..metrics.base import MetricBase
 from ..models import get_model
@@ -38,7 +39,7 @@ def run_evaluations(
     force_recompute: bool,
     visualizers: Optional[List[Any]] = None,
     num_splits: int = 1,
-    cal_ratio: float = 0.3,
+    cal_ratio: float = 0.2,
     subset_items: int = 40_000,
     do_not_stratify: bool = False,
     **kwargs: Any,
@@ -59,6 +60,7 @@ def run_evaluations(
             data_dir=str(data_root / dataset_name),
             **dataset_params,
         )
+        print(f"Dataset: {dataset.name}")
 
         model_config = config["model_config"]
         model_name = model_config["name"]
@@ -108,6 +110,8 @@ def run_evaluations(
                 datasplit = split_data(
                     test_outputs, test_labels, test_probs, cal_ratio, split_seed, subset_items
                 )
+                test_size, cal_size = get_sizes(datasplit)
+                print(f"Test size: {test_size}, Calibration size: {cal_size}")
 
                 evaluator = ModelEvaluator(
                     metrics=metrics,

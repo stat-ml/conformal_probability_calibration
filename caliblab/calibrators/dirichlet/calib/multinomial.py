@@ -26,7 +26,7 @@ config.update("jax_enable_x64", True)
 
 class MultinomialRegression(BaseEstimator, RegressorMixin):
     def __init__(self, weights_0=None, method=None, initializer='identity', reg_format=None,
-                 reg_lambda=0.0, reg_mu=None, reg_norm=False, ref_row=True):
+                 reg_lambda=0.0, reg_mu=None, reg_norm=False, ref_row=True, optimizer='auto'):
         if method not in [None, 'Full', 'Diag', 'FixDiag']:
             raise(ValueError('method {} not avaliable'.format(method)))
 

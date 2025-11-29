@@ -13,13 +13,28 @@
         "one_minus_alpha_coverage_curve": {"alpha": 0.1}
     },
     "calibrators": [
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.01, "score_transformation": "identity"}},
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.05, "score_transformation": "identity"}},
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.1, "score_transformation": "identity"}},
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.15, "score_transformation": "identity"}},
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.2, "score_transformation": "identity"}},
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.25, "score_transformation": "identity"}},
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.3, "score_transformation": "identity"}},
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.35, "score_transformation": "identity"}},
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.4, "score_transformation": "identity"}},
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.45, "score_transformation": "identity"}},
+        {"name": "conformal_mass_threshold", "params": {"score_type": "msp", "alpha": 0.5, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.01, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.05, "score_transformation": "identity"}},
         {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.1, "score_transformation": "identity"}},
-        {"name": "naive_cmce", "params": {"tau_min": 1e-3, "tau_max": 1e2, "num_taus": 300, "n_bins": 25, "strategy": "uniform", "weighted": true}},
-        "temperature_scaling",
-        "isotonic_regression",
-        "adaptive_temperature_scaling",
-        "platt_regression",
-        {"name": "venn_abers", "params": {"va_type": "one_vs_all"}}
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.15, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.2, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.25, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.3, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.35, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.4, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.45, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.5, "score_transformation": "identity"}}
     ],
     "metrics": [
         "accuracy",
@@ -46,33 +61,6 @@
         }
     ],
     "evaluations": [
-        {
-            "dataset": {"name": "cifar10"},
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar10_resnet20",
-                "alias": "ResNet20"
-            }
-        },
-        {
-            "dataset": {"name": "cifar10"},
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar10_resnet56",
-                "alias": "ResNet56"
-            }
-        },
-        {
-            "dataset": {"name": "cifar100"},
-            "model": {
-                "source": "torch_hub",
-                "repo": "chenyaofo/pytorch-cifar-models",
-                "name": "cifar100_resnet56",
-                "alias": "ResNet56"
-            }
-        },
         {
             "dataset": {"name": "cifar100", "params": {"image_size": 224}},
             "model": {
