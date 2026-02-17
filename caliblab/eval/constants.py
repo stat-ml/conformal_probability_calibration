@@ -15,5 +15,6 @@ class EvaluationReport:
     calibrated_probabilities: Optional[np.ndarray] = field(default=None, repr=False)
     true_labels: Optional[np.ndarray] = field(default=None, repr=False)
     conformal_set_sizes: Optional[np.ndarray] = field(default=None, repr=False)
+    conformal_test_coverage: Optional[np.float64] = field(default=None, repr=False)
     train_time: float = 0.0
     predict_time: float = 0.0

@@ -100,10 +100,16 @@ class ModelEvaluator:
             metric_results[metric.name] = metric(probs=probs, y_true=labels, true_proba=true_probs)
 
         conformal_test_sizes = None
+        conformal_test_coverage = None
         if calibrator and calibrator.uses_conformal_set_helper():
             conformal_test_sizes = calibrator.get_conformal_set_sizes(
                 logits=logits
             )
+            conformal_test_coverage = calibrator.get_conformal_set_coverage(
+                logits=logits,
+                y_true=labels
+            )
+            print(f"{calibrator_name} conformal test coverage: {conformal_test_coverage}")
 
         return EvaluationReport(
             calibrator_name=calibrator_name,
@@ -115,4 +121,5 @@ class ModelEvaluator:
             train_time=train_time,
             predict_time=predict_time,
             conformal_set_sizes=conformal_test_sizes,
+            conformal_test_coverage=conformal_test_coverage,
         )

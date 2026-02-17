@@ -18,6 +18,7 @@ from .classification import Accuracy, RocAuc, PrAuc
 from .proper_scores import BrierScore, NegativeLogLikelihood
 from .coverage_around_one_minus_alpha import CoverageAroundOneMinusAlpha
 from .cumulative_mass_calibration_error import CumulativeMassCalibrationError
+from .alpha_suffix_coverage import AlphaSuffixCoverage
 
 
 def get_metric(name: str, **kwargs: Any) -> MetricBase:
@@ -45,6 +46,8 @@ def get_metric(name: str, **kwargs: Any) -> MetricBase:
         return CoverageAroundOneMinusAlpha(**kwargs)
     elif name == "cmce":
         return CumulativeMassCalibrationError(**kwargs)
+    elif name == "alpha_suffix_coverage":
+        return AlphaSuffixCoverage(**kwargs)
     else:
         raise ValueError(f"Unknown metric: {name}")
 
@@ -64,4 +67,5 @@ __all__ = [
     "get_metric",
     "CoverageAroundOneMinusAlpha",
     "CumulativeMassCalibrationError",
+    "AlphaSuffixCoverage",
 ]
