@@ -7,11 +7,12 @@ from caliblab.utils.computations import cumulative_mass_and_coverage
 class AlphaSuffixCoverage(LabelBasedMetricBase):
     """
     Empirical coverage of the minimal prediction set whose cumulative probability
-    mass is at least `alpha`.
+    mass is at least `1 - alpha`.
 
     For each example, we consider the smallest top-k set (in descending
-    probability order) such that cumulative mass is >= alpha, and check whether
-    the true label lies in this set.
+    probability order) such that cumulative mass is >= (1 - alpha), and check
+    whether the true label lies in this set. The metric is the average of this
+    indicator over examples.
     """
 
     def __init__(self, alpha: float) -> None:
@@ -37,7 +38,7 @@ class AlphaSuffixCoverage(LabelBasedMetricBase):
 
         cum_probs, _, sorted_indices = cumulative_mass_and_coverage(probs, y_true)
 
-        # Find smallest k such that cumulative mass reaches alpha.
+        # Find smallest k such that cumulative mass reaches (1 - alpha).
         mask = cum_probs >= 1 - self.alpha
         first_true_idx = mask.argmax(axis=1)
 
