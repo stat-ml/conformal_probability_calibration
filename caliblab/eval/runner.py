@@ -108,7 +108,7 @@ def run_evaluations(
                 from_cache = True
             else:
                 datasplit = split_data(
-                    test_outputs, test_labels, test_probs, cal_ratio, split_seed, subset_items
+                    test_outputs, test_labels, test_probs, cal_ratio, split_seed, subset_items, do_not_stratify
                 )
                 test_size, cal_size = get_sizes(datasplit)
                 print(f"Test size: {test_size}, Calibration size: {cal_size}")

@@ -77,7 +77,66 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
             raise ValueError("y_true must be a 1D array aligned with probs rows")
 
         # Use shared utility to get cumulative sums and sorting indices
-        cum_probs, _coverage_matrix, sorted_idx = cumulative_mass_and_coverage(probs, y_true)
+        cum_probs, _coverage_matrix, sorted_idx = cumulative_mass_and_coverage(
+            probs, y_true
+        )
         true_rank = np.where(sorted_idx == y_true[:, np.newaxis])[1]
 
         return self.compute_from_cumsum(cum_probs=cum_probs, true_rank=true_rank)[0]
+
+
+class AlphaSuffixCoverage(LabelBasedMetricBase):
+    """
+    Empirical coverage of the minimal prediction set whose cumulative probability
+    mass is at least `alpha`.
+
+    For each example, we consider the smallest top-k set (in terms of descending
+    probabilities) such that the cumulative mass is >= alpha, and check whether
+    the true label lies in this set. The metric is the average of this indicator
+    over all examples.
+    """
+
+    def __init__(self, alpha: float) -> None:
+        super().__init__()
+        self.alpha = float(alpha)
+        self.requires_labels = True
+
+        if not (0.0 < self.alpha <= 1.0):
+            raise ValueError("alpha must be in (0, 1].")
+
+    @property
+    def name(self) -> str:
+        a = round(self.alpha, 3)
+        return f"alpha_suffix_coverage_{a}"
+
+    def _compute(
+        self, *, probs: np.ndarray, y_true: np.ndarray, **kwargs
+    ) -> float:
+        """
+        Compute alpha-suffix coverage using cumulative_mass_and_coverage.
+        """
+        if probs.ndim != 2:
+            raise ValueError("probs must be a 2D array of shape (n_samples, n_classes)")
+        if y_true.ndim != 1 or y_true.shape[0] != probs.shape[0]:
+            raise ValueError("y_true must be a 1D array aligned with probs rows")
+
+        cum_probs, coverage_matrix, _ = cumulative_mass_and_coverage(probs, y_true)
+
+        # For each sample, find the smallest k such that cum_probs[i, k] >= alpha.
+        # Since cumulative sums end at 1, such a k always exists for alpha <= 1.
+        threshold = 1 - self.alpha
+        mask = cum_probs >= threshold
+
+        # argmax over boolean mask gives first True index when at least one True exists.
+        # For numerical robustness, still guard against all-False rows.
+        first_true_idx = mask.argmax(axis=1)
+
+        # If a row has no True (possible only due to numerical issues), fall back to last index.
+        no_true_row = ~mask.any(axis=1)
+        if np.any(no_true_row):
+            n_classes = cum_probs.shape[1]
+            first_true_idx[no_true_row] = n_classes - 1
+
+        # Coverage at the selected top-k set for each example.
+        selected_coverage = coverage_matrix[np.arange(cum_probs.shape[0]), first_true_idx]
+        return float(selected_coverage.mean())

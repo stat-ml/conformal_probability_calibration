@@ -51,6 +51,8 @@ def main():
         config_path
     )
 
+    print(f"{args.do_not_stratify=}")
+
     run_evaluations(
         configs=configs,
         calibrators=calibrators,
