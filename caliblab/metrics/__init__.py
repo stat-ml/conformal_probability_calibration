@@ -6,13 +6,17 @@ from typing import Any
 
 from .base import (
     LabelBasedMetricBase,
+    MetricComputeInput,
     MetricBase,
+    PairwiseProbMetricBase,
     TrueProbMetricBase,
 )
 from .calibration_errors import (
+    AccuracyPreservingRatio,
     ClasswiseExpectedCalibrationError,
     ExpectedCalibrationError,
     MaximumCalibrationError,
+    OrderPreservingRatio,
 )
 from .classification import Accuracy, RocAuc, PrAuc
 from .proper_scores import BrierScore, NegativeLogLikelihood
@@ -38,6 +42,10 @@ def get_metric(name: str, **kwargs: Any) -> MetricBase:
         return MaximumCalibrationError(**kwargs)
     elif name == "cw-ece":
         return ClasswiseExpectedCalibrationError(**kwargs)
+    elif name == "accuracy_preserving_ratio":
+        return AccuracyPreservingRatio(**kwargs)
+    elif name == "order_preserving_ratio":
+        return OrderPreservingRatio(**kwargs)
     elif name == "nll":
         return NegativeLogLikelihood()
     elif name == "brier_score":
@@ -54,11 +62,15 @@ def get_metric(name: str, **kwargs: Any) -> MetricBase:
 
 __all__ = [
     "MetricBase",
+    "MetricComputeInput",
     "LabelBasedMetricBase",
     "TrueProbMetricBase",
+    "PairwiseProbMetricBase",
     "ExpectedCalibrationError",
     "MaximumCalibrationError",
     "ClasswiseExpectedCalibrationError",
+    "AccuracyPreservingRatio",
+    "OrderPreservingRatio",
     "BrierScore",
     "NegativeLogLikelihood",
     "Accuracy",

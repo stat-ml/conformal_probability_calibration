@@ -1,4 +1,4 @@
-from .base import LabelBasedMetricBase
+from .base import LabelBasedMetricBase, MetricComputeInput
 import numpy as np
 from typing import Optional
 
@@ -56,8 +56,10 @@ class CumulativeMassCalibrationError(LabelBasedMetricBase):
         return "cmce"
 
     def _compute(
-        self, *, probs, y_true: Optional[np.ndarray], true_proba: Optional[np.ndarray]
+        self, *, metric_input: MetricComputeInput
     ):
+        probs = metric_input.probs
+        y_true = metric_input.y_true
         bin_diffs = _compute_cumulative_mass_calibration_error(probs, y_true, self.n_bins, self.strategy)
         
         if self.weighted:

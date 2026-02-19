@@ -79,7 +79,7 @@ class ModelEvaluator:
         calibrator: CalibratorBase | None,
         outputs: np.ndarray,
         labels: np.ndarray,
-        logits: np.ndarray,
+        uncalibrated_test_logits: np.ndarray,
         true_probs: Optional[np.ndarray] = None,
         train_time: float = 0.0,
         predict_time: float = 0.0,
@@ -95,18 +95,24 @@ class ModelEvaluator:
         else:
             # For calibrated cases, the outputs are already probabilities
             probs = outputs
+        uncalibrated_probs = softmax(uncalibrated_test_logits)
 
         for metric in self.metrics:
-            metric_results[metric.name] = metric(probs=probs, y_true=labels, true_proba=true_probs)
+            metric_results[metric.name] = metric(
+                probs=probs,
+                y_true=labels,
+                true_proba=true_probs,
+                uncalibrated_probs=uncalibrated_probs,
+            )
 
         conformal_test_sizes = None
         conformal_test_coverage = None
         if calibrator and calibrator.uses_conformal_set_helper():
             conformal_test_sizes = calibrator.get_conformal_set_sizes(
-                logits=logits
+                logits=uncalibrated_test_logits
             )
             conformal_test_coverage = calibrator.get_conformal_set_coverage(
-                logits=logits,
+                logits=uncalibrated_test_logits,
                 y_true=labels
             )
             print(f"{calibrator_name} conformal test coverage: {conformal_test_coverage}")

@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score
 
-from .base import LabelBasedMetricBase
+from .base import LabelBasedMetricBase, MetricComputeInput
 from ..utils.computations import make_one_hot
 
 
@@ -12,7 +12,9 @@ class Accuracy(LabelBasedMetricBase):
     def name(self) -> str:
         return "accuracy"
 
-    def _compute(self, *, probs: np.ndarray, y_true: np.ndarray, **kwargs) -> float:
+    def _compute(self, *, metric_input: MetricComputeInput) -> float:
+        probs = metric_input.probs
+        y_true = metric_input.y_true
         y_pred = np.argmax(probs, axis=1)
         return accuracy_score(y_true, y_pred)
 
@@ -24,7 +26,9 @@ class RocAuc(LabelBasedMetricBase):
     def name(self) -> str:
         return "roc_auc"
 
-    def _compute(self, *, probs: np.ndarray, y_true: np.ndarray, **kwargs) -> float:
+    def _compute(self, *, metric_input: MetricComputeInput) -> float:
+        probs = metric_input.probs
+        y_true = metric_input.y_true
         return roc_auc_score(y_true, probs, multi_class="ovr", average="macro")
 
 
@@ -35,6 +39,8 @@ class PrAuc(LabelBasedMetricBase):
     def name(self) -> str:
         return "pr_auc"
 
-    def _compute(self, *, probs: np.ndarray, y_true: np.ndarray, **kwargs) -> float:
+    def _compute(self, *, metric_input: MetricComputeInput) -> float:
+        probs = metric_input.probs
+        y_true = metric_input.y_true
         y_true_one_hot = make_one_hot(y_true, n_classes=probs.shape[1])
         return average_precision_score(y_true_one_hot, probs, average="macro")

@@ -1,6 +1,6 @@
 import numpy as np
 
-from caliblab.metrics.base import LabelBasedMetricBase
+from caliblab.metrics.base import LabelBasedMetricBase, MetricComputeInput
 from caliblab.utils.computations import cumulative_mass_and_coverage
 
 
@@ -28,9 +28,9 @@ class AlphaSuffixCoverage(LabelBasedMetricBase):
         a = round(self.alpha, 3)
         return f"alpha_suffix_coverage_{a}"
 
-    def _compute(
-        self, *, probs: np.ndarray, y_true: np.ndarray, **kwargs
-    ) -> float:
+    def _compute(self, *, metric_input: MetricComputeInput) -> float:
+        probs = metric_input.probs
+        y_true = metric_input.y_true
         if probs.ndim != 2:
             raise ValueError("probs must be a 2D array of shape (n_samples, n_classes)")
         if y_true.ndim != 1 or y_true.shape[0] != probs.shape[0]:
