@@ -86,19 +86,15 @@ class ConformalSetHelper:
         return self
 
     @staticmethod
-    def _topk_mask_by_cumsum(
-        probs: np.ndarray, threshold: float | np.ndarray
-    ) -> np.ndarray:
-        n, _ = probs.shape
-        order = np.argsort(-probs, axis=1)
-        sorted_p = np.take_along_axis(probs, order, axis=1)
-        csum = np.cumsum(sorted_p, axis=1)
-
-        k_star = (csum >= threshold).argmax(axis=1)
-        mask = np.zeros_like(probs, dtype=bool)
-        for i in range(n):
-            mask[i, order[i, : k_star[i] + 1]] = True
-        return mask
+    def _aps_prediction_sets(probs: np.ndarray, qhat: float | np.ndarray) -> np.ndarray:
+        val_pi = probs.argsort(1)[:, ::-1]
+        val_srt = np.take_along_axis(probs, val_pi, axis=1).cumsum(
+            axis=1
+        )
+        prediction_sets = np.take_along_axis(
+            val_srt <= qhat, val_pi.argsort(axis=1), axis=1
+        )
+        return prediction_sets
 
     def make_mask(self, base_logits: np.ndarray) -> np.ndarray:
         if self.q_hat_ is None:
@@ -110,8 +106,7 @@ class ConformalSetHelper:
         if self.score_type == ScoreTypes.MSP.value:
             return p >= 1 - self.scores_transformer.inverse(self.q_hat_, base_logits)
         elif self.score_type == ScoreTypes.APS.value:
-            return self._topk_mask_by_cumsum(
-                p, threshold=self.scores_transformer.inverse(self.q_hat_, base_logits)
-            )
+            qhat = self.scores_transformer.inverse(self.q_hat_, base_logits)
+            return self._aps_prediction_sets(p, qhat)
         else:
             raise ValueError(f"Invalid score type: {self.score_type}")
