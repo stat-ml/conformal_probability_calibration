@@ -72,7 +72,7 @@ class OneMinusAlphaCoverageVisualizer:
                 self.eps_values,
                 coverage_values,
                 s=70,
-                alpha=np.log(np.array(set_sizes) + 0.1) / np.log(np.array(set_sizes).sum() + 0.1), 
+                alpha=np.maximum(0.1, np.log(np.array(set_sizes) + 0.1) / np.log(np.array(set_sizes).sum() + 0.1)), 
                 edgecolors="none",
             )
         

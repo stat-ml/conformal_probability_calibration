@@ -52,3 +52,19 @@ class AlphaSuffixCoverage(LabelBasedMetricBase):
         true_rank = np.where(sorted_indices == y_true[:, np.newaxis])[1]
         selected_coverage = true_rank <= first_true_idx
         return float(selected_coverage.mean())
+
+
+
+class AlfaSuffixCoverageDifference(AlphaSuffixCoverage):
+    """
+    Absolute gap between alpha-suffix coverage and the target (1 - alpha).
+    """
+
+    @property
+    def name(self) -> str:
+        a = round(self.alpha, 3)
+        return f"alfa_suffix_coverage_difference_{a}"
+
+    def _compute(self, *, metric_input: MetricComputeInput) -> float:
+        alpha_suffix_coverage = super()._compute(metric_input=metric_input)
+        return float((alpha_suffix_coverage - (1 - self.alpha)))

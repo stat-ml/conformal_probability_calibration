@@ -49,7 +49,7 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
         lb, ub = self.lower_bound, self.upper_bound
 
         if ub < lb:
-            return 0.0
+            raise ValueError(f"upper bound {ub} is less than lower bound {lb}")
 
         L = (cum_probs < lb).sum(axis=1)
         R = (cum_probs <= ub).sum(axis=1) - 1
@@ -58,7 +58,7 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
         counts = np.maximum(R - L + 1, 0)
         total_sets = int(counts.sum())
         if total_sets == 0:
-            return 0.0
+            return 0.0, 0
 
         start_cover = np.maximum(L, true_rank)
         covers = np.maximum(R - start_cover + 1, 0)
