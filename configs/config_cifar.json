@@ -10,19 +10,42 @@
         "confidence_curve": {"n_bins": 25},
         "cumulative_mass_curve": {"n_bins": 25},
         "conformal_set_size_distribution": {},
-        "one_minus_alpha_coverage_curve": {"alpha": 0.1}
+        "one_minus_alpha_coverage_curve": {"alpha": 0.1},
+        "alpha_suffix_coverage_curve": {"alpha_min": 0, "alpha_max": 0.3, "n_alpha_steps": 25}
     },
     "calibrators": [
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.01, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.05, "score_transformation": "identity"}},
         {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.1, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.2, "score_transformation": "identity"}},
+
+        {"name": "conformal_temperature", "params": {"score_type": "aps", "alpha": 0.01, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "aps", "alpha": 0.05, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "aps", "alpha": 0.1, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "aps", "alpha": 0.2, "score_transformation": "identity"}},
+    
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.01, "score_transformation": "normalizing_flow"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.05, "score_transformation": "normalizing_flow"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.1, "score_transformation": "normalizing_flow"}},
+        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.2, "score_transformation": "normalizing_flow"}},
+
+        {"name": "conformal_temperature", "params": {"score_type": "aps", "alpha": 0.01, "score_transformation": "normalizing_flow"}},
+        {"name": "conformal_temperature", "params": {"score_type": "aps", "alpha": 0.05, "score_transformation": "normalizing_flow"}},
+        {"name": "conformal_temperature", "params": {"score_type": "aps", "alpha": 0.1, "score_transformation": "normalizing_flow"}},
+        {"name": "conformal_temperature", "params": {"score_type": "aps", "alpha": 0.2, "score_transformation": "normalizing_flow"}},
+
         {"name": "naive_cmce", "params": {"tau_min": 1e-3, "tau_max": 1e2, "num_taus": 300, "n_bins": 25, "strategy": "uniform", "weighted": true}},
         "temperature_scaling",
         "isotonic_regression",
         "adaptive_temperature_scaling",
         "platt_regression",
+        "dirichlet",
         {"name": "venn_abers", "params": {"va_type": "one_vs_all"}}
     ],
     "metrics": [
         "accuracy",
+        "accuracy_preserving_ratio",
+        "order_preserving_ratio",
         {"name": "ece", "params": {"n_bins": 25}},
         {"name": "mce", "params": {"n_bins": 25}},
         {"name": "cw-ece", "params": {"n_bins": 25}},
@@ -33,16 +56,20 @@
             "params": {"n_bins": 25, "strategy": "uniform", "weighted": true}
         },
         {
-            "name": "coverage_around_one_minus_alpha",
-            "params": {"alpha": 0.3, "eps": 0.02}
+            "name": "alfa_suffix_coverage_difference",
+            "params": {"alpha": 0.2}
         },
         {
-            "name": "coverage_around_one_minus_alpha",
-            "params": {"alpha": 0.1, "eps": 0.02}
+            "name": "alfa_suffix_coverage_difference",
+            "params": {"alpha": 0.1}
         },
         {
-            "name": "coverage_around_one_minus_alpha",
-            "params": {"alpha": 0.01, "eps": 0.005}
+            "name": "alfa_suffix_coverage_difference",
+            "params": {"alpha": 0.05}
+        },
+        {
+            "name": "alfa_suffix_coverage_difference",
+            "params": {"alpha": 0.01}
         }
     ],
     "evaluations": [

@@ -86,16 +86,21 @@ def get_predictions(
     cache_path: Path,
     use_cache: bool = True,
     force_recompute: bool = False,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray | None]:
     if use_cache and not force_recompute and cache_path.exists():
         print(f"Loading cached predictions from {cache_path}")
         cached_data = np.load(cache_path, allow_pickle=True)
         if "outputs" in cached_data and "labels" in cached_data and "probs" in cached_data:
-            return cached_data["outputs"], cached_data["labels"], cached_data["probs"]
+            probs = cached_data["probs"]
+            # np.savez serializes None as a 0-D object array; normalize it back.
+            if isinstance(probs, np.ndarray) and probs.ndim == 0 and probs.dtype == object:
+                if probs.item() is None:
+                    probs = None
+            return cached_data["outputs"], cached_data["labels"], probs
         elif "outputs" in cached_data and "labels" in cached_data:
-            return cached_data["outputs"], cached_data["labels"]
+            return cached_data["outputs"], cached_data["labels"], None
         elif "logits" in cached_data and "true_labels" in cached_data:
-            return cached_data["logits"], cached_data["true_labels"]
+            return cached_data["logits"], cached_data["true_labels"], None
         else:
             raise KeyError(
                 "Could not find 'outputs'/'labels' or 'logits'/'true_labels' in cached file."
@@ -103,5 +108,8 @@ def get_predictions(
 
     print(f"Computing predictions and saving to {cache_path}")
     outputs, labels, probs = model.predict(loader, device)
-    np.savez(cache_path, outputs=outputs, labels=labels, probs=probs)
+    if probs is None:
+        np.savez(cache_path, outputs=outputs, labels=labels)
+    else:
+        np.savez(cache_path, outputs=outputs, labels=labels, probs=probs)
     return outputs, labels, probs
