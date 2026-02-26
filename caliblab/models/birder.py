@@ -35,7 +35,7 @@ class _BirderModel(ModelBase):
             all_outputs.append(outputs.astype(np.float64))
             all_labels.append(labels.cpu().numpy().astype(np.int64))
 
-        return np.concatenate(all_outputs), np.concatenate(all_labels)
+        return np.concatenate(all_outputs), np.concatenate(all_labels), None
 
 def BirderModel(
     model_name: str,

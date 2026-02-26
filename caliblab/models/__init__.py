@@ -31,7 +31,7 @@ def get_model(
         return BirderModel(name, alias=alias, cache_dir=cache_dir, **kwargs)
     elif source == "ours":
         model = MLPClassifier(**kwargs)
-        model.load_weights(path=f"synthetic_model_weights/model_{kwargs["n_classes"]}.pth")
+        model.load_weights(path=f"synthetic_model_weights/model_{kwargs['n_classes']}.pth")
         return model
     else:
         raise ValueError(f"Unknown model source: '{source}'")

@@ -106,7 +106,7 @@ def run_evaluations(
                 from_cache = True
             else:
                 datasplit = split_data(
-                    test_outputs, test_labels, test_probs, cal_ratio, split_seed, subset_items
+                    test_outputs, test_labels, test_probs, cal_ratio, split_seed, subset_items, do_not_stratify
                 )
 
                 evaluator = ModelEvaluator(
