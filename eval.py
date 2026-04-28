@@ -42,11 +42,6 @@ def main():
         action="store_true",
         help="Do not stratify the data for calibration.",
     )
-    parser.add_argument(
-        "--skip-visualizations",
-        action="store_true",
-        help="Skip plot generation and only write result tables.",
-    )
     args = parser.parse_args()
     config_path = Path(args.config_file)
     if not config_path.is_file():
@@ -60,7 +55,7 @@ def main():
         configs=configs,
         calibrators=calibrators,
         metrics=metrics,
-        visualizers=[] if args.skip_visualizations else visualizers,
+        visualizers=visualizers,
         num_splits=args.num_splits,
         cal_ratio=args.cal_ratio,
         subset_items=args.subset_items,
