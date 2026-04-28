@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 import pandas as pd
@@ -7,7 +7,6 @@ import torch
 from tabulate import tabulate
 from torch.utils.data import DataLoader
 
-from ..datasets import BaseDataset
 from ..models import ModelBase
 from .constants import EvaluationReport
 
@@ -17,13 +16,13 @@ TIMING_COLUMNS = ["Fit Time (s)", "Predict Time (s)", "Total Time (s)"]
 
 def print_and_collect_run_results(
     run_reports: List[EvaluationReport],
-    dataset: BaseDataset,
-    model: ModelBase,
+    dataset_name: str,
+    model_name: str,
     table_data: List[Dict[str, Any]],
     all_metric_names: List[str],
 ) -> None:
     """Prints per-run summary and collects data for the final table."""
-    print(f"\nResults for {dataset.name} with {model.name}:")
+    print(f"\nResults for {dataset_name} with {model_name}:")
     for report in run_reports:
         print(f"  Calibrator: {report.calibrator_name}")
         fit_time = getattr(report, "train_time", 0.0)
@@ -33,8 +32,8 @@ def print_and_collect_run_results(
         print(f"    predict_time: {predict_time:.4f}s")
         print(f"    total_time: {total_time:.4f}s")
         row = {
-            "Dataset": dataset.name,
-            "Model": model.name,
+            "Dataset": dataset_name,
+            "Model": model_name,
             "Calibrator": report.calibrator_name,
             "Fit Time (s)": fit_time,
             "Predict Time (s)": predict_time,
@@ -92,8 +91,8 @@ def generate_and_save_summary(
 
 
 def get_predictions(
-    model: ModelBase,
-    loader: DataLoader,
+    model: Optional[ModelBase],
+    loader: Optional[DataLoader],
     device: torch.device,
     cache_path: Path,
     use_cache: bool = True,
@@ -117,6 +116,11 @@ def get_predictions(
             raise KeyError(
                 "Could not find 'outputs'/'labels' or 'logits'/'true_labels' in cached file."
             )
+
+    if model is None or loader is None:
+        raise RuntimeError(
+            f"Prediction cache not found at {cache_path}; a model and loader are required to compute predictions."
+        )
 
     print(f"Computing predictions and saving to {cache_path}")
     outputs, labels, probs = model.predict(loader, device)

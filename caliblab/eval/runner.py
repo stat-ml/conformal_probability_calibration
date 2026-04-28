@@ -53,33 +53,43 @@ def run_evaluations(
     for config in configs:
         dataset_config = config["dataset_config"]
         dataset_name = dataset_config["name"]
+        dataset_display_name = dataset_name
         dataset_params = dataset_config.get("params", {})
-        dataset = dataset_getter(
-            dataset_name,
-            data_dir=str(data_root / dataset_name),
-            **dataset_params,
-        )
 
         model_config = config["model_config"]
         model_name = model_config["name"]
         model_source = model_config["source"]
         model_alias = model_config.get("alias")
+        model_display_name = model_alias or model_name
         model_repo = model_config.get("repo")
         model_params = model_config.get("params", {})
-        model = get_model(
-            name=model_name,
-            source=model_source,
-            alias=model_alias,
-            repo=model_repo,
-            cache_dir=model_cache_dir,
-            **model_params,
-        )
 
-        base_run_dir = output_dir / f"{dataset.name}_{model.name}"
+        base_run_dir = output_dir / f"{dataset_display_name}_{model_display_name}"
         base_run_dir.mkdir(parents=True, exist_ok=True)
 
-        test_loader = dataset.get_test_loader(batch_size=512)
         test_preds_path = base_run_dir / "test_preds.npz"
+        test_loader = None
+        model = None
+        if force_recompute or not (use_cache and test_preds_path.exists()):
+            dataset = dataset_getter(
+                dataset_name,
+                data_dir=str(data_root / dataset_name),
+                **dataset_params,
+            )
+            dataset_display_name = dataset.name
+            base_run_dir = output_dir / f"{dataset_display_name}_{model_display_name}"
+            base_run_dir.mkdir(parents=True, exist_ok=True)
+            test_loader = dataset.get_test_loader(batch_size=512)
+            test_preds_path = base_run_dir / "test_preds.npz"
+            model = get_model(
+                name=model_name,
+                source=model_source,
+                alias=model_alias,
+                repo=model_repo,
+                cache_dir=model_cache_dir,
+                **model_params,
+            )
+            model_display_name = model.name
 
         test_outputs, test_labels, test_probs = get_predictions(
             model, test_loader, device, test_preds_path, use_cache, force_recompute
@@ -90,7 +100,7 @@ def run_evaluations(
             print(f"Running split with seed {split_seed}")
             print("-" * 80)
             print(
-                f"Running evaluation for model '{model.name}' on dataset '{dataset.name}'"
+                f"Running evaluation for model '{model_display_name}' on dataset '{dataset_display_name}'"
             )
 
             run_dir = base_run_dir / f"split_{split_seed}"
@@ -121,7 +131,7 @@ def run_evaluations(
                 )
 
             print_and_collect_run_results(
-                run_reports, dataset, model, table_data, all_metric_names
+                run_reports, dataset_display_name, model_display_name, table_data, all_metric_names
             )
 
             if visualizers and not from_cache:
@@ -129,8 +139,8 @@ def run_evaluations(
                     visualizer.plot(
                         reports=run_reports,
                         run_dir=run_dir,
-                        dataset_name=dataset.name,
-                        model_name=model.name,
+                        dataset_name=dataset_display_name,
+                        model_name=model_display_name,
                     )
 
             # Drop large arrays before saving/aggregating to keep memory and cache light
