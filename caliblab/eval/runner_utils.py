@@ -12,6 +12,9 @@ from ..models import ModelBase
 from .constants import EvaluationReport
 
 
+TIMING_COLUMNS = ["Fit Time (s)", "Predict Time (s)", "Total Time (s)"]
+
+
 def print_and_collect_run_results(
     run_reports: List[EvaluationReport],
     dataset: BaseDataset,
@@ -23,10 +26,19 @@ def print_and_collect_run_results(
     print(f"\nResults for {dataset.name} with {model.name}:")
     for report in run_reports:
         print(f"  Calibrator: {report.calibrator_name}")
+        fit_time = getattr(report, "train_time", 0.0)
+        predict_time = getattr(report, "predict_time", 0.0)
+        total_time = fit_time + predict_time
+        print(f"    fit_time: {fit_time:.4f}s")
+        print(f"    predict_time: {predict_time:.4f}s")
+        print(f"    total_time: {total_time:.4f}s")
         row = {
             "Dataset": dataset.name,
             "Model": model.name,
             "Calibrator": report.calibrator_name,
+            "Fit Time (s)": fit_time,
+            "Predict Time (s)": predict_time,
+            "Total Time (s)": total_time,
         }
         for metric_name, value in report.metrics.items():
             print(f"    {metric_name}: {value:.4f}")
@@ -56,11 +68,11 @@ def generate_and_save_summary(
         "Calibrator": agg_df[("Calibrator", "")],
     }
 
-    for metric in all_metric_names:
-        mean_col = (metric, "mean")
-        std_col = (metric, "std")
+    for column in [*TIMING_COLUMNS, *all_metric_names]:
+        mean_col = (column, "mean")
+        std_col = (column, "std")
         std_values = agg_df[std_col].fillna(0)
-        summary_data[metric] = agg_df[mean_col].apply(
+        summary_data[column] = agg_df[mean_col].apply(
             lambda x: f"{x:.4f}"
         ) + " ± " + std_values.apply(lambda x: f"{x:.4f}")
     

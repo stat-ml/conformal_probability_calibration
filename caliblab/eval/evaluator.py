@@ -51,15 +51,15 @@ class ModelEvaluator:
                 train_time = 0.0
                 predict_time = 0.0
             else:
-                start_time = time.time()
+                start_time = time.perf_counter()
                 calibrator.fit(logits=datasplit.cal_outputs, y_true=datasplit.cal_labels)
-                train_time = time.time() - start_time
+                train_time = time.perf_counter() - start_time
 
-                start_time = time.time()
+                start_time = time.perf_counter()
                 calibrated_test_outputs = calibrator.predict_proba(
                     logits=datasplit.test_outputs
                 )
-                predict_time = time.time() - start_time
+                predict_time = time.perf_counter() - start_time
 
             report = self._evaluate_calibrator(
                 calibrator,
