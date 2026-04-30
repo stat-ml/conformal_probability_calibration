@@ -11,7 +11,7 @@ from .utils import clip_for_log
 
 class DirichletCalibrator(BaseEstimator, RegressorMixin):
     def __init__(self, matrix_type='full', l2=0.0, comp_l2=False,
-                 initializer='identity'):
+                 initializer='identity', maxiter=None):
         if matrix_type not in ['full', 'full_gen', 'diagonal', 'fixed_diagonal']:
             raise(ValueError)
 
@@ -26,6 +26,7 @@ class DirichletCalibrator(BaseEstimator, RegressorMixin):
         else:
             self.comp_l2 = [comp_l2]
         self.initializer = initializer
+        self.maxiter = maxiter
 
     def fit(self, X, y, X_val=None, y_val=None, **kwargs):
         if self.matrix_type == 'full':
@@ -38,6 +39,7 @@ class DirichletCalibrator(BaseEstimator, RegressorMixin):
                 method=method,
                 reg_lambda_list=self.l2_grid,
                 initializer=self.initializer,
+                maxiter=self.maxiter,
             )
         else:
             raise(ValueError)
@@ -95,10 +97,11 @@ class DirichletCalibrator(BaseEstimator, RegressorMixin):
 
 
 class _RegularizedDirichletCalibrator(BaseEstimator, RegressorMixin):
-    def __init__(self, method, reg_lambda_list, initializer='identity'):
+    def __init__(self, method, reg_lambda_list, initializer='identity', maxiter=None):
         self.method = method
         self.reg_lambda_list = reg_lambda_list
         self.initializer = initializer
+        self.maxiter = maxiter
         self.calibrator_ = None
         self.reg_lambda = None
 
@@ -115,6 +118,7 @@ class _RegularizedDirichletCalibrator(BaseEstimator, RegressorMixin):
                 method=self.method,
                 reg_lambda=reg_lambda,
                 initializer=self.initializer,
+                maxiter=self.maxiter,
             )
             tmp_cal.fit(_X, y, *args, **kwargs)
             tmp_loss = log_loss(

@@ -17,14 +17,28 @@ def _ensure_dirichlet_on_path() -> None:
 
 
 class DirichletCalibration(CalibratorBase):
-    def __init__(self, matrix_type: str = "full", l2: float | list[float] = 0.0, comp_l2: bool | list[bool] = False, initializer: str = "identity"):
+    def __init__(
+        self,
+        matrix_type: str = "full",
+        l2: float | list[float] = 0.0,
+        comp_l2: bool | list[bool] = False,
+        initializer: str = "identity",
+        maxiter: int | None = None,
+    ):
         super().__init__()
         _ensure_dirichlet_on_path()
-        self.calibrator = DirichletCalibrator(matrix_type=matrix_type, l2=l2, comp_l2=comp_l2, initializer=initializer)
+        self.calibrator = DirichletCalibrator(
+            matrix_type=matrix_type,
+            l2=l2,
+            comp_l2=comp_l2,
+            initializer=initializer,
+            maxiter=maxiter,
+        )
         self.matrix_type = matrix_type
         self.l2 = l2
         self.comp_l2 = comp_l2
         self.initializer = initializer
+        self.maxiter = maxiter
         self._model = None
         self._trained_on: Optional[str] = None
 

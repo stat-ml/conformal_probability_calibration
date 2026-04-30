@@ -26,7 +26,7 @@ config.update("jax_enable_x64", True)
 
 class MultinomialRegression(BaseEstimator, RegressorMixin):
     def __init__(self, weights_0=None, method=None, initializer='identity', reg_format=None,
-                 reg_lambda=0.0, reg_mu=None, reg_norm=False, ref_row=True):
+                 reg_lambda=0.0, reg_mu=None, reg_norm=False, ref_row=True, maxiter=None):
         if method not in [None, 'Full', 'Diag', 'FixDiag']:
             raise(ValueError('method {} not avaliable'.format(method)))
 
@@ -39,6 +39,7 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
         self.reg_mu = reg_mu  # If number, then ODIR is applied
         self.reg_norm = reg_norm
         self.ref_row = ref_row
+        self.maxiter = maxiter
         self.classes = None
 
     @property
@@ -109,14 +110,27 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
                                      initializer=self.initializer,
                                      reg_format=self.reg_format)
         else:
-            res = scipy.optimize.fmin_l_bfgs_b(func=_objective, fprime=_gradient,
-                                               x0=self.weights_0_,
-                                               args=(X_, XXT, target, k,
-                                                     self.method_, self.reg_lambda, self.reg_mu,
-                                                     self.ref_row, self.initializer,
-                                                     self.reg_format),
-                                               maxls=128,
-                                               factr=1.0)
+            optimizer_kwargs = {"maxls": 128, "factr": 1.0}
+            if self.maxiter is not None:
+                optimizer_kwargs["maxiter"] = self.maxiter
+            res = scipy.optimize.fmin_l_bfgs_b(
+                func=_objective,
+                fprime=_gradient,
+                x0=self.weights_0_,
+                args=(
+                    X_,
+                    XXT,
+                    target,
+                    k,
+                    self.method_,
+                    self.reg_lambda,
+                    self.reg_mu,
+                    self.ref_row,
+                    self.initializer,
+                    self.reg_format,
+                ),
+                **optimizer_kwargs,
+            )
             weights = res[0]
 
         self.params_ = weights
