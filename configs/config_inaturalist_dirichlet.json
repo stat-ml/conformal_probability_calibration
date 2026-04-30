@@ -1,0 +1,29 @@
+{
+    "data_root": "data",
+    "runner_settings": {
+        "output_dir": "experiments_inaturalist_dirichlet",
+        "use_cache": true,
+        "force_recompute": false
+    },
+    "calibrators": [
+        {"name": "dirichlet", "params": {"matrix_type": "diagonal", "l2": 0.0, "initializer": "identity"}}
+    ],
+    "metrics": [
+        "accuracy",
+        "accuracy_preserving_ratio",
+        {"name": "ece", "params": {"n_bins": 25}},
+        {"name": "mce", "params": {"n_bins": 25}},
+        "nll",
+        "brier_score"
+    ],
+    "evaluations": [
+        {
+            "dataset": {"name": "inaturalist", "params": {"image_size": 224}},
+            "model": {
+                "source": "birder",
+                "name": "rope_vit_reg4_b14_capi-inat21-224px",
+                "alias": "Birder-ViT-B14"
+            }
+        }
+    ]
+}

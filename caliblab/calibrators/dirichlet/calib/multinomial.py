@@ -83,7 +83,12 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
 
         n, m = X_.shape
 
-        XXT = (X_.repeat(m, axis=1) * np.hstack([X_]*m)).reshape((n, m, m))
+        # Diagonal variants do not use XXT in the objective/gradient/Hessian,
+        # and materializing it is prohibitively expensive for large-class data.
+        if self.method_ in ['Diag', 'FixDiag']:
+            XXT = None
+        else:
+            XXT = (X_.repeat(m, axis=1) * np.hstack([X_]*m)).reshape((n, m, m))
 
         logging.debug(self.method_)
 
