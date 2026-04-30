@@ -117,7 +117,11 @@ class _RegularizedDirichletCalibrator(BaseEstimator, RegressorMixin):
                 initializer=self.initializer,
             )
             tmp_cal.fit(_X, y, *args, **kwargs)
-            tmp_loss = log_loss(y_val, tmp_cal.predict_proba(_X_val))
+            tmp_loss = log_loss(
+                y_val,
+                tmp_cal.predict_proba(_X_val),
+                labels=np.arange(X.shape[1]),
+            )
 
             if i == 0 or tmp_loss < final_loss:
                 final_cal = tmp_cal

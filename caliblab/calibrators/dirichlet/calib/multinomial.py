@@ -43,13 +43,19 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
 
     @property
     def coef_(self):
+        if self.weights_ is None:
+            return None
         return self.weights_[:, :-1]
 
     @property
     def intercept_(self):
+        if self.weights_ is None:
+            return None
         return self.weights_[:, -1]
 
     def predict_proba(self, S):
+        if self.method_ in ['Diag', 'FixDiag'] and hasattr(self, 'params_'):
+            return np.asarray(_calculate_diagonal_outputs(self.params_, S, S.shape[1], self.method_))
 
         S_ = np.hstack((S, np.ones((len(S), 1))))
 
@@ -113,7 +119,11 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
                                                factr=1.0)
             weights = res[0]
 
-        self.weights_ = _get_weights(weights, k, self.ref_row, self.method_)
+        self.params_ = weights
+        if self.method_ in ['Diag', 'FixDiag']:
+            self.weights_ = None
+        else:
+            self.weights_ = _get_weights(weights, k, self.ref_row, self.method_)
 
         return self
 
@@ -162,6 +172,10 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
 
 def _objective(params, *args):
     (X, _, y, k, method, reg_lambda, reg_mu, ref_row, _, reg_format) = args
+    if method in ['Diag', 'FixDiag'] and reg_lambda == 0.0 and reg_mu is None:
+        outputs = clip_jax(_calculate_diagonal_outputs(params, X[:, :k], k, method))
+        return np.mean(-np.log(np.sum(y * outputs, axis=1)))
+
     weights = _get_weights(params, k, ref_row, method)
     #outputs = _calculate_outputs(weights, X)
     outputs = clip_jax(_calculate_outputs(weights, X))
@@ -236,6 +250,16 @@ def _get_identity_weights(n_classes, ref_row, method):
 def _calculate_outputs(weights, X):
     mul = np.dot(X, weights.transpose())
     return _softmax(mul)
+
+
+def _calculate_diagonal_outputs(params, X, k, method):
+    if method == 'Diag':
+        logits = X * params[:k] + params[k:]
+    elif method == 'FixDiag':
+        logits = X * params[0]
+    else:
+        raise(ValueError("Unknown diagonal calibration method {}".format(method)))
+    return _softmax(logits)
 
 
 def _softmax(X):
