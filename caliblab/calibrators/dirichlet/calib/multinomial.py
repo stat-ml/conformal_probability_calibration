@@ -63,11 +63,13 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
 
     def fit(self, X, y, *args, **kwargs):
 
+        k = X.shape[1]
         X_ = np.hstack((X, np.ones((len(X), 1))))
 
-        self.classes = raw_np.unique(y)
-
-        k = len(self.classes)
+        # Probability columns define the class space. On large datasets a
+        # calibration subset may not contain every class label, but the
+        # parameter matrix must still match all probability columns.
+        self.classes = raw_np.arange(k)
 
         if self.reg_norm:
             if self.reg_mu is None:
