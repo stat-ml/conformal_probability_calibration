@@ -1,7 +1,7 @@
 [project]
 name = "conformal-probability-calibration"
 version = "0.1.0"
-description = "Add your description here"
+description = "Adaptive cumulative mass calibration experiments with conformal prediction."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -21,4 +21,9 @@ dependencies = [
     "venn-abers>=0.2.2",
     "tabulate>=0.9.0",
     "birder"
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests that download data or run longer benchmarks",
 ]
