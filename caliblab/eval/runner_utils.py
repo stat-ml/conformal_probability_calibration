@@ -42,6 +42,51 @@ def print_and_collect_run_results(
         for metric_name, value in report.metrics.items():
             print(f"    {metric_name}: {value:.4f}")
             row[metric_name] = value
+
+        # Optionally log statistics of the conformal set sizes as additional metric-like values.
+        # We both print them, store them in the row used for the summary table, and persist them
+        # on the EvaluationReport so they end up in run_reports.pkl even after raw arrays are dropped.
+        avg_set_size = None
+        q25 = q50 = q75 = None
+
+        if report.conformal_set_sizes is not None:
+            set_sizes = report.conformal_set_sizes
+
+            avg_set_size = float(np.mean(set_sizes))
+            q25, q50, q75 = np.percentile(set_sizes, [25, 50, 75])
+
+            # Persist on the report so that these statistics are available from run_reports.pkl.
+            report.avg_set_size = avg_set_size
+            report.set_size_q25 = float(q25)
+            report.set_size_q50 = float(q50)
+            report.set_size_q75 = float(q75)
+        else:
+            # When loading from cached run_reports.pkl, conformal_set_sizes may be None,
+            # but the pre-computed statistics are still available.
+            avg_set_size = getattr(report, "avg_set_size", None)
+            q25 = getattr(report, "set_size_q25", None)
+            q50 = getattr(report, "set_size_q50", None)
+            q75 = getattr(report, "set_size_q75", None)
+
+        if avg_set_size is not None:
+            print(f"    avg_set_size: {avg_set_size:.4f}")
+            row["avg_set_size"] = float(avg_set_size)
+
+            if q25 is not None:
+                print(f"    set_size_q25: {q25:.4f}")
+                row["set_size_q25"] = float(q25)
+            if q50 is not None:
+                print(f"    set_size_q50: {q50:.4f}")
+                row["set_size_q50"] = float(q50)
+            if q75 is not None:
+                print(f"    set_size_q75: {q75:.4f}")
+                row["set_size_q75"] = float(q75)
+
+            # Make sure these statistics are treated as metrics when aggregating the summary.
+            for extra_metric in ["avg_set_size", "set_size_q25", "set_size_q50", "set_size_q75"]:
+                if extra_metric not in all_metric_names:
+                    all_metric_names.append(extra_metric)
+
         table_data.append(row)
 
 
@@ -60,20 +105,29 @@ def generate_and_save_summary(
         .agg(["mean", "std"])
         .reset_index()
     )
-    
+
     summary_data = {
         "Dataset": agg_df[("Dataset", "")],
         "Model": agg_df[("Model", "")],
         "Calibrator": agg_df[("Calibrator", "")],
     }
 
+    def format_mean_std(mean_value: float, std_value: float) -> str:
+        if pd.isna(mean_value):
+            return ""
+        if pd.isna(std_value):
+            std_value = 0.0
+        return f"{mean_value:.4f} ± {std_value:.4f}"
+
     for column in [*TIMING_COLUMNS, *all_metric_names]:
         mean_col = (column, "mean")
         std_col = (column, "std")
+        mean_values = agg_df[mean_col]
         std_values = agg_df[std_col].fillna(0)
-        summary_data[column] = agg_df[mean_col].apply(
-            lambda x: f"{x:.4f}"
-        ) + " ± " + std_values.apply(lambda x: f"{x:.4f}")
+        summary_data[column] = [
+            format_mean_std(mean_value, std_value)
+            for mean_value, std_value in zip(mean_values, std_values)
+        ]
     
     summary_df = pd.DataFrame(summary_data)
 

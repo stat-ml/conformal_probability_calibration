@@ -3,17 +3,35 @@
     "runner_settings": {
         "output_dir": "experiments_inaturalist",
         "use_cache": true,
-        "force_recompute": false
+        "force_recompute": false,
+        "visualization_n_bins": 25
+    },
+    "visualizations": {
+        "confidence_curve": {"n_bins": 25},
+        "cumulative_mass_curve": {"n_bins": 25},
+        "conformal_set_size_distribution": {},
+        "one_minus_alpha_coverage_curve": {"alpha": 0.1},
+        "alpha_suffix_coverage_curve": {"alpha_min": 0.0, "alpha_max": 0.3, "n_alpha_steps": 25}
     },
     "calibrators": [
-        {"name": "conformal_temperature", "params": {"score_type": "msp", "alpha": 0.1, "score_transformation": "identity"}},
-        {"name": "naive_cmce", "params": {"tau_min": 1e-3, "tau_max": 1e2, "num_taus": 150, "n_bins": 25, "strategy": "uniform", "weighted": true}},
         "temperature_scaling",
         "isotonic_regression",
-        "adaptive_temperature_scaling",
-        "platt_regression"
+        {"name": "conformal_mass_threshold", "params": {"score_type": "aps", "alpha": 0.1, "score_transformation": "identity"}},
+        {"name": "conformal_temperature", "params": {"score_type": "aps", "alpha": 0.1, "score_transformation": "identity"}}
     ],
     "metrics": [
+        "accuracy",
+        "accuracy_preserving_ratio",
+        "order_preserving_ratio",
+        {"name": "ece", "params": {"n_bins": 25}},
+        {"name": "mce", "params": {"n_bins": 25}},
+        {"name": "cw-ece", "params": {"n_bins": 25}},
+        "nll",
+        "brier_score",
+        {"name": "cmce", "params": {"n_bins": 25, "strategy": "uniform", "weighted": true}},
+        {"name": "coverage_around_one_minus_alpha", "params": {"alpha": 0.1, "eps": 0.02}},
+        {"name": "alpha_suffix_coverage", "params": {"alpha": 0.1}},
+        {"name": "alpha_suffix_coverage_difference", "params": {"alpha": 0.1}}
     ],
     "evaluations": [
         {
@@ -26,4 +44,3 @@
         }
     ]
 }
-

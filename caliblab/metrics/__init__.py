@@ -22,7 +22,11 @@ from .classification import Accuracy, RocAuc, PrAuc
 from .proper_scores import BrierScore, NegativeLogLikelihood
 from .coverage_around_one_minus_alpha import CoverageAroundOneMinusAlpha
 from .cumulative_mass_calibration_error import CumulativeMassCalibrationError
-from .alpha_suffix_coverage import AlphaSuffixCoverage, AlfaSuffixCoverageDifference
+from .alpha_suffix_coverage import (
+    AlphaSuffixCoverage,
+    AlphaSuffixCoverageDifference,
+    AlfaSuffixCoverageDifference,
+)
 
 
 def get_metric(name: str, **kwargs: Any) -> MetricBase:
@@ -56,8 +60,13 @@ def get_metric(name: str, **kwargs: Any) -> MetricBase:
         return CumulativeMassCalibrationError(**kwargs)
     elif name == "alpha_suffix_coverage":
         return AlphaSuffixCoverage(**kwargs)
-    elif name in ("alfa_suffix_coverage_difference", "alfa_suffix_coverage_diff"):
-        return AlfaSuffixCoverageDifference(**kwargs)
+    elif name in (
+        "alpha_suffix_coverage_difference",
+        "alpha_suffix_coverage_diff",
+        "alfa_suffix_coverage_difference",
+        "alfa_suffix_coverage_diff",
+    ):
+        return AlphaSuffixCoverageDifference(**kwargs)
     else:
         raise ValueError(f"Unknown metric: {name}")
 
@@ -82,5 +91,6 @@ __all__ = [
     "CoverageAroundOneMinusAlpha",
     "CumulativeMassCalibrationError",
     "AlphaSuffixCoverage",
+    "AlphaSuffixCoverageDifference",
     "AlfaSuffixCoverageDifference",
 ]

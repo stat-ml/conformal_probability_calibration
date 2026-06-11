@@ -26,17 +26,10 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-<<<<<<< HEAD
 *.pdf
 *.png
 *.pth
 *.csv
-=======
-*.pth
-*.csv
-*.pdf
-*.png
->>>>>>> origin/main
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

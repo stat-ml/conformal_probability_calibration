@@ -83,7 +83,7 @@ class OneMinusAlphaCoverageVisualizer:
             linewidth=2,
         )
 
-        ax.set_xlabel("Offset ($\epsilon$)", labelpad=12)
+        ax.set_xlabel(r"Offset ($\epsilon$)", labelpad=12)
         ax.set_ylabel("Coverage", labelpad=12)
         ax.set_xlim([self.eps_values.min(), self.eps_values.max()])
         ax.legend(loc="lower right")

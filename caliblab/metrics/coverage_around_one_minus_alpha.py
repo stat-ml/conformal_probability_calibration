@@ -28,8 +28,6 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
         ub = round(self.upper_bound, 3)
         return f"coverage_[{lb}, {ub}]"
 
-    
-
     def compute_from_cumsum(
         self, *, cum_probs: np.ndarray, true_rank: np.ndarray
     ) -> float:
@@ -79,7 +77,9 @@ class CoverageAroundOneMinusAlpha(LabelBasedMetricBase):
             raise ValueError("y_true must be a 1D array aligned with probs rows")
 
         # Use shared utility to get cumulative sums and sorting indices
-        cum_probs, _coverage_matrix, sorted_idx = cumulative_mass_and_coverage(probs, y_true)
+        cum_probs, _coverage_matrix, sorted_idx = cumulative_mass_and_coverage(
+            probs, y_true
+        )
         true_rank = np.where(sorted_idx == y_true[:, np.newaxis])[1]
 
         return self.compute_from_cumsum(cum_probs=cum_probs, true_rank=true_rank)[0]

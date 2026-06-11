@@ -118,6 +118,10 @@ def run_evaluations(
                 datasplit = split_data(
                     test_outputs, test_labels, test_probs, cal_ratio, split_seed, subset_items, do_not_stratify
                 )
+                print(
+                    f"Test size: {len(datasplit.test_labels)}, "
+                    f"Calibration size: {len(datasplit.cal_labels)}"
+                )
 
                 evaluator = ModelEvaluator(
                     metrics=metrics,

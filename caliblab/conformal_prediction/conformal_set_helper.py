@@ -88,11 +88,10 @@ class ConformalSetHelper:
     @staticmethod
     def _aps_prediction_sets(probs: np.ndarray, qhat: float | np.ndarray) -> np.ndarray:
         val_pi = probs.argsort(1)[:, ::-1]
-        val_srt = np.take_along_axis(probs, val_pi, axis=1).cumsum(
-            axis=1
-        )
+        val_srt = np.take_along_axis(probs, val_pi, axis=1).cumsum(axis=1)
+        threshold = qhat[:, np.newaxis] if np.ndim(qhat) > 0 else qhat
         prediction_sets = np.take_along_axis(
-            val_srt <= qhat, val_pi.argsort(axis=1), axis=1
+            val_srt <= threshold, val_pi.argsort(axis=1), axis=1
         )
         return prediction_sets
 
