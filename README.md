@@ -1,6 +1,6 @@
 # Conformal Probability Calibration
 
-Code for the paper [Adaptive Set-Mass Calibration with Conformal Prediction](https://arxiv.org/abs/2505.15437).
+Code for the paper [Adaptive Cumulative Mass Calibration with Conformal Prediction](https://arxiv.org/abs/2505.15437).
 
 The main entry point is `eval.py`. Experiments are configured with JSON files in `configs/`.
 

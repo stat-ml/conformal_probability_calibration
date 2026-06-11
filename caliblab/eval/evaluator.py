@@ -18,11 +18,7 @@ from ..datasets.utils import DataSplit
 
 
 class ModelEvaluator:
-    """Main class for evaluating model calibration and performance with caching.
-
-    Predictions are cached at: experiments/{dataset}_{model}/predictions.npz
-    Other artifacts (plots/metrics) are also saved in the same run directory.
-    """
+    """Evaluate model calibration and performance for one data split."""
 
     def __init__(
         self,

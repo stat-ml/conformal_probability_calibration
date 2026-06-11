@@ -3,6 +3,12 @@ import pytest
 import torch
 
 from caliblab.calibrators import IsotonicRegression, TemperatureScaling
+import caliblab.calibrators as calibrators_module
+
+
+def test_calibrators_public_exports_exist():
+    for name in calibrators_module.__all__:
+        assert hasattr(calibrators_module, name)
 
 
 def test_temperature_scaling_on_overconfident_model():
