@@ -72,7 +72,7 @@ class OneMinusAlphaCoverageVisualizer:
                 self.eps_values,
                 coverage_values,
                 s=70,
-                alpha=np.log(np.array(set_sizes) + 0.1) / np.log(np.array(set_sizes).sum() + 0.1), 
+                alpha=np.maximum(0.1, np.log(np.array(set_sizes) + 0.1) / np.log(np.array(set_sizes).sum() + 0.1)), 
                 edgecolors="none",
             )
         
@@ -83,7 +83,7 @@ class OneMinusAlphaCoverageVisualizer:
             linewidth=2,
         )
 
-        ax.set_xlabel("Offset ($\epsilon$)", labelpad=12)
+        ax.set_xlabel(r"Offset ($\epsilon$)", labelpad=12)
         ax.set_ylabel("Coverage", labelpad=12)
         ax.set_xlim([self.eps_values.min(), self.eps_values.max()])
         ax.legend(loc="lower right")

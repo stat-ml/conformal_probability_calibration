@@ -6,18 +6,27 @@ from typing import Any
 
 from .base import (
     LabelBasedMetricBase,
+    MetricComputeInput,
     MetricBase,
+    PairwiseProbMetricBase,
     TrueProbMetricBase,
 )
 from .calibration_errors import (
+    AccuracyPreservingRatio,
     ClasswiseExpectedCalibrationError,
     ExpectedCalibrationError,
     MaximumCalibrationError,
+    OrderPreservingRatio,
 )
 from .classification import Accuracy, RocAuc, PrAuc
 from .proper_scores import BrierScore, NegativeLogLikelihood
 from .coverage_around_one_minus_alpha import CoverageAroundOneMinusAlpha
 from .cumulative_mass_calibration_error import CumulativeMassCalibrationError
+from .alpha_suffix_coverage import (
+    AlphaSuffixCoverage,
+    AlphaSuffixCoverageDifference,
+    AlfaSuffixCoverageDifference,
+)
 
 
 def get_metric(name: str, **kwargs: Any) -> MetricBase:
@@ -37,6 +46,10 @@ def get_metric(name: str, **kwargs: Any) -> MetricBase:
         return MaximumCalibrationError(**kwargs)
     elif name == "cw-ece":
         return ClasswiseExpectedCalibrationError(**kwargs)
+    elif name == "accuracy_preserving_ratio":
+        return AccuracyPreservingRatio(**kwargs)
+    elif name == "order_preserving_ratio":
+        return OrderPreservingRatio(**kwargs)
     elif name == "nll":
         return NegativeLogLikelihood()
     elif name == "brier_score":
@@ -45,17 +58,30 @@ def get_metric(name: str, **kwargs: Any) -> MetricBase:
         return CoverageAroundOneMinusAlpha(**kwargs)
     elif name == "cmce":
         return CumulativeMassCalibrationError(**kwargs)
+    elif name == "alpha_suffix_coverage":
+        return AlphaSuffixCoverage(**kwargs)
+    elif name in (
+        "alpha_suffix_coverage_difference",
+        "alpha_suffix_coverage_diff",
+        "alfa_suffix_coverage_difference",
+        "alfa_suffix_coverage_diff",
+    ):
+        return AlphaSuffixCoverageDifference(**kwargs)
     else:
         raise ValueError(f"Unknown metric: {name}")
 
 
 __all__ = [
     "MetricBase",
+    "MetricComputeInput",
     "LabelBasedMetricBase",
     "TrueProbMetricBase",
+    "PairwiseProbMetricBase",
     "ExpectedCalibrationError",
     "MaximumCalibrationError",
     "ClasswiseExpectedCalibrationError",
+    "AccuracyPreservingRatio",
+    "OrderPreservingRatio",
     "BrierScore",
     "NegativeLogLikelihood",
     "Accuracy",
@@ -64,4 +90,7 @@ __all__ = [
     "get_metric",
     "CoverageAroundOneMinusAlpha",
     "CumulativeMassCalibrationError",
+    "AlphaSuffixCoverage",
+    "AlphaSuffixCoverageDifference",
+    "AlfaSuffixCoverageDifference",
 ]

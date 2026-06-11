@@ -41,7 +41,11 @@ def split_data(
 
     test_ratio = 1.0 - cal_ratio
 
-    if probs is not None:
+    
+    has_probs = probs is not None and isinstance(probs, np.ndarray) and probs.ndim > 0
+
+    if has_probs:
+
         if do_not_stratify:
             cal_outputs, test_outputs, cal_labels, test_labels, cal_probs, test_probs = train_test_split(
                 outputs, labels, probs, test_size=test_ratio, random_state=seed

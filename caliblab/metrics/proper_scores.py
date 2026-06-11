@@ -1,5 +1,5 @@
 import numpy as np
-from .base import MetricBase, LabelBasedMetricBase, TrueProbMetricBase
+from .base import MetricBase, MetricComputeInput
 from ..utils.computations import make_one_hot
 
 
@@ -8,7 +8,10 @@ class BrierScore(MetricBase):
     def name(self) -> str:
         return "brier_score"
 
-    def _compute(self, *, probs, y_true=None, true_proba=None, **kwargs):
+    def _compute(self, *, metric_input: MetricComputeInput):
+        probs = metric_input.probs
+        y_true = metric_input.y_true
+        true_proba = metric_input.true_proba
         if (y_true is None and true_proba is None):
             raise ValueError(
                 "Provide exactly one of y_true (labels) or true_proba (probabilities)."
@@ -26,7 +29,10 @@ class NegativeLogLikelihood(MetricBase):
     def name(self) -> str:
         return "nll"
 
-    def _compute(self, *, probs, y_true=None, true_proba=None, **kwargs):
+    def _compute(self, *, metric_input: MetricComputeInput):
+        probs = metric_input.probs
+        y_true = metric_input.y_true
+        true_proba = metric_input.true_proba
         if (y_true is None and true_proba is None):
             raise ValueError(
                 "Provide exactly one of y_true (labels) or true_proba (probabilities)."

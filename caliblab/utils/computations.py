@@ -57,10 +57,10 @@ def get_cumulative_mass_scores(probs: np.ndarray, y_true: np.ndarray) -> np.ndar
 
     The score is the sum of sorted probabilities down to the rank of the true class.
     """
-    cum_probs, _, sorted_indices = cumulative_mass_and_coverage(probs, y_true)
-    true_class_ranks = np.where(sorted_indices == y_true[:, np.newaxis])[1]
-    scores = cum_probs[np.arange(len(y_true)), true_class_ranks]
-    return scores
+    cal_pi = probs.argsort(1)[:,::-1]
+    cal_srt = np.take_along_axis(probs, cal_pi, axis=1).cumsum(axis=1)
+    cal_scores = np.take_along_axis(cal_srt,cal_pi.argsort(axis=1),axis=1)[range(len(y_true)), y_true]
+    return cal_scores
 
 
 def softmax(logits: np.ndarray, axis: int = -1) -> np.ndarray:

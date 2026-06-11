@@ -141,3 +141,15 @@ class ConformalTemperatureCalibrator(CalibratorBase):
         self.check_fitted()
         C = self._conf.make_mask(logits)  # (n, K) fixed set
         return C.sum(axis=1)
+    
+    def get_conformal_set_coverage(
+        self,
+        *,
+        logits: Optional[np.ndarray] = None,
+        y_true: np.ndarray,
+    ) -> np.float64:
+        self.check_fitted()
+        C = self._conf.make_mask(logits).astype(bool)
+        y_true = np.asarray(y_true)
+        covered = C[np.arange(y_true.shape[0]), y_true]
+        return np.float64(covered.mean())

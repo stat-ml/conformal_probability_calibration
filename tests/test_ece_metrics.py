@@ -1,9 +1,11 @@
 import pytest
 import numpy as np
 from caliblab.metrics.calibration_errors import (
+    AccuracyPreservingRatio,
     ExpectedCalibrationError,
     MaximumCalibrationError,
     ClasswiseExpectedCalibrationError,
+    OrderPreservingRatio,
 )
 
 
@@ -110,3 +112,57 @@ class TestCalibrationMetricsExact:
 
         # cw-ECE = (0.16 + 0.055 + 0.095) / 3 = 0.103333
         assert result == pytest.approx(0.103333, abs=1e-6)
+
+
+class TestOrderPreservationMetrics:
+    def test_accuracy_preserving_ratio(self):
+        uncalibrated_probs = np.array(
+            [
+                [0.7, 0.2, 0.1],  # top-1 stays class 0
+                [0.45, 0.4, 0.15],  # top-1 swaps 0 -> 1
+                [0.2, 0.7, 0.1],  # top-1 stays class 1
+                [0.2, 0.3, 0.5],  # top-1 stays class 2
+            ]
+        )
+        calibrated_probs = np.array(
+            [
+                [0.6, 0.25, 0.15],
+                [0.35, 0.5, 0.15],
+                [0.15, 0.75, 0.1],
+                [0.21, 0.29, 0.5],
+            ]
+        )
+
+        metric = AccuracyPreservingRatio()
+        result = metric(
+            probs=calibrated_probs,
+            y_true=np.array([0, 1, 1, 2]),
+            uncalibrated_probs=uncalibrated_probs,
+        )
+        assert result == pytest.approx(0.75, abs=1e-9)
+
+    def test_order_preserving_ratio(self):
+        uncalibrated_probs = np.array(
+            [
+                [0.7, 0.2, 0.1],  # order preserved
+                [0.45, 0.4, 0.15],  # order changed
+                [0.2, 0.7, 0.1],  # order preserved
+                [0.3, 0.4, 0.3],  # order changed
+            ]
+        )
+        calibrated_probs = np.array(
+            [
+                [0.6, 0.25, 0.15],  # same: 0 > 1 > 2
+                [0.35, 0.5, 0.15],  # now: 1 > 0 > 2
+                [0.15, 0.75, 0.1],  # same: 1 > 0 > 2
+                [0.25, 0.35, 0.4],  # now: 2 > 1 > 0
+            ]
+        )
+
+        metric = OrderPreservingRatio()
+        result = metric(
+            probs=calibrated_probs,
+            y_true=np.array([0, 1, 1, 2]),
+            uncalibrated_probs=uncalibrated_probs,
+        )
+        assert result == pytest.approx(0.5, abs=1e-9)

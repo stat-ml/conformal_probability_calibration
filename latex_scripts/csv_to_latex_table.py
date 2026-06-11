@@ -137,7 +137,7 @@ def map_calibrator_display(name: str) -> str:
     if base == "dirichlet":
         return "Dirichlet"
     if base in {"adaptive_temperature_scaling", "ada_temp_scaling"}:
-        return "Ada-Temp Scaling"
+        return "Ada-TS"
     # Normalize Naive CMCE calibrator naming
     if base in {"naive cmce calibrator", "naive_cmce_calibrator", "naive cmce", "naive_cmce"}:
         return "Naive CMCE"
@@ -158,9 +158,9 @@ def map_transform_display(value: str) -> str:
     if s in {"temp_scaling", "temperature_scaling", "temp"}:
         return "Temp. scaling"
     if s in {"norm", "norm_flow"}:
-        return "NF"
+        return "Ada"
     if s in {"iden", "identity"}:
-        return "I"
+        return "Const"
     return str(value)
 
 def map_score_type_display(value: str) -> str:
@@ -170,7 +170,7 @@ def map_score_type_display(value: str) -> str:
     s = str(value).strip().lower()
     if s == "aps":
         return "APS"
-    if s == "thr":
+    if s in {"thr", "msp"}:
         return "MSP"
     if s == "temp_scaling":
         return "Temp. scaling"
@@ -189,6 +189,8 @@ def map_header_display(name: str) -> str:
         return "Score"
     if key == "transform":
         return "Transf."
+    if key == "calibrator":
+        return "Calibrator"
     return map_metric_header_display(name)
 
 def map_metric_header_display(name: str) -> str:
@@ -204,6 +206,9 @@ def map_metric_header_display(name: str) -> str:
     if cov is not None:
         lo, hi = cov
         return f"Coverage [{lo}, {hi}]"
+    alpha_cmce = parse_alpha_cmce_col(s)
+    if alpha_cmce is not None:
+        return f"<<ALPHACMCE:{alpha_cmce}>>"
     if key == "cw-ece":
         return "cw-ECE"
     if key == "nll":
@@ -219,6 +224,10 @@ def map_metric_header_display(name: str) -> str:
     return s
 
 COVERAGE_COL_RE = re.compile(r"^coverage_\[\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*\]\s*$")
+ALPHA_CMCE_COL_RE = re.compile(
+    r"^(?:alfa|alpha)_suffix_coverage_(?:difference|distance)_([0-9]*\.?[0-9]+)\s*$",
+    re.IGNORECASE,
+)
 
 def is_coverage_col(col: str) -> Optional[Tuple[float, float]]:
     """Return (low, high) if column is coverage_[low, high], else None."""
@@ -226,6 +235,15 @@ def is_coverage_col(col: str) -> Optional[Tuple[float, float]]:
     if m:
         return float(m.group(1)), float(m.group(2))
     return None
+
+def parse_alpha_cmce_col(col: str) -> Optional[str]:
+    """Return alpha value if column is an alpha-suffix coverage-difference column."""
+    if col is None:
+        return None
+    m = ALPHA_CMCE_COL_RE.match(str(col).strip())
+    if not m:
+        return None
+    return m.group(1)
 
 def is_lower_better(col: str) -> bool:
     """Decide whether a metric should be minimized (True) or maximized (False)."""
@@ -292,9 +310,26 @@ def find_top2_indices(values: List[Optional[Tuple[float, float]]],
     second_indices = [i for m, i in finite_pairs if abs(m - second_val) <= eps]
     return best_indices, second_indices
 
-def format_math(mean: float, std: float, bold: bool = False, underline: bool = False) -> str:
+def _fmt_num(value: float, decimals: int) -> str:
+    s = f"{value:.{decimals}f}"
+    if s.startswith("-0."):
+        return "-" + s[2:]
+    if s.startswith("0."):
+        return s[1:]
+    return s
+
+def _decimals_for_metric(col: str) -> int:
+    key = str(col).strip().lower()
+    if key in {"nll", "cmce"}:
+        return 3
+    if parse_alpha_cmce_col(str(col)) is not None:
+        return 3
+    return 2
+
+def format_math(mean: float, std: float, col: str, bold: bool = False, underline: bool = False) -> str:
     """Format a number as LaTeX math with optional bold and/or underline for the whole formula."""
-    content = f"{mean:.4f} \\pm {std:.4f}"
+    d = _decimals_for_metric(col)
+    content = f"{_fmt_num(mean, d)} \\spm {_fmt_num(std, d)}"
     if bold:
         content = r"\mathbf{" + content + r"}"
     if underline:
@@ -308,12 +343,16 @@ def generate_latex_table(df: pd.DataFrame,
                          label: str,
                          wrap_resizebox: bool = True,
                          context_df: Optional[pd.DataFrame] = None) -> str:
-    # Identify available text columns and metric columns
-    # Prefer these text columns if present (order matters for display):
-    # Place calibrator-derived fields immediately after Calibrator
+    # Identify available text columns and metric columns.
+    # Compact format with calibrator metadata columns (without dataset/model).
     preferred_text_cols = ["dataset", "model", "calibrator", "alpha", "score_type", "transform"]
     lower_map = {c.lower(): c for c in df.columns}
-    text_cols = [lower_map[c] for c in preferred_text_cols if c in lower_map]
+    text_cols = []
+    for key in ["calibrator", "alpha", "score_type", "transform"]:
+        if key in lower_map:
+            text_cols.append(lower_map[key])
+    if not text_cols:
+        text_cols = [lower_map[c] for c in preferred_text_cols if c in lower_map]
     dataset_col = lower_map.get("dataset")
     model_col = lower_map.get("model")
     calibrator_col = lower_map.get("calibrator")
@@ -324,12 +363,21 @@ def generate_latex_table(df: pd.DataFrame,
     dataset_col_ctx = lower_map_ctx.get("dataset")
     model_col_ctx = lower_map_ctx.get("model")
     calibrator_col_ctx = lower_map_ctx.get("calibrator")
-    metric_cols = [c for c in df.columns if c not in set(text_cols)]
+    text_like_cols = {
+        lower_map[k]
+        for k in ["dataset", "model", "calibrator", "alpha", "score_type", "transform"]
+        if k in lower_map
+    }
+    metric_cols = [c for c in df.columns if c not in text_like_cols]
 
     # Pre-parse all metric cells into (mean, std) or None for non-numeric
     parsed: Dict[str, List[Optional[Tuple[float, float]]]] = {}
     for col in metric_cols:
-        parsed[col] = [parse_pm(x) for x in df[col].tolist()]
+        vals = [parse_pm(x) for x in df[col].tolist()]
+        # Use absolute values for alpha-suffix coverage-difference columns.
+        if parse_alpha_cmce_col(col) is not None:
+            vals = [(abs(v[0]), v[1]) if v is not None else None for v in vals]
+        parsed[col] = vals
 
     # Determine best and second-best rows for each metric (non-coverage)
     top2_indices_by_col: Dict[str, Tuple[List[int], List[int]]] = {}
@@ -351,9 +399,30 @@ def generate_latex_table(df: pd.DataFrame,
     header_latex = " & ".join(latex_escape(map_header_display(c)) for c in header_cols) + r" \\" 
     # Replace math placeholders post-escape to keep LaTeX intact
     header_latex = header_latex.replace("<<ALPHA>>", r"$\alpha$")
+    header_latex = re.sub(
+        r"<<ALPHACMCE:([0-9]*\.?[0-9]+)>>",
+        lambda m: rf"$\alpha$-CMCE ({m.group(1)})",
+        header_latex,
+    )
 
-    # Column alignment matches available text columns
-    alignment = " ".join(["l"] * len(text_cols) + ["c"] * len(metric_cols))
+    # Column alignment: keep calibrator/meta columns tight, leave normal spacing for metrics.
+    compact_meta_cols = {"calibrator", "alpha", "score_type", "transform"}
+    text_specs: List[str] = []
+    for idx, col in enumerate(text_cols):
+        key = str(col).strip().lower()
+        if key in compact_meta_cols:
+            if idx == 0:
+                text_specs.append(r"@{}l")
+            else:
+                text_specs.append(r"@{\hspace{2pt}}l")
+        else:
+            text_specs.append("l")
+    metric_specs: List[str] = []
+    if metric_cols:
+        metric_specs.append(r"@{\hspace{8pt}}c")
+        if len(metric_cols) > 1:
+            metric_specs.extend(["c"] * (len(metric_cols) - 1))
+    alignment = " ".join(text_specs + metric_specs)
 
     # Pre-compute uncalibrated baselines per (Dataset, Model) when possible
     def _is_uncalibrated(name: str) -> bool:
@@ -399,13 +468,32 @@ def generate_latex_table(df: pd.DataFrame,
         s = str(name).strip().lower()
         if s in {"uncalibrated", "none"}:
             return 0
+        if s in {"naive cmce calibrator", "naive_cmce_calibrator", "naive cmce", "naive_cmce"}:
+            return 2
         if s.startswith("cnfrml"):
             return 2
         return 1
 
+    def _calibrator_ours_rank(name: str) -> int:
+        s = str(name).strip().lower()
+        if s in {"naive cmce calibrator", "naive_cmce_calibrator", "naive cmce", "naive_cmce"}:
+            return 0
+        if s.startswith("cnfrml_mass_thrsh"):
+            return 1
+        if s.startswith("cnfrml_temp"):
+            return 2
+        return 9
+
     indices = list(range(len(df)))
     if calibrator_col_ctx is not None:
-        ordered_indices = sorted(indices, key=lambda i: (_calibrator_group(ctx.at[i, calibrator_col_ctx]), i))
+        ordered_indices = sorted(
+            indices,
+            key=lambda i: (
+                _calibrator_group(ctx.at[i, calibrator_col_ctx]),
+                _calibrator_ours_rank(ctx.at[i, calibrator_col_ctx]),
+                i,
+            ),
+        )
     else:
         ordered_indices = indices
 
@@ -415,7 +503,7 @@ def generate_latex_table(df: pd.DataFrame,
         if calibrator_col_ctx is not None:
             cur_group = _calibrator_group(ctx.at[i, calibrator_col_ctx])
             if prev_group is not None and cur_group > prev_group:
-                body_lines.append(r"\\")
+                body_lines.append(r"\midrule")
             prev_group = cur_group
         row_cells: List[str] = []
         # text cells
@@ -452,7 +540,7 @@ def generate_latex_table(df: pd.DataFrame,
                 elif i in second_idxs:
                     underline = True
 
-            cell = format_math(mean, std, bold=bold, underline=underline)
+            cell = format_math(mean, std, col=col, bold=bold, underline=underline)
 
             # Optional green/red color if better/worse than uncalibrated baseline (non-coverage metrics)
             if dataset_col_ctx is not None and model_col_ctx is not None and calibrator_col_ctx is not None:
@@ -469,13 +557,19 @@ def generate_latex_table(df: pd.DataFrame,
 
             row_cells.append(cell)
 
-        body_lines.append(" & ".join(row_cells) + r" \\")
+        if len(text_cols) == 1:
+            body_lines.append(row_cells[0])
+            body_lines.append("& " + " & ".join(row_cells[1:]) + r" \\")
+        else:
+            body_lines.append(" & ".join(row_cells) + r" \\")
     # Compose full table with booktabs
     table_core = []
-    table_core.append(r"\begin{table*}[htbp]")
+    table_core.append(r"\begin{table*}[!h]")
     table_core.append(r"\centering")
+    table_core.append(r"\small")
+    table_core.append(r"\captionsetup{justification=centering}")
     if caption:
-        table_core.append(r"\caption{" + latex_escape(caption) + r"}")
+        table_core.append(r"\caption{" + caption + r"}")
     if label:
         table_core.append(r"\label{" + latex_escape(label) + r"}")
     if wrap_resizebox:

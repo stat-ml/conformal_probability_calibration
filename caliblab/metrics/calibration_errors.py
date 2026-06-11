@@ -1,4 +1,4 @@
-from .base import LabelBasedMetricBase
+from .base import LabelBasedMetricBase, PairwiseProbMetricBase, MetricComputeInput
 import numpy as np
 from typing import Optional
 
@@ -40,8 +40,12 @@ class ExpectedCalibrationError(LabelBasedMetricBase):
         return "ece"
 
     def _compute(
-        self, *, probs, y_true: Optional[np.ndarray], true_proba: Optional[np.ndarray]
+        self,
+        *,
+        metric_input: MetricComputeInput,
     ):
+        probs = metric_input.probs
+        y_true = metric_input.y_true
         max_probs = np.max(probs, axis=1)
         correct = (np.argmax(probs, axis=1) == y_true).astype(float)
         bin_boundaries = get_bin_boundaries(max_probs, self.n_bins, self.strategy)
@@ -61,8 +65,12 @@ class MaximumCalibrationError(LabelBasedMetricBase):
         return "mce"
 
     def _compute(
-        self, *, probs, y_true: Optional[np.ndarray], true_proba: Optional[np.ndarray]
+        self,
+        *,
+        metric_input: MetricComputeInput,
     ):
+        probs = metric_input.probs
+        y_true = metric_input.y_true
         max_probs = np.max(probs, axis=1)
         correct = (np.argmax(probs, axis=1) == y_true).astype(float)
         bin_boundaries = get_bin_boundaries(max_probs, self.n_bins, self.strategy)
@@ -86,8 +94,12 @@ class ClasswiseExpectedCalibrationError(LabelBasedMetricBase):
         return "cw-ece"
 
     def _compute(
-        self, *, probs, y_true: Optional[np.ndarray], true_proba: Optional[np.ndarray]
+        self,
+        *,
+        metric_input: MetricComputeInput,
     ):
+        probs = metric_input.probs
+        y_true = metric_input.y_true
         bin_boundaries = get_bin_boundaries(probs, self.n_bins, self.strategy)
         class_eces = []
         n_classes = probs.shape[1]
@@ -105,8 +117,65 @@ class ClasswiseExpectedCalibrationError(LabelBasedMetricBase):
         return np.mean(class_eces)
 
 
+def _validate_pairwise_prob_inputs(
+    calibrated_probs: np.ndarray, uncalibrated_probs: Optional[np.ndarray]
+) -> np.ndarray:
+    if uncalibrated_probs is None:
+        raise ValueError(
+            "uncalibrated_probs must be provided to compute preserving ratios."
+        )
+    if calibrated_probs.shape != uncalibrated_probs.shape:
+        raise ValueError(
+            "uncalibrated_probs and calibrated probs must have the same shape."
+        )
+    return uncalibrated_probs
+
+
+class AccuracyPreservingRatio(PairwiseProbMetricBase):
+    """Ratio of samples where top-1 class is unchanged after calibration."""
+
+    @property
+    def name(self) -> str:
+        return "accuracy_preserving_ratio"
+
+    def _compute(
+        self,
+        *,
+        metric_input: MetricComputeInput,
+    ) -> float:
+        probs = metric_input.probs
+        uncalibrated_probs = metric_input.uncalibrated_probs
+        uncalibrated_probs = _validate_pairwise_prob_inputs(probs, uncalibrated_probs)
+        calibrated_top1 = np.argmax(probs, axis=1)
+        uncalibrated_top1 = np.argmax(uncalibrated_probs, axis=1)
+        return float(np.mean(calibrated_top1 == uncalibrated_top1))
+
+
+class OrderPreservingRatio(PairwiseProbMetricBase):
+    """Ratio of samples where class probability ranking is unchanged."""
+
+    @property
+    def name(self) -> str:
+        return "order_preserving_ratio"
+
+    def _compute(
+        self,
+        *,
+        metric_input: MetricComputeInput,
+    ) -> float:
+        probs = metric_input.probs
+        uncalibrated_probs = metric_input.uncalibrated_probs
+        uncalibrated_probs = _validate_pairwise_prob_inputs(probs, uncalibrated_probs)
+        calibrated_order = np.argsort(-probs, axis=1, kind="mergesort")
+        uncalibrated_order = np.argsort(-uncalibrated_probs, axis=1, kind="mergesort")
+        same_order = np.all(calibrated_order == uncalibrated_order, axis=1)
+        return float(np.mean(same_order))
+
+
 __all__ = [
     "ExpectedCalibrationError",
     "MaximumCalibrationError",
     "ClasswiseExpectedCalibrationError",
+    "AccuracyPreservingRatio",
+    "OrderPreservingRatio",
 ]

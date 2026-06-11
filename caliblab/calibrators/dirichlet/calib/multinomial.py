@@ -26,7 +26,7 @@ config.update("jax_enable_x64", True)
 
 class MultinomialRegression(BaseEstimator, RegressorMixin):
     def __init__(self, weights_0=None, method=None, initializer='identity', reg_format=None,
-                 reg_lambda=0.0, reg_mu=None, reg_norm=False, ref_row=True):
+                 reg_lambda=0.0, reg_mu=None, reg_norm=False, ref_row=True, maxiter=None):
         if method not in [None, 'Full', 'Diag', 'FixDiag']:
             raise(ValueError('method {} not avaliable'.format(method)))
 
@@ -39,17 +39,24 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
         self.reg_mu = reg_mu  # If number, then ODIR is applied
         self.reg_norm = reg_norm
         self.ref_row = ref_row
+        self.maxiter = maxiter
         self.classes = None
 
     @property
     def coef_(self):
+        if self.weights_ is None:
+            return None
         return self.weights_[:, :-1]
 
     @property
     def intercept_(self):
+        if self.weights_ is None:
+            return None
         return self.weights_[:, -1]
 
     def predict_proba(self, S):
+        if self.method_ in ['Diag', 'FixDiag'] and hasattr(self, 'params_'):
+            return np.asarray(_calculate_diagonal_outputs(self.params_, S, S.shape[1], self.method_))
 
         S_ = np.hstack((S, np.ones((len(S), 1))))
 
@@ -63,11 +70,13 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
 
     def fit(self, X, y, *args, **kwargs):
 
+        k = X.shape[1]
         X_ = np.hstack((X, np.ones((len(X), 1))))
 
-        self.classes = raw_np.unique(y)
-
-        k = len(self.classes)
+        # Probability columns define the class space. On large datasets a
+        # calibration subset may not contain every class label, but the
+        # parameter matrix must still match all probability columns.
+        self.classes = raw_np.arange(k)
 
         if self.reg_norm:
             if self.reg_mu is None:
@@ -83,7 +92,12 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
 
         n, m = X_.shape
 
-        XXT = (X_.repeat(m, axis=1) * np.hstack([X_]*m)).reshape((n, m, m))
+        # Diagonal variants do not use XXT in the objective/gradient/Hessian,
+        # and materializing it is prohibitively expensive for large-class data.
+        if self.method_ in ['Diag', 'FixDiag']:
+            XXT = None
+        else:
+            XXT = (X_.repeat(m, axis=1) * np.hstack([X_]*m)).reshape((n, m, m))
 
         logging.debug(self.method_)
 
@@ -96,17 +110,34 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
                                      initializer=self.initializer,
                                      reg_format=self.reg_format)
         else:
-            res = scipy.optimize.fmin_l_bfgs_b(func=_objective, fprime=_gradient,
-                                               x0=self.weights_0_,
-                                               args=(X_, XXT, target, k,
-                                                     self.method_, self.reg_lambda, self.reg_mu,
-                                                     self.ref_row, self.initializer,
-                                                     self.reg_format),
-                                               maxls=128,
-                                               factr=1.0)
+            optimizer_kwargs = {"maxls": 128, "factr": 1.0}
+            if self.maxiter is not None:
+                optimizer_kwargs["maxiter"] = self.maxiter
+            res = scipy.optimize.fmin_l_bfgs_b(
+                func=_objective,
+                fprime=_gradient,
+                x0=self.weights_0_,
+                args=(
+                    X_,
+                    XXT,
+                    target,
+                    k,
+                    self.method_,
+                    self.reg_lambda,
+                    self.reg_mu,
+                    self.ref_row,
+                    self.initializer,
+                    self.reg_format,
+                ),
+                **optimizer_kwargs,
+            )
             weights = res[0]
 
-        self.weights_ = _get_weights(weights, k, self.ref_row, self.method_)
+        self.params_ = weights
+        if self.method_ in ['Diag', 'FixDiag']:
+            self.weights_ = None
+        else:
+            self.weights_ = _get_weights(weights, k, self.ref_row, self.method_)
 
         return self
 
@@ -155,6 +186,10 @@ class MultinomialRegression(BaseEstimator, RegressorMixin):
 
 def _objective(params, *args):
     (X, _, y, k, method, reg_lambda, reg_mu, ref_row, _, reg_format) = args
+    if method in ['Diag', 'FixDiag'] and reg_lambda == 0.0 and reg_mu is None:
+        outputs = clip_jax(_calculate_diagonal_outputs(params, X[:, :k], k, method))
+        return np.mean(-np.log(np.sum(y * outputs, axis=1)))
+
     weights = _get_weights(params, k, ref_row, method)
     #outputs = _calculate_outputs(weights, X)
     outputs = clip_jax(_calculate_outputs(weights, X))
@@ -229,6 +264,16 @@ def _get_identity_weights(n_classes, ref_row, method):
 def _calculate_outputs(weights, X):
     mul = np.dot(X, weights.transpose())
     return _softmax(mul)
+
+
+def _calculate_diagonal_outputs(params, X, k, method):
+    if method == 'Diag':
+        logits = X * params[:k] + params[k:]
+    elif method == 'FixDiag':
+        logits = X * params[0]
+    else:
+        raise(ValueError("Unknown diagonal calibration method {}".format(method)))
+    return _softmax(logits)
 
 
 def _softmax(X):

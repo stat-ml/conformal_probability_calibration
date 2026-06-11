@@ -16,6 +16,7 @@ from ..visualizations import (
     CumulativeMassVisualizer,
     OneMinusAlphaCoverageVisualizer,
     ConformalSetSizeVisualizer,
+    AlphaSuffixCoverageVisualizer,
 )
 
 # A simple type alias for the JSON config
@@ -68,6 +69,12 @@ def parse_config(
         accepted_params = set(sig.parameters.keys()) - {"self"}
         filtered_params = {k: v for k, v in params.items() if k in accepted_params}
         visualizers.append(OneMinusAlphaCoverageVisualizer(**filtered_params))
+    if "alpha_suffix_coverage_curve" in vis_config:
+        params = vis_config["alpha_suffix_coverage_curve"]
+        sig = inspect.signature(AlphaSuffixCoverageVisualizer.__init__)
+        accepted_params = set(sig.parameters.keys()) - {"self"}
+        filtered_params = {k: v for k, v in params.items() if k in accepted_params}
+        visualizers.append(AlphaSuffixCoverageVisualizer(**filtered_params))
     if "conformal_set_size_distribution" in vis_config:
         visualizers.append(ConformalSetSizeVisualizer())
 
